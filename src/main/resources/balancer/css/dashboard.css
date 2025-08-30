@@ -9,3 +9,4 @@
 .card-button:hover { -fx-background-color: #efefef; }
 .info-label { -fx-font-size: 14px; -fx-font-weight: bold; }
 .info-value { -fx-font-size: 14px; }
+.user-menu { -fx-text-fill: white; -fx-mark-color: white; }

@@ -8,6 +8,15 @@
         <ToolBar styleClass="main-toolbar">
             <Label text="Balancer - Dashboard" styleClass="titulo"/>
             <Pane HBox.hgrow="ALWAYS"/>
+            <MenuButton fx:id="userMenu" text="Usuario" styleClass="user-menu">
+                <items>
+                    <MenuItem text="Mi perfil"/>
+                    <MenuItem text="Configuración"/>
+                    <MenuItem text="Notificaciones"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="Cerrar sesión" onAction="#cerrarSesion"/>
+                </items>
+            </MenuButton>
         </ToolBar>
     </top>
     <left>
@@ -18,10 +27,6 @@
     </left>
     <center>
         <VBox spacing="10" padding="10">
-            <HBox spacing="20">
-                <Label text="Usuario:" styleClass="info-label"/>
-                <Label fx:id="usuarioLabel" styleClass="info-value"/>
-            </HBox>
             <HBox spacing="20">
                 <Label text="Total Puntos:" styleClass="info-label"/>
                 <Label fx:id="totalPuntosLabel" styleClass="info-value"/>
