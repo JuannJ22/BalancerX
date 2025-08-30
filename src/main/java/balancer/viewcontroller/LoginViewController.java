@@ -1,9 +1,8 @@
 package balancer.viewcontroller;
 
+import balancer.controller.LoginController;
 import balancer.model.Usuario;
-import balancer.service.AuthService;
 import balancer.util.Navigator;
-import balancer.util.Sesion;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -17,7 +16,7 @@ public class LoginViewController {
     @FXML private TextField txtPasswordVisible;
     @FXML private Label lblError;
     @FXML private CheckBox remember;
-    private final AuthService auth = new AuthService();
+    private final LoginController controller = new LoginController();
     private final Preferences prefs = Preferences.userNodeForPackage(LoginViewController.class);
 
     @FXML public void initialize(){
@@ -46,14 +45,13 @@ public class LoginViewController {
 
     @FXML private void onLogin(){
         String pass = txtPassword.isVisible() ? txtPassword.getText() : txtPasswordVisible.getText();
-        Usuario u = auth.login(txtUsuario.getText(), pass);
+        Usuario u = controller.login(txtUsuario.getText(), pass);
         if(u!=null){
             if(remember.isSelected()){
                 prefs.put("rememberedUser", txtUsuario.getText());
             }else{
                 prefs.remove("rememberedUser");
             }
-            Sesion.setUsuarioActual(u);
             Navigator.navigateTo("dashboard.fxml", "Dashboard - Balancer");
         }else{
             lblError.setText("Credenciales inválidas");
