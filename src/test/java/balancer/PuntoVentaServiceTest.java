@@ -8,9 +8,17 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PuntoVentaServiceTest {
-    @BeforeAll static void init(){ ArchivoUtils.inicializar(); KeystoreManager.inicializarSiNoExiste(); }
-    @Test void listaPuntos(){
+
+    @BeforeAll
+    static void init() {
+        ArchivoUtils.inicializar();
+        KeystoreManager.inicializarSiNoExiste();
+    }
+
+    @Test
+    void listaPuntos() {
         var s = new PuntoVentaService();
         assertTrue(s.listar().size() >= 4);
     }
 }
+
