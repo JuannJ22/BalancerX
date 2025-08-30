@@ -23,7 +23,8 @@ public final class Encriptador {
     public static boolean verifica(String password, String stored){
         try{
             if(stored==null || !stored.contains("$")) return false;
-            String[] parts = stored.split("\\$");
+            // The '$' character is a special regex metacharacter; escape it and limit the split to two parts
+            String[] parts = stored.split("\\$", 2);
             byte[] salt = Base64.getDecoder().decode(parts[0]);
             byte[] hash = Base64.getDecoder().decode(parts[1]);
             PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITER, KEYLEN);
