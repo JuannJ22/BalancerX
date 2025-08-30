@@ -1,7 +1,7 @@
 package balancer.viewcontroller;
 
+import balancer.controller.FormCuadreController;
 import balancer.model.Cuadre;
-import balancer.service.CuadreService;
 import balancer.util.Navigator;
 import balancer.util.Sesion;
 import javafx.fxml.FXML;
@@ -12,7 +12,7 @@ public class FormCuadreViewController {
     @FXML private TextField txtMonto;
     @FXML private TextArea txtObs;
     @FXML private Label lblTitulo;
-    private final CuadreService service = new CuadreService();
+    private final FormCuadreController controller = new FormCuadreController();
     private Cuadre actual;
     public void cargarCuadre(Cuadre c){
         this.actual = c;
@@ -26,7 +26,7 @@ public class FormCuadreViewController {
             actual.setFecha(dpFecha.getValue());
             actual.setMonto(Double.parseDouble(txtMonto.getText()));
             actual.setObservacion(txtObs.getText());
-            service.guardar(actual);
+            controller.guardar(actual);
             Navigator.navigateTo("cuadres.fxml","Cuadres - " + Sesion.getPuntoSeleccionado().getNombre());
         }catch(Exception e){ new Alert(Alert.AlertType.ERROR, "Error: "+e.getMessage()).showAndWait(); }
     }
