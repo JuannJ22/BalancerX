@@ -1,7 +1,8 @@
 package balancer.viewcontroller;
 
+import balancer.controller.DashboardController;
 import balancer.model.PuntoVenta;
-import balancer.service.PuntoVentaService;
+import balancer.model.Usuario;
 import balancer.util.Navigator;
 import balancer.util.Sesion;
 import javafx.fxml.FXML;
@@ -18,15 +19,16 @@ public class DashboardViewController {
     @FXML private FlowPane contenedorCards;
     @FXML private MenuButton userMenu;
     @FXML private Label totalPuntosLabel;
-    private final PuntoVentaService pvs = new PuntoVentaService();
+    private final DashboardController controller = new DashboardController();
 
     @FXML public void initialize(){
         contenedorCards.setAlignment(Pos.CENTER);
         contenedorCards.setHgap(20); contenedorCards.setVgap(20);
-        List<PuntoVenta> puntos = pvs.listar();
+        List<PuntoVenta> puntos = controller.listarPuntos();
         totalPuntosLabel.setText(String.valueOf(puntos.size()));
-        if(Sesion.getUsuarioActual() != null){
-            userMenu.setText(Sesion.getUsuarioActual().getNombre());
+        Usuario actual = controller.usuarioActual();
+        if(actual != null){
+            userMenu.setText(actual.getNombre());
         }
         for(PuntoVenta pv: puntos){
             VBox card = new VBox(10);
@@ -37,6 +39,10 @@ public class DashboardViewController {
             Button btn = new Button("Cuadres");
             btn.getStyleClass().add("card-button");
             btn.setOnAction(e -> {
+                // No se gestiona en el controller porque es navegación específica
+                // del cuadro seleccionado; la sesión mantiene el punto actual.
+                // Se puede extraer a un controller en futuras funcionalidades.
+                // Por ahora se mantiene la lógica existente para navegación.
                 Sesion.setPuntoSeleccionado(pv);
                 Navigator.navigateTo("cuadres.fxml","Cuadres - "+pv.getNombre());
             });
@@ -48,7 +54,7 @@ public class DashboardViewController {
     @FXML public void abrirUsuarios(){ Navigator.navigateTo("usuarios.fxml", "Usuarios - Balancer"); }
 
     @FXML public void cerrarSesion(){
-        Sesion.clear();
+        controller.cerrarSesion();
         Navigator.navigateTo("login.fxml", "Login - Balancer");
     }
 }
