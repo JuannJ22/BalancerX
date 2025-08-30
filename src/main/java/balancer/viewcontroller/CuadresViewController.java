@@ -1,7 +1,7 @@
 package balancer.viewcontroller;
 
+import balancer.controller.CuadresController;
 import balancer.model.Cuadre;
-import balancer.service.CuadreService;
 import balancer.util.Navigator;
 import balancer.util.Sesion;
 import javafx.collections.FXCollections;
@@ -18,7 +18,7 @@ public class CuadresViewController {
     @FXML private TableColumn<Cuadre, String> colFecha;
     @FXML private TableColumn<Cuadre, String> colMonto;
     @FXML private TableColumn<Cuadre, Void> colAcciones;
-    private final CuadreService service = new CuadreService();
+    private final CuadresController controller = new CuadresController();
     private final ObservableList<Cuadre> datos = FXCollections.observableArrayList();
     @FXML public void initialize(){
         String nombre = Sesion.getPuntoSeleccionado()!=null ? Sesion.getPuntoSeleccionado().getNombre() : "Sin Punto";
@@ -27,7 +27,7 @@ public class CuadresViewController {
         colMonto.setCellValueFactory(c -> new javafx.beans.property.SimpleStringProperty(String.format("$ %, .2f", c.getValue().getMonto())));
         agregarAcciones();
         if(Sesion.getPuntoSeleccionado()!=null){
-            datos.setAll(service.listarPorPunto(Sesion.getPuntoSeleccionado().getId()));
+            datos.setAll(controller.listarPorPunto(Sesion.getPuntoSeleccionado().getId()));
         }
         tabla.setItems(datos);
     }
