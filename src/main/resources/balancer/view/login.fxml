@@ -1,18 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="balancer.viewcontroller.LoginViewController"
-            stylesheets="@../css/login.css">
+            stylesheets="@../css/login.css"
+            prefWidth="900" prefHeight="650"
+            styleClass="gradient-bg">
     <children>
-        <VBox alignment="CENTER" spacing="15" prefWidth="900" prefHeight="650" styleClass="fondo">
-            <VBox alignment="CENTER" spacing="10" styleClass="caja-login">
-                <Label text="Balancer - Iniciar Sesión" styleClass="titulo"/>
-                <TextField fx:id="txtUsuario" promptText="Usuario" />
-                <PasswordField fx:id="txtPassword" promptText="Contraseña" />
-                <Button text="Entrar" onAction="#onLogin" styleClass="boton-primario"/>
-                <Label fx:id="lblError" styleClass="mensaje-error"/>
+        <VBox alignment="CENTER" prefWidth="900" prefHeight="650">
+            <VBox alignment="CENTER" maxWidth="400" styleClass="login-card">
+                <VBox alignment="CENTER" spacing="10" styleClass="card-header">
+                    <Label text="🧮" styleClass="header-icon"/>
+                    <Label text="Gestión de Cuadres" styleClass="header-title"/>
+                    <Label text="Inicie sesión para continuar" styleClass="header-subtitle"/>
+                </VBox>
+                <VBox spacing="15" styleClass="form-body">
+                    <VBox spacing="5">
+                        <Label text="Usuario" styleClass="form-label"/>
+                        <HBox spacing="5" alignment="CENTER_LEFT" styleClass="input-group">
+                            <Label text="👤" styleClass="input-icon"/>
+                            <TextField fx:id="txtUsuario" promptText="Ingrese su usuario" styleClass="input-field" HBox.hgrow="ALWAYS"/>
+                        </HBox>
+                    </VBox>
+                    <VBox spacing="5">
+                        <Label text="Contraseña" styleClass="form-label"/>
+                        <HBox spacing="5" alignment="CENTER_LEFT" styleClass="input-group">
+                            <Label text="🔒" styleClass="input-icon"/>
+                            <StackPane HBox.hgrow="ALWAYS">
+                                <PasswordField fx:id="txtPassword" promptText="Ingrese su contraseña" styleClass="input-field"/>
+                                <TextField fx:id="txtPasswordVisible" promptText="Ingrese su contraseña" styleClass="input-field" visible="false" managed="false"/>
+                            </StackPane>
+                            <Button text="👁" onAction="#onTogglePassword" styleClass="toggle-button"/>
+                        </HBox>
+                    </VBox>
+                    <HBox alignment="CENTER_LEFT" spacing="10">
+                        <CheckBox fx:id="remember" text="Recordarme"/>
+                        <Pane HBox.hgrow="ALWAYS"/>
+                        <Hyperlink text="¿Olvidó su contraseña?"/>
+                    </HBox>
+                    <Button text="Iniciar Sesión" onAction="#onLogin" styleClass="btn-login" maxWidth="Infinity"/>
+                    <Label fx:id="lblError" styleClass="mensaje-error"/>
+                </VBox>
+                <VBox alignment="CENTER" spacing="5" styleClass="card-footer">
+                    <Label text="¿No tienes una cuenta?"/>
+                    <Hyperlink text="Contacta al administrador"/>
+                </VBox>
             </VBox>
+            <Label text="© 2025 Balancer. Todos los derechos reservados." styleClass="copyright"/>
         </VBox>
     </children>
 </AnchorPane>

@@ -12,10 +12,29 @@ import javafx.scene.control.TextField;
 public class LoginViewController {
     @FXML private TextField txtUsuario;
     @FXML private PasswordField txtPassword;
+    @FXML private TextField txtPasswordVisible;
     @FXML private Label lblError;
     private final AuthService auth = new AuthService();
+
+    @FXML private void onTogglePassword(){
+        if(txtPassword.isVisible()){
+            txtPasswordVisible.setText(txtPassword.getText());
+            txtPassword.setVisible(false);
+            txtPassword.setManaged(false);
+            txtPasswordVisible.setVisible(true);
+            txtPasswordVisible.setManaged(true);
+        }else{
+            txtPassword.setText(txtPasswordVisible.getText());
+            txtPasswordVisible.setVisible(false);
+            txtPasswordVisible.setManaged(false);
+            txtPassword.setVisible(true);
+            txtPassword.setManaged(true);
+        }
+    }
+
     @FXML private void onLogin(){
-        Usuario u = auth.login(txtUsuario.getText(), txtPassword.getText());
+        String pass = txtPassword.isVisible() ? txtPassword.getText() : txtPasswordVisible.getText();
+        Usuario u = auth.login(txtUsuario.getText(), pass);
         if(u!=null){ Sesion.setUsuarioActual(u); Navigator.navigateTo("dashboard.fxml", "Dashboard - Balancer"); }
         else{ lblError.setText("Credenciales inválidas"); }
     }
