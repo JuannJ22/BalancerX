@@ -1,6 +1,11 @@
-.titulo { -fx-font-size: 20px; -fx-font-weight: bold; }
-.card { -fx-background-color: linear-gradient(to bottom right, #667eea, #764ba2); -fx-background-radius: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 6); -fx-pref-width: 220; -fx-pref-height: 140; -fx-alignment: center; }
+.titulo { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: white; }
+.main-toolbar { -fx-background-color: #1e3a8a; }
+.sidebar { -fx-background-color: #1e3a8a; -fx-padding: 15; }
+.sidebar-button { -fx-background-color: transparent; -fx-text-fill: white; -fx-pref-width: 120; -fx-alignment: BASELINE_LEFT; -fx-cursor: hand; }
+.sidebar-button:hover { -fx-background-color: rgba(255,255,255,0.1); }
+.card { -fx-background-color: linear-gradient(to bottom right, #1e3a8a, #2746a9); -fx-background-radius: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 6); -fx-pref-width: 220; -fx-pref-height: 140; -fx-alignment: center; }
 .card-label { -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; }
 .card-button { -fx-background-color: white; -fx-background-radius: 8; -fx-text-fill: #333; -fx-cursor: hand; }
 .card-button:hover { -fx-background-color: #efefef; }
-.boton-secundario { -fx-background-color: white; -fx-text-fill: #333; }
+.info-label { -fx-font-size: 14px; -fx-font-weight: bold; }
+.info-value { -fx-font-size: 14px; }

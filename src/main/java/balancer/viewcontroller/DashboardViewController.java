@@ -11,20 +11,33 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
+import java.util.List;
 
 public class DashboardViewController {
     @FXML private FlowPane contenedorCards;
+    @FXML private Label usuarioLabel;
+    @FXML private Label totalPuntosLabel;
     private final PuntoVentaService pvs = new PuntoVentaService();
     @FXML public void initialize(){
         contenedorCards.setAlignment(Pos.CENTER);
         contenedorCards.setHgap(20); contenedorCards.setVgap(20);
-        for(PuntoVenta pv: pvs.listar()){
+        List<PuntoVenta> puntos = pvs.listar();
+        totalPuntosLabel.setText(String.valueOf(puntos.size()));
+        if(Sesion.getUsuarioActual() != null){
+            usuarioLabel.setText(Sesion.getUsuarioActual().getNombre());
+        }
+        for(PuntoVenta pv: puntos){
             VBox card = new VBox(10);
             card.getStyleClass().add("card");
             card.setAlignment(Pos.CENTER); card.setPadding(new Insets(20));
-            Label nombre = new Label(pv.getNombre()); nombre.getStyleClass().add("card-label");
-            Button btn = new Button("Cuadres"); btn.getStyleClass().add("card-button");
-            btn.setOnAction(e -> { Sesion.setPuntoSeleccionado(pv); Navigator.navigateTo("cuadres.fxml","Cuadres - "+pv.getNombre()); });
+            Label nombre = new Label(pv.getNombre());
+            nombre.getStyleClass().add("card-label");
+            Button btn = new Button("Cuadres");
+            btn.getStyleClass().add("card-button");
+            btn.setOnAction(e -> {
+                Sesion.setPuntoSeleccionado(pv);
+                Navigator.navigateTo("cuadres.fxml","Cuadres - "+pv.getNombre());
+            });
             card.getChildren().addAll(nombre, btn);
             contenedorCards.getChildren().add(card);
         }
