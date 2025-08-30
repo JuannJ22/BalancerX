@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="balancer.viewcontroller.DashboardViewController"
+            stylesheets="@../css/dashboard.css">
+    <top>
+        <ToolBar>
+            <Label text="Balancer - Dashboard" styleClass="titulo"/>
+            <Pane HBox.hgrow="ALWAYS"/>
+            <Button text="Usuarios" onAction="#abrirUsuarios" styleClass="boton-secundario"/>
+        </ToolBar>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true">
+            <content>
+                <FlowPane fx:id="contenedorCards" />
+            </content>
+        </ScrollPane>
+    </center>
+</BorderPane>

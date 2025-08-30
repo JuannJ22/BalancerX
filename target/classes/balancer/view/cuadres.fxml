@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="balancer.viewcontroller.CuadresViewController"
+      spacing="10" stylesheets="@../css/cuadres.css" alignment="TOP_CENTER">
+    <Label fx:id="lblTitulo" styleClass="titulo"/>
+    <TableView fx:id="tabla" prefWidth="820" prefHeight="420">
+        <columns>
+            <TableColumn fx:id="colFecha" text="Fecha" prefWidth="200"/>
+            <TableColumn fx:id="colMonto" text="Monto" prefWidth="200"/>
+            <TableColumn fx:id="colAcciones" text="Acciones" prefWidth="150"/>
+        </columns>
+    </TableView>
+    <HBox spacing="10">
+        <Button text="Nuevo" onAction="#nuevoCuadre" styleClass="boton-primario"/>
+        <Button text="Volver" onAction="#volver" styleClass="boton-secundario"/>
+    </HBox>
+</VBox>

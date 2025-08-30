@@ -1,0 +1,4 @@
+.titulo { -fx-font-size: 20px; -fx-font-weight: bold; -fx-padding: 10; }
+.boton-primario { -fx-background-color: #667eea; -fx-text-fill: white; -fx-background-radius: 8; }
+.boton-secundario { -fx-background-color: white; -fx-text-fill: #333; -fx-background-radius: 8; -fx-border-color: #667eea; }
+.boton-accion { -fx-background-color: white; -fx-text-fill: #333; -fx-background-radius: 8; -fx-border-color: #888; }

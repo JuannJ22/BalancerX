@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<AnchorPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="balancer.viewcontroller.LoginViewController"
+            stylesheets="@../css/login.css">
+    <children>
+        <VBox alignment="CENTER" spacing="15" prefWidth="900" prefHeight="650" styleClass="fondo">
+            <VBox alignment="CENTER" spacing="10" styleClass="caja-login">
+                <Label text="Balancer - Iniciar Sesión" styleClass="titulo"/>
+                <TextField fx:id="txtUsuario" promptText="Usuario" />
+                <PasswordField fx:id="txtPassword" promptText="Contraseña" />
+                <Button text="Entrar" onAction="#onLogin" styleClass="boton-primario"/>
+                <Label fx:id="lblError" styleClass="mensaje-error"/>
+            </VBox>
+        </VBox>
+    </children>
+</AnchorPane>

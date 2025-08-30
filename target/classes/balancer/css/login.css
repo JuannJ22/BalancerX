@@ -1,0 +1,6 @@
+.fondo { -fx-background-color: linear-gradient(to right, #667eea, #764ba2); }
+.caja-login { -fx-background-color: white; -fx-background-radius: 14; -fx-padding: 30; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.25), 12, 0, 0, 6); }
+.titulo { -fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #333; }
+.boton-primario { -fx-background-color: #667eea; -fx-text-fill: white; -fx-background-radius: 8; -fx-cursor: hand; }
+.boton-primario:hover { -fx-background-color: #5a67d8; }
+.mensaje-error { -fx-text-fill: red; }

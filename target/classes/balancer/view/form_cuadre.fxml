@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="balancer.viewcontroller.FormCuadreViewController"
+      spacing="10" alignment="CENTER" stylesheets="@../css/form_cuadre.css">
+    <Label fx:id="lblTitulo" styleClass="titulo"/>
+    <DatePicker fx:id="dpFecha"/>
+    <TextField fx:id="txtMonto" promptText="Monto"/>
+    <TextArea fx:id="txtObs" promptText="Observaciones" prefWidth="400" prefHeight="120"/>
+    <HBox spacing="10">
+        <Button text="Guardar" onAction="#guardar" styleClass="boton-primario"/>
+        <Button text="Cancelar" onAction="#cancelar" styleClass="boton-secundario"/>
+    </HBox>
+</VBox>

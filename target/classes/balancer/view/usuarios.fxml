@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="balancer.viewcontroller.UsuariosViewController"
+      spacing="10" stylesheets="@../css/usuarios.css" alignment="TOP_CENTER">
+    <Label text="Gestión de Usuarios" styleClass="titulo"/>
+    <Label fx:id="lblInfo"/>
+    <TableView fx:id="tabla" prefWidth="820" prefHeight="380">
+        <columns>
+            <TableColumn fx:id="colUsuario" text="Usuario" prefWidth="300"/>
+            <TableColumn fx:id="colRol" text="Rol" prefWidth="200"/>
+        </columns>
+    </TableView>
+    <HBox spacing="10" alignment="CENTER">
+        <TextField fx:id="txtNombre" promptText="Nombre completo"/>
+        <TextField fx:id="txtUsuario" promptText="Usuario"/>
+        <PasswordField fx:id="txtPass" promptText="Contraseña"/>
+        <ComboBox fx:id="cbRol" promptText="Rol"/>
+        <Button text="Agregar" onAction="#agregar" styleClass="boton-primario"/>
+        <Button text="Volver" onAction="#volver" styleClass="boton-secundario"/>
+    </HBox>
+</VBox>
