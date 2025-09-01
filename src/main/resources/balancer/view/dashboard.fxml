@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.geometry.Insets?>
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="balancer.viewcontroller.DashboardViewController"
             stylesheets="@../css/dashboard.css">
@@ -26,7 +27,10 @@
         </VBox>
     </left>
     <center>
-        <VBox spacing="10" padding="10">
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
             <HBox spacing="20">
                 <Label text="Total Puntos:" styleClass="info-label"/>
                 <Label fx:id="totalPuntosLabel" styleClass="info-value"/>
