@@ -25,6 +25,7 @@
         <lombok.version>1.18.32</lombok.version>
         <jacoco.version>0.8.11</jacoco.version>
         <spotless.version>2.43.0</spotless.version>
+        <flyway.version>9.22.3</flyway.version>
     </properties>
 
     <dependencyManagement>
