@@ -1,6 +1,0 @@
-.titulo { -fx-font-size: 20px; -fx-font-weight: bold; }
-.card { -fx-background-color: linear-gradient(to bottom right, #667eea, #764ba2); -fx-background-radius: 16; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 6); -fx-pref-width: 220; -fx-pref-height: 140; -fx-alignment: center; }
-.card-label { -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; }
-.card-button { -fx-background-color: white; -fx-background-radius: 8; -fx-text-fill: #333; -fx-cursor: hand; }
-.card-button:hover { -fx-background-color: #efefef; }
-.boton-secundario { -fx-background-color: white; -fx-text-fill: #333; }
