@@ -1,0 +1,26 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: balancerx
+      POSTGRES_USER: balancerx
+      POSTGRES_PASSWORD: balancerx
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/balancerx
+      SPRING_DATASOURCE_USERNAME: balancerx
+      SPRING_DATASOURCE_PASSWORD: balancerx
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+volumes:
+  postgres_data:

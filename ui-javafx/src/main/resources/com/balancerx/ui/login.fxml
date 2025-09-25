@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.balancerx.ui.LoginController">
+    <children>
+        <VBox spacing="10.0" alignment="CENTER" AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20" AnchorPane.topAnchor="20" AnchorPane.bottomAnchor="20">
+            <Label text="BalancerX" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+            <Label fx:id="statusLabel" />
+            <TextField fx:id="emailField" promptText="Correo electrónico" />
+            <PasswordField fx:id="passwordField" promptText="Contraseña" />
+            <Button fx:id="loginButton" text="Ingresar" onAction="#onLogin" maxWidth="Infinity" />
+        </VBox>
+    </children>
+</AnchorPane>
