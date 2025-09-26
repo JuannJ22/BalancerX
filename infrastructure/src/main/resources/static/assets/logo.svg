@@ -1,0 +1,20 @@
+<svg width="160" height="160" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>BalancerX Logo</title>
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95" />
+      <stop offset="100%" stop-color="#a8c8ff" stop-opacity="0.65" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4d7fff" />
+      <stop offset="100%" stop-color="#6ef3ff" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="144" height="144" rx="40" fill="url(#grad)" />
+  <g transform="translate(40 40)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 68c18-8 26-36 40-36s22 28 40 36" stroke="url(#accent)" stroke-width="12" />
+    <path d="M12 36c18-8 26-36 40-36s22 28 40 36" stroke="#1d2b64" stroke-opacity="0.35" stroke-width="12" />
+    <circle cx="52" cy="52" r="16" fill="#10214f" opacity="0.9" />
+    <circle cx="52" cy="52" r="8" fill="url(#accent)" />
+  </g>
+</svg>

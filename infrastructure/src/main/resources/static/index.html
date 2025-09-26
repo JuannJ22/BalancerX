@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Centro de control de rentabilidad</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="notification" role="alert" aria-live="polite">
+      <div class="notification__main">
+        <span class="notification__icon" aria-hidden="true">✔</span>
+        <div class="notification__copy">
+          <p class="notification__title">Se generó el archivo Septiembre-24.xlsx.</p>
+          <p class="notification__subtitle">
+            Usa el botón <strong>"Abrir"</strong> para abrir el archivo.
+          </p>
+        </div>
+      </div>
+      <div class="notification__actions">
+        <a class="notification__open" href="#" download> Abrir </a>
+        <button class="notification__close" type="button" aria-label="Cerrar notificación">✕</button>
+      </div>
+    </div>
+
+    <main class="hero">
+      <header class="hero__header">
+        <div class="brand">
+          <img src="assets/logo.svg" alt="Logo BalancerX" class="brand__logo" />
+          <span class="brand__name">BalancerX</span>
+        </div>
+        <span class="hero__badge">Centro de control de rentabilidad</span>
+      </header>
+
+      <section class="hero__content">
+        <h1 class="hero__title">Centro de control de rentabilidad</h1>
+        <p class="hero__subtitle">
+          Administra la generación de informes, el cargue de EXCZ y los listados de
+          productos desde un solo lugar.
+        </p>
+
+        <div class="hero__actions">
+          <button class="button button--primary" type="button">Generar informe</button>
+          <button class="button button--ghost" type="button">Ver históricos</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="scripts.js"></script>
+  </body>
+</html>
