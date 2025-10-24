@@ -11,8 +11,10 @@
     <packaging>jar</packaging>
     <properties>
         <javafx.version>21.0.3</javafx.version>
+        <mssql-jdbc.version>12.4.2.jre11</mssql-jdbc.version>
     </properties>
     <dependencies>
+        <!-- JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -23,11 +25,27 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        
+        <!-- SQL Server -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>${mssql-jdbc.version}</version>
+        </dependency>
+        
+        <!-- UI Components -->
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-javafx</artifactId>
             <version>12.3.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome5-pack</artifactId>
+            <version>12.3.1</version>
+        </dependency>
+        
+        <!-- JSON -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -36,11 +54,20 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
+        
+        <!-- Logging -->
         <dependency>
-            <groupId>com.balancerx</groupId>
-            <artifactId>balancerx-application</artifactId>
-            <version>${project.version}</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.9</version>
         </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
+        </dependency>
+        
+        <!-- BalancerX Modules (eliminado temporalmente para compilar la UI con servicios en memoria) -->
     </dependencies>
     <build>
         <plugins>
@@ -49,7 +76,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.balancerx.ui.BalancerXDesktopApp</mainClass>
+                    <mainClass>com.balancerx.BalancerXDesktopApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>

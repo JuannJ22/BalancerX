@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane fx:id="mainContainer" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.balancerx.viewcontroller.MenuPrincipalViewController">
+    <top>
+        <VBox spacing="5.0" style="-fx-background-color: #f0f0f0;">
+            <padding>
+                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+            </padding>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <Label text="BalancerX" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+                <Region HBox.hgrow="ALWAYS" />
+                <VBox alignment="CENTER_RIGHT">
+                    <Label fx:id="lblUsuario" text="Nombre de Usuario" style="-fx-font-weight: bold;" />
+                    <Label fx:id="lblRol" text="Rol" />
+                </VBox>
+            </HBox>
+            <Separator />
+            <ToolBar>
+                <Button fx:id="btnCuadres" text="Cuadres" />
+                <Button fx:id="btnPuntosVenta" text="Puntos de Venta" />
+                <Button fx:id="btnUsuarios" text="Usuarios" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="btnCerrarSesion" text="Cerrar Sesión" />
+            </ToolBar>
+        </VBox>
+    </top>
+    <center>
+        <StackPane>
+            <Label text="Seleccione una opción del menú" style="-fx-font-size: 18px;" />
+        </StackPane>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="5.0" style="-fx-background-color: #f0f0f0;">
+            <padding>
+                <Insets bottom="5.0" left="10.0" right="10.0" top="5.0" />
+            </padding>
+            <Label text="BalancerX v2.0.0" />
+        </HBox>
+    </bottom>
+</BorderPane>
