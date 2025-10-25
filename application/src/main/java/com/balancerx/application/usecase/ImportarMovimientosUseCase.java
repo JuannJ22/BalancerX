@@ -8,16 +8,25 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class ImportarMovimientosUseCase {
+    private final MovimientoBancarioRepository movimientoRepository;
     private final MovimientoBancarioRepository movimientoBancarioRepository;
     private final ImportadorMovimientosPort importadorMovimientosPort;
     private final Clock clock;
+
+    public ImportarMovimientosUseCase(MovimientoBancarioRepository movimientoRepository, 
+                                      MovimientoBancarioRepository movimientoBancarioRepository,
+                                      ImportadorMovimientosPort importadorMovimientosPort, 
+                                      Clock clock) {
+        this.movimientoRepository = movimientoRepository;
+        this.movimientoBancarioRepository = movimientoBancarioRepository;
+        this.importadorMovimientosPort = importadorMovimientosPort;
+        this.clock = clock;
+    }
 
     @Transactional
     public List<MovimientoBancario> handle(ImportMovimientosCommand command) {
@@ -25,7 +34,7 @@ public class ImportarMovimientosUseCase {
                 command.getFuente(), command.getInputStream());
         Instant now = Instant.now(clock);
         List<MovimientoBancario> enriquecidos = movimientos.stream()
-                .map(mov -> mov.toBuilder().createdAt(now).build())
+                .map(mov -> mov.withCreatedAt(now))
                 .collect(Collectors.toList());
         movimientoBancarioRepository.saveAll(enriquecidos);
         return enriquecidos;

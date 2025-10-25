@@ -40,4 +40,62 @@ public class JpaFirma {
 
     @Column(nullable = false)
     private Instant timestamp;
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setCuadreId(UUID cuadreId) {
+        this.cuadreId = cuadreId;
+    }
+
+    public void setRol(RolUsuario rol) {
+        this.rol = rol;
+    }
+
+    public void setFirmanteId(UUID firmanteId) {
+        this.firmanteId = firmanteId;
+    }
+
+    public void setMetodo(MetodoFirma metodo) {
+        this.metodo = metodo;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
+
+    public void setTimestamp(Instant timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getCuadreId() {
+        return cuadreId;
+    }
+
+    public RolUsuario getRol() {
+        return rol;
+    }
+
+    public UUID getFirmanteId() {
+        return firmanteId;
+    }
+
+    public MetodoFirma getMetodo() {
+        return metodo;
+    }
+
+    public String getHash() {
+        return hash;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
+    }
 }

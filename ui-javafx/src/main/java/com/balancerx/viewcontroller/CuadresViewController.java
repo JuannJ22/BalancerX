@@ -129,7 +129,7 @@ public class CuadresViewController {
             cuadre1.setId(1L);
             cuadre1.setFecha(LocalDate.now());
             cuadre1.setPuntoVentaId(1L);
-            cuadre1.setEstado(Cuadre.EstadoCuadre.PENDIENTE);
+            cuadre1.setEstado(Cuadre.EstadoCuadre.BORRADOR);
             cuadre1.setTotalTirilla(new BigDecimal("1000.00"));
             cuadre1.setTotalBancos(new BigDecimal("950.00"));
             cuadre1.setTotalContable(new BigDecimal("975.00"));
@@ -206,7 +206,7 @@ public class CuadresViewController {
                 Cuadre nuevoCuadre = new Cuadre();
                 nuevoCuadre.setFecha(fecha);
                 nuevoCuadre.setPuntoVentaId(puntoVentaId);
-                nuevoCuadre.setEstado(Cuadre.EstadoCuadre.PENDIENTE);
+                nuevoCuadre.setEstado(Cuadre.EstadoCuadre.BORRADOR);
                 nuevoCuadre.setTotalTirilla(totalTirilla);
                 nuevoCuadre.setTotalBancos(totalBancos);
                 nuevoCuadre.setTotalContable(totalContable);

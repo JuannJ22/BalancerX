@@ -42,18 +42,18 @@ class CreateCuadreUseCaseTest {
     void creaCuadreEnEstadoBorrador() {
         UUID pvId = UUID.randomUUID();
         when(puntoVentaRepository.findById(pvId))
-                .thenReturn(Optional.of(PuntoVenta.builder().id(pvId).nombre("Principal").activo(true).build()));
+                .thenReturn(Optional.of(new PuntoVenta(pvId, "Principal", true, null)));
         when(cuadreRepository.existsAprobadoByFechaAndPuntoVenta(any(), any())).thenReturn(false);
         when(cuadreRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0, Cuadre.class));
 
-        CreateCuadreCommand command = CreateCuadreCommand.builder()
-                .fecha(LocalDate.of(2024, 1, 2))
-                .puntoVentaId(pvId)
-                .totalTirilla(new BigDecimal("100000"))
-                .totalBancos(new BigDecimal("100000"))
-                .totalContable(new BigDecimal("100000"))
-                .creadoPor(UUID.randomUUID())
-                .build();
+        CreateCuadreCommand command = new CreateCuadreCommand(
+                LocalDate.of(2024, 1, 2),
+                pvId,
+                new BigDecimal("100000"),
+                new BigDecimal("100000"),
+                new BigDecimal("100000"),
+                UUID.randomUUID()
+        );
 
         Cuadre resultado = useCase.handle(command);
 
@@ -65,17 +65,17 @@ class CreateCuadreUseCaseTest {
     void validaCuadreAprobadoExistente() {
         UUID pvId = UUID.randomUUID();
         when(puntoVentaRepository.findById(pvId))
-                .thenReturn(Optional.of(PuntoVenta.builder().id(pvId).nombre("Principal").activo(true).build()));
+                .thenReturn(Optional.of(new PuntoVenta(pvId, "Principal", true, null)));
         when(cuadreRepository.existsAprobadoByFechaAndPuntoVenta(any(), any())).thenReturn(true);
 
-        CreateCuadreCommand command = CreateCuadreCommand.builder()
-                .fecha(LocalDate.of(2024, 1, 2))
-                .puntoVentaId(pvId)
-                .totalTirilla(BigDecimal.ZERO)
-                .totalBancos(BigDecimal.ZERO)
-                .totalContable(BigDecimal.ZERO)
-                .creadoPor(UUID.randomUUID())
-                .build();
+        CreateCuadreCommand command = new CreateCuadreCommand(
+                LocalDate.of(2024, 1, 2),
+                pvId,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                UUID.randomUUID()
+        );
 
         assertThatThrownBy(() -> useCase.handle(command)).isInstanceOf(IllegalStateException.class);
     }

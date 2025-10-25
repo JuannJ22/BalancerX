@@ -24,14 +24,14 @@ public class ShaFirmaAutomaticaService implements FirmaAutomaticaService {
                 "%s|%s|%s|%s",
                 usuario.getId(), rol.name(), Instant.now(), cuadre.getChecksumPdf().orElse(""));
         String hash = checksumService.sha256(payload.getBytes(StandardCharsets.UTF_8));
-        return Firma.builder()
-                .id(UUID.randomUUID())
-                .cuadreId(cuadre.getId())
-                .rol(rol)
-                .firmanteId(usuario.getId())
-                .metodo(MetodoFirma.AUTO)
-                .hash(hash)
-                .timestamp(Instant.now())
-                .build();
+        return new Firma(
+                UUID.randomUUID(),
+                cuadre.getId(),
+                rol,
+                usuario.getId(),
+                MetodoFirma.AUTO,
+                hash,
+                Instant.now()
+        );
     }
 }

@@ -18,11 +18,11 @@ public class PuntoVentaMapper {
     }
 
     public PuntoVenta toDomain(JpaPuntoVenta entity) {
-        return PuntoVenta.builder()
-                .id(entity.getId())
-                .nombre(entity.getNombre())
-                .activo(entity.isActivo())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        return new PuntoVenta(
+                entity.getId(),
+                entity.getNombre(),
+                entity.isActivo(),
+                entity.getCreatedAt()
+        );
     }
 }

@@ -4,15 +4,20 @@ import com.balancerx.application.command.AprobarCuadreCommand;
 import com.balancerx.domain.model.Cuadre;
 import com.balancerx.domain.repository.CuadreRepository;
 import com.balancerx.domain.valueobject.EstadoCuadre;
+import java.time.Clock;
 import java.time.LocalDate;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class AprobarCuadreUseCase {
     private final CuadreRepository cuadreRepository;
+    private final Clock clock;
+
+    public AprobarCuadreUseCase(CuadreRepository cuadreRepository, Clock clock) {
+        this.cuadreRepository = cuadreRepository;
+        this.clock = clock;
+    }
 
     @Transactional
     public Cuadre handle(AprobarCuadreCommand command) {

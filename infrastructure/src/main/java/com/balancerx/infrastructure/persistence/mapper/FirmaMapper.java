@@ -21,14 +21,14 @@ public class FirmaMapper {
     }
 
     public Firma toDomain(JpaFirma entity) {
-        return Firma.builder()
-                .id(entity.getId())
-                .cuadreId(entity.getCuadreId())
-                .rol(entity.getRol())
-                .firmanteId(entity.getFirmanteId())
-                .metodo(entity.getMetodo())
-                .hash(entity.getHash())
-                .timestamp(entity.getTimestamp())
-                .build();
+        return new Firma(
+                entity.getId(),
+                entity.getCuadreId(),
+                entity.getRol(),
+                entity.getFirmanteId(),
+                entity.getMetodo(),
+                entity.getHash(),
+                entity.getTimestamp()
+        );
     }
 }

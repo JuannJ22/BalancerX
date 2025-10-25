@@ -14,12 +14,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class Tess4JOcrPipeline implements OcrPipeline {
+    private static final Logger log = LoggerFactory.getLogger(Tess4JOcrPipeline.class);
     private static final List<String> ORDEN_OBLIGATORIO = List.of(
             "TIRILLA", "CUADRE", "VOUCHER", "TRANSFERENCIA", "CONSIGNACION", "FORMATO L1");
 
@@ -33,14 +36,14 @@ public class Tess4JOcrPipeline implements OcrPipeline {
             validarOrden(pdfArchivo, texto, observaciones);
         } catch (IOException e) {
             log.error("No se pudo procesar el PDF {}", pdfArchivo.getPath(), e);
-            observaciones.add(Observacion.builder()
-                    .id(UUID.randomUUID())
-                    .cuadreId(pdfArchivo.getCuadreId())
-                    .autorId(pdfArchivo.getSubidoPor())
-                    .severidad(SeveridadObservacion.ERROR)
-                    .texto("Error procesando PDF: " + e.getMessage())
-                    .createdAt(Instant.now())
-                    .build());
+            observaciones.add(new Observacion(
+                    UUID.randomUUID(),
+                    pdfArchivo.getCuadreId(),
+                    pdfArchivo.getSubidoPor(),
+                    SeveridadObservacion.ERROR,
+                    "Error procesando PDF: " + e.getMessage(),
+                    Instant.now()
+            ));
         }
         return observaciones;
     }
@@ -50,25 +53,26 @@ public class Tess4JOcrPipeline implements OcrPipeline {
         for (String marcador : ORDEN_OBLIGATORIO) {
             int index = texto.indexOf(marcador);
             if (index == -1) {
-                observaciones.add(Observacion.builder()
-                        .id(UUID.randomUUID())
-                        .cuadreId(pdfArchivo.getCuadreId())
-                        .autorId(pdfArchivo.getSubidoPor())
-                        .severidad(SeveridadObservacion.WARNING)
-                        .texto("Sección no encontrada: " + marcador)
-                        .createdAt(Instant.now())
-                        .build());
+                observaciones.add(new Observacion(
+                        UUID.randomUUID(),
+                        pdfArchivo.getCuadreId(),
+                        pdfArchivo.getSubidoPor(),
+                        SeveridadObservacion.WARNING,
+                        "Sección no encontrada: " + marcador,
+                        Instant.now()
+                ));
             } else if (index < posicionAnterior) {
-                observaciones.add(Observacion.builder()
-                        .id(UUID.randomUUID())
-                        .cuadreId(pdfArchivo.getCuadreId())
-                        .autorId(pdfArchivo.getSubidoPor())
-                        .severidad(SeveridadObservacion.ERROR)
-                        .texto("Orden incorrecto para sección: " + marcador)
-                        .createdAt(Instant.now())
-                        .build());
+                observaciones.add(new Observacion(
+                        UUID.randomUUID(),
+                        pdfArchivo.getCuadreId(),
+                        pdfArchivo.getSubidoPor(),
+                        SeveridadObservacion.ERROR,
+                        "Orden incorrecto para sección: " + marcador,
+                        Instant.now()
+                ));
             }
             posicionAnterior = Math.max(posicionAnterior, index);
         }
     }
 }
+

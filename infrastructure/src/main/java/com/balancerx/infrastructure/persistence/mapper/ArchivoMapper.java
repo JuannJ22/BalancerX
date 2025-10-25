@@ -22,15 +22,15 @@ public class ArchivoMapper {
     }
 
     public Archivo toDomain(JpaArchivo entity) {
-        return Archivo.builder()
-                .id(entity.getId())
-                .tipo(entity.getTipo())
-                .path(entity.getPath())
-                .checksum(entity.getChecksum())
-                .metadataJson(entity.getMetadataJson())
-                .subidoPor(entity.getSubidoPor())
-                .cuadreId(entity.getCuadreId())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        return new Archivo(
+                entity.getId(),
+                entity.getTipo(),
+                entity.getPath(),
+                entity.getChecksum(),
+                entity.getMetadataJson(),
+                entity.getSubidoPor(),
+                entity.getCuadreId(),
+                entity.getCreatedAt()
+        );
     }
 }

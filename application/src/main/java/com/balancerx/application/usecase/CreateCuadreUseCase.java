@@ -9,16 +9,20 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class CreateCuadreUseCase {
     private final CuadreRepository cuadreRepository;
     private final PuntoVentaRepository puntoVentaRepository;
     private final Clock clock;
+
+    public CreateCuadreUseCase(CuadreRepository cuadreRepository, PuntoVentaRepository puntoVentaRepository, Clock clock) {
+        this.cuadreRepository = cuadreRepository;
+        this.puntoVentaRepository = puntoVentaRepository;
+        this.clock = clock;
+    }
 
     @Transactional
     public Cuadre handle(CreateCuadreCommand command) {
@@ -32,20 +36,25 @@ public class CreateCuadreUseCase {
         }
 
         Instant now = Instant.now(clock);
-        Cuadre nuevo = Cuadre.builder()
-                .id(UUID.randomUUID())
-                .fecha(command.getFecha())
-                .puntoVentaId(command.getPuntoVentaId())
-                .estado(EstadoCuadre.BORRADOR)
-                .totalTirilla(command.getTotalTirilla())
-                .totalBancos(command.getTotalBancos())
-                .totalContable(command.getTotalContable())
-                .creadoPor(command.getCreadoPor())
-                .actualizadoPor(command.getCreadoPor())
-                .createdAt(now)
-                .updatedAt(now)
-                .version(0L)
-                .build();
+        Cuadre nuevo = new Cuadre(
+                UUID.randomUUID(),
+                command.getFecha(),
+                command.getPuntoVentaId(),
+                EstadoCuadre.BORRADOR,
+                command.getTotalTirilla(),
+                command.getTotalBancos(),
+                command.getTotalContable(),
+                null, // pdfPath
+                null, // checksumPdf
+                command.getCreadoPor(),
+                command.getCreadoPor(),
+                false, // firmadoElabora
+                false, // firmadoAutoriza
+                false, // firmadoAudita
+                now,
+                now,
+                0L
+        );
         return cuadreRepository.save(nuevo);
     }
 }

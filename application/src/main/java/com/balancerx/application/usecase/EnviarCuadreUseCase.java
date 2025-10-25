@@ -12,17 +12,23 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class EnviarCuadreUseCase {
     private final CuadreRepository cuadreRepository;
-    private final ArchivoRepository archivoRepository;
     private final ObservacionRepository observacionRepository;
+    private final ArchivoRepository archivoRepository;
     private final Clock clock;
+
+    public EnviarCuadreUseCase(CuadreRepository cuadreRepository, ObservacionRepository observacionRepository, 
+                               ArchivoRepository archivoRepository, Clock clock) {
+        this.cuadreRepository = cuadreRepository;
+        this.observacionRepository = observacionRepository;
+        this.archivoRepository = archivoRepository;
+        this.clock = clock;
+    }
 
     @Transactional
     public Cuadre handle(EnviarCuadreCommand command) {
@@ -40,14 +46,14 @@ public class EnviarCuadreUseCase {
         }
 
         if (command.isFueraDeCalendario()) {
-            Observacion observacion = Observacion.builder()
-                    .id(UUID.randomUUID())
-                    .cuadreId(cuadre.getId())
-                    .autorId(command.getUsuarioId())
-                    .severidad(SeveridadObservacion.WARNING)
-                    .texto("Fuera de calendario: " + command.getJustificacion())
-                    .createdAt(Instant.now(clock))
-                    .build();
+            Observacion observacion = new Observacion(
+                    UUID.randomUUID(),
+                    cuadre.getId(),
+                    command.getUsuarioId(),
+                    SeveridadObservacion.WARNING,
+                    "Fuera de calendario: " + command.getJustificacion(),
+                    Instant.now(clock)
+            );
             observacionRepository.save(observacion);
         }
 

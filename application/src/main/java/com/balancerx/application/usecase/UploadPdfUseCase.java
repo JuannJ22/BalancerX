@@ -14,12 +14,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class UploadPdfUseCase {
     private final CuadreRepository cuadreRepository;
     private final ArchivoRepository archivoRepository;
@@ -27,6 +25,17 @@ public class UploadPdfUseCase {
     private final OcrPipeline ocrPipeline;
     private final FileStoragePort fileStoragePort;
     private final Clock clock;
+
+    public UploadPdfUseCase(CuadreRepository cuadreRepository, ArchivoRepository archivoRepository,
+                           ObservacionRepository observacionRepository, OcrPipeline ocrPipeline,
+                           FileStoragePort fileStoragePort, Clock clock) {
+        this.cuadreRepository = cuadreRepository;
+        this.archivoRepository = archivoRepository;
+        this.observacionRepository = observacionRepository;
+        this.ocrPipeline = ocrPipeline;
+        this.fileStoragePort = fileStoragePort;
+        this.clock = clock;
+    }
 
     @Transactional
     public Archivo handle(UploadPdfCommand command) {
@@ -36,16 +45,16 @@ public class UploadPdfUseCase {
 
         FileStoragePort.StoredFile storedFile = fileStoragePort.storePdf(command.getNombreArchivo(), command.getContenido());
         Instant now = Instant.now(clock);
-        Archivo archivo = Archivo.builder()
-                .id(UUID.randomUUID())
-                .tipo(TipoArchivo.PDF)
-                .path(storedFile.path())
-                .checksum(storedFile.checksum())
-                .metadataJson("{}")
-                .subidoPor(command.getUsuarioId())
-                .cuadreId(cuadre.getId())
-                .createdAt(now)
-                .build();
+        Archivo archivo = new Archivo(
+                UUID.randomUUID(),
+                TipoArchivo.PDF,
+                storedFile.path(),
+                storedFile.checksum(),
+                "{}",
+                command.getUsuarioId(),
+                cuadre.getId(),
+                now
+        );
         archivoRepository.save(archivo);
 
         List<Observacion> observaciones = ocrPipeline.procesar(archivo);

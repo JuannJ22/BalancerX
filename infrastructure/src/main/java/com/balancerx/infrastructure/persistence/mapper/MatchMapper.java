@@ -29,17 +29,17 @@ public class MatchMapper {
     }
 
     public Match toDomain(JpaMatch entity) {
-        return Match.builder()
-                .id(entity.getId())
-                .movimientoBancarioId(entity.getMovimientoBancarioId())
-                .documentoId(entity.getDocumentoId())
-                .estrategia(entity.getEstrategia())
-                .score(entity.getScore())
-                .estado(entity.getEstado())
-                .razones(fromJson(entity.getRazonesJson()))
-                .decidedBy(entity.getDecidedBy())
-                .decidedAt(entity.getDecidedAt())
-                .build();
+        return new Match(
+                entity.getId(),
+                entity.getMovimientoBancarioId(),
+                entity.getDocumentoId(),
+                entity.getEstrategia(),
+                entity.getScore(),
+                entity.getEstado(),
+                fromJson(entity.getRazonesJson()),
+                entity.getDecidedBy(),
+                entity.getDecidedAt()
+        );
     }
 
     private Map<String, Object> fromJson(String json) {

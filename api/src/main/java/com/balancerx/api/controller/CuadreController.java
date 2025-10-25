@@ -42,31 +42,31 @@ public class CuadreController {
 
     @PostMapping
     public Cuadre crear(@RequestBody CreateCuadreRequest request) {
-        CreateCuadreCommand command = CreateCuadreCommand.builder()
-                .fecha(request.fecha())
-                .puntoVentaId(request.puntoVentaId())
-                .totalTirilla(request.totalTirilla())
-                .totalBancos(request.totalBancos())
-                .totalContable(request.totalContable())
-                .creadoPor(UUID.randomUUID())
-                .build();
+        CreateCuadreCommand command = new CreateCuadreCommand(
+                request.fecha(),
+                request.puntoVentaId(),
+                request.totalTirilla(),
+                request.totalBancos(),
+                request.totalContable(),
+                UUID.randomUUID()
+        );
         return createCuadreUseCase.handle(command);
     }
 
     @PostMapping("/{id}/preconciliar")
     public List<Match> preconciliar(@PathVariable UUID id) {
-        return preConciliarUseCase.handle(PreConciliarCommand.builder().cuadreId(id).usuarioId(UUID.randomUUID()).build());
+        return preConciliarUseCase.handle(new PreConciliarCommand(id, UUID.randomUUID()));
     }
 
     @PostMapping("/{id}/enviar")
     public Cuadre enviar(@PathVariable UUID id) {
         return enviarCuadreUseCase.handle(
-                EnviarCuadreCommand.builder().cuadreId(id).usuarioId(UUID.randomUUID()).build());
+                new EnviarCuadreCommand(id, UUID.randomUUID(), false, null));
     }
 
     @PostMapping("/{id}/aprobar")
     public Cuadre aprobar(@PathVariable UUID id) {
-        return aprobarCuadreUseCase.handle(AprobarCuadreCommand.builder().cuadreId(id).usuarioId(UUID.randomUUID()).build());
+        return aprobarCuadreUseCase.handle(new AprobarCuadreCommand(id, UUID.randomUUID()));
     }
 
     @GetMapping
@@ -86,7 +86,7 @@ public class CuadreController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate hasta,
             @RequestParam(required = false) UUID pvId) {
         return generarReporteUseCase.handle(
-                GenerarReporteQuery.builder().tipo(tipo).desde(desde).hasta(hasta).puntoVentaId(pvId).build());
+                new GenerarReporteQuery(tipo, desde, hasta, pvId));
     }
 
     @GetMapping("/{id}")

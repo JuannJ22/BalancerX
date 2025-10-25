@@ -1,9 +1,7 @@
 package com.balancerx.controller;
 
 import com.balancerx.model.entity.Cuadre;
-import com.balancerx.model.entity.PuntoVenta;
 import com.balancerx.model.service.CuadreService;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

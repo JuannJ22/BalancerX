@@ -39,4 +39,62 @@ public class JpaAjuste {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setCuadreId(UUID cuadreId) {
+        this.cuadreId = cuadreId;
+    }
+
+    public void setTipo(TipoAjuste tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setMonto(BigDecimal monto) {
+        this.monto = monto;
+    }
+
+    public void setMotivo(String motivo) {
+        this.motivo = motivo;
+    }
+
+    public void setAutorId(UUID autorId) {
+        this.autorId = autorId;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getCuadreId() {
+        return cuadreId;
+    }
+
+    public TipoAjuste getTipo() {
+        return tipo;
+    }
+
+    public BigDecimal getMonto() {
+        return monto;
+    }
+
+    public String getMotivo() {
+        return motivo;
+    }
+
+    public UUID getAutorId() {
+        return autorId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

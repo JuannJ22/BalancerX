@@ -20,13 +20,13 @@ public class ObservacionMapper {
     }
 
     public Observacion toDomain(JpaObservacion entity) {
-        return Observacion.builder()
-                .id(entity.getId())
-                .cuadreId(entity.getCuadreId())
-                .autorId(entity.getAutorId())
-                .severidad(entity.getSeveridad())
-                .texto(entity.getTexto())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        return new Observacion(
+                entity.getId(),
+                entity.getCuadreId(),
+                entity.getAutorId(),
+                entity.getSeveridad(),
+                entity.getTexto(),
+                entity.getCreatedAt()
+        );
     }
 }

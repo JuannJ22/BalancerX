@@ -22,28 +22,44 @@ class ReglasConciliacionServiceTest {
 
     @Test
     void conciliaExacto() {
-        Cuadre cuadre = Cuadre.builder()
-                .id(UUID.randomUUID())
-                .fecha(LocalDate.now())
-                .puntoVentaId(UUID.randomUUID())
-                .estado(EstadoCuadre.BORRADOR)
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
-                .version(0L)
-                .build();
+        Cuadre cuadre = new Cuadre(
+                UUID.randomUUID(),
+                LocalDate.now(),
+                UUID.randomUUID(),
+                EstadoCuadre.BORRADOR,
+                new BigDecimal("100000"),
+                new BigDecimal("100000"),
+                new BigDecimal("100000"),
+                null,
+                null,
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                false,
+                false,
+                false,
+                Instant.now(),
+                Instant.now(),
+                0L
+        );
         DocumentoContable documento = DocumentoContable.builder()
                 .id(UUID.randomUUID())
                 .tipo(TipoDocumentoContable.FACTURA)
                 .numero("FAC-1")
                 .fecha(LocalDate.now())
                 .valor(new BigDecimal("100000"))
+                .cuadreId(cuadre.getId())
                 .build();
         MovimientoBancario movimiento = MovimientoBancario.builder()
                 .id(UUID.randomUUID())
                 .tipo(TipoMovimientoBancario.TRANSFERENCIA)
+                .banco("BANCO_TEST")
                 .fecha(LocalDate.now())
                 .valor(new BigDecimal("100000"))
+                .referenciaBanco(null)
                 .fuente(FuenteMovimiento.CSV)
+                .asignadoPor(null)
+                .puntoVentaId(UUID.randomUUID())
+                .cuadreId(cuadre.getId())
                 .createdAt(Instant.now())
                 .version(0L)
                 .build();

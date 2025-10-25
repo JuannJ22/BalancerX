@@ -21,14 +21,14 @@ public class UsuarioMapper {
     }
 
     public Usuario toDomain(JpaUsuario entity) {
-        return Usuario.builder()
-                .id(entity.getId())
-                .nombre(entity.getNombre())
-                .email(entity.getEmail())
-                .rol(entity.getRol())
-                .hashPassword(entity.getHashPassword())
-                .activo(entity.isActivo())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        return new Usuario(
+                entity.getId(),
+                entity.getNombre(),
+                entity.getEmail(),
+                entity.getRol(),
+                entity.getHashPassword(),
+                entity.isActivo(),
+                entity.getCreatedAt()
+        );
     }
 }

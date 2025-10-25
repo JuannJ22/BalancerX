@@ -21,14 +21,14 @@ public class AjusteMapper {
     }
 
     public Ajuste toDomain(JpaAjuste entity) {
-        return Ajuste.builder()
-                .id(entity.getId())
-                .cuadreId(entity.getCuadreId())
-                .tipo(entity.getTipo())
-                .monto(entity.getMonto())
-                .motivo(entity.getMotivo())
-                .autorId(entity.getAutorId())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        return new Ajuste(
+                entity.getId(),
+                entity.getCuadreId(),
+                entity.getTipo(),
+                entity.getMonto(),
+                entity.getMotivo(),
+                entity.getAutorId(),
+                entity.getCreatedAt()
+        );
     }
 }

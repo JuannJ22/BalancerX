@@ -5,16 +5,18 @@ import com.balancerx.domain.model.Cuadre;
 import com.balancerx.domain.model.MovimientoBancario;
 import com.balancerx.domain.repository.CuadreRepository;
 import com.balancerx.domain.repository.MovimientoBancarioRepository;
-import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class AsignarMovimientoUseCase {
-    private final MovimientoBancarioRepository movimientoBancarioRepository;
     private final CuadreRepository cuadreRepository;
+    private final MovimientoBancarioRepository movimientoBancarioRepository;
+
+    public AsignarMovimientoUseCase(CuadreRepository cuadreRepository, MovimientoBancarioRepository movimientoBancarioRepository) {
+        this.cuadreRepository = cuadreRepository;
+        this.movimientoBancarioRepository = movimientoBancarioRepository;
+    }
 
     @Transactional
     public MovimientoBancario handle(AsignarMovimientoCommand command) {
@@ -25,10 +27,9 @@ public class AsignarMovimientoUseCase {
                 .findById(command.getMovimientoId())
                 .orElseThrow(() -> new IllegalArgumentException("Movimiento no encontrado"));
 
-        MovimientoBancario actualizado = movimiento.toBuilder()
-                .cuadreId(cuadre.getId())
-                .asignadoPor(command.getUsuarioId())
-                .build();
+        MovimientoBancario actualizado = movimiento
+                .withCuadreId(cuadre.getId())
+                .withAsignadoPor(command.getUsuarioId());
         return movimientoBancarioRepository.save(actualizado);
     }
 }

@@ -30,8 +30,9 @@ public class ReglasConciliacionService implements ConciliacionService {
             Cuadre cuadre, List<DocumentoContable> documentos, List<MovimientoBancario> movimientos) {
         List<Match> matches = new ArrayList<>();
         Set<UUID> movimientosUsados = new HashSet<>();
-        documentos.sort(Comparator.comparing(DocumentoContable::getValor).reversed());
-        for (DocumentoContable documento : documentos) {
+        List<DocumentoContable> documentosOrdenados = new ArrayList<>(documentos);
+        documentosOrdenados.sort(Comparator.comparing(DocumentoContable::getValor).reversed());
+        for (DocumentoContable documento : documentosOrdenados) {
             Optional<MovimientoBancario> matchExacto = movimientos.stream()
                     .filter(mov -> !movimientosUsados.contains(mov.getId()))
                     .filter(mov -> mismaFecha(documento, mov))
@@ -89,31 +90,36 @@ public class ReglasConciliacionService implements ConciliacionService {
                 .collect(Collectors.toSet());
         documentos.stream()
                 .filter(doc -> !documentosConciliados.contains(doc.getId()))
-                .forEach(doc -> matches.add(Match.builder()
-                        .id(UUID.randomUUID())
-                        .documentoId(doc.getId())
-                        .estrategia(EstrategiaMatch.FUZZY_REF_PLUS_TOLERANCE)
-                        .estado(EstadoMatch.PROPUESTO)
-                        .score(BigDecimal.ZERO)
-                        .razones(Map.of("detalle", "Sin coincidencias automáticas"))
-                        .build()));
+                .forEach(doc -> matches.add(new Match(
+                        UUID.randomUUID(),
+                        null,
+                        doc.getId(),
+                        EstrategiaMatch.FUZZY_REF_PLUS_TOLERANCE,
+                        BigDecimal.ZERO,
+                        EstadoMatch.PROPUESTO,
+                        Map.of("detalle", "Sin coincidencias automáticas"),
+                        null,
+                        null
+                )));
 
         return matches;
     }
 
     private Match crearMatch(DocumentoContable documento, MovimientoBancario movimiento, EstrategiaMatch estrategia, BigDecimal score) {
-        return Match.builder()
-                .id(UUID.randomUUID())
-                .movimientoBancarioId(movimiento.getId())
-                .documentoId(documento.getId())
-                .estrategia(estrategia)
-                .score(score)
-                .estado(EstadoMatch.PROPUESTO)
-                .razones(Map.of(
-                        "documento", documento.getNumero(),
-                        "movimiento", movimiento.getReferenciaBanco(),
-                        "delta", movimiento.getValor().subtract(documento.getValor()).abs().toPlainString()))
-                .build();
+        return new Match(
+                UUID.randomUUID(),
+                movimiento.getId(),
+                documento.getId(),
+                estrategia,
+                score,
+                EstadoMatch.PROPUESTO,
+                Map.of(
+                        "documento", documento.getNumero() != null ? documento.getNumero() : "",
+                        "movimiento", movimiento.getReferenciaBanco() != null ? movimiento.getReferenciaBanco() : "",
+                        "delta", movimiento.getValor().subtract(documento.getValor()).abs().toPlainString()),
+                null,
+                null
+        );
     }
 
     private boolean mismaFecha(DocumentoContable documento, MovimientoBancario movimiento) {

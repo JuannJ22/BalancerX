@@ -8,16 +8,22 @@ import com.balancerx.domain.repository.DocumentoContableRepository;
 import com.balancerx.domain.valueobject.TipoArchivo;
 import java.util.List;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class ImportarDocumentosUseCase {
     private final CuadreRepository cuadreRepository;
     private final DocumentoContableRepository documentoContableRepository;
     private final ImportadorDocumentosPort importadorDocumentosPort;
+
+    public ImportarDocumentosUseCase(CuadreRepository cuadreRepository, 
+                                   DocumentoContableRepository documentoContableRepository,
+                                   ImportadorDocumentosPort importadorDocumentosPort) {
+        this.cuadreRepository = cuadreRepository;
+        this.documentoContableRepository = documentoContableRepository;
+        this.importadorDocumentosPort = importadorDocumentosPort;
+    }
 
     @Transactional
     public List<DocumentoContable> handle(ImportDocumentosCommand command) {
@@ -33,7 +39,7 @@ public class ImportarDocumentosUseCase {
         };
 
         List<DocumentoContable> enriquecidos = documentos.stream()
-                .map(doc -> doc.toBuilder().cuadreId(command.getCuadreId()).build())
+                .map(doc -> doc.withCuadreId(command.getCuadreId()))
                 .collect(Collectors.toList());
         documentoContableRepository.saveAll(enriquecidos);
         return enriquecidos;

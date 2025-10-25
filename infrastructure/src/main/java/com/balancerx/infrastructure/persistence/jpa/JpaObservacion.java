@@ -37,4 +37,54 @@ public class JpaObservacion {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setCuadreId(UUID cuadreId) {
+        this.cuadreId = cuadreId;
+    }
+
+    public void setAutorId(UUID autorId) {
+        this.autorId = autorId;
+    }
+
+    public void setSeveridad(SeveridadObservacion severidad) {
+        this.severidad = severidad;
+    }
+
+    public void setTexto(String texto) {
+        this.texto = texto;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getCuadreId() {
+        return cuadreId;
+    }
+
+    public UUID getAutorId() {
+        return autorId;
+    }
+
+    public SeveridadObservacion getSeveridad() {
+        return severidad;
+    }
+
+    public String getTexto() {
+        return texto;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
 }

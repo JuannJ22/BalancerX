@@ -12,4 +12,11 @@ public class GenerarReporteQuery {
     LocalDate desde;
     LocalDate hasta;
     UUID puntoVentaId;
+    
+    public GenerarReporteQuery(String tipo, LocalDate desde, LocalDate hasta, UUID puntoVentaId) {
+        this.tipo = tipo;
+        this.desde = desde;
+        this.hasta = hasta;
+        this.puntoVentaId = puntoVentaId;
+    }
 }

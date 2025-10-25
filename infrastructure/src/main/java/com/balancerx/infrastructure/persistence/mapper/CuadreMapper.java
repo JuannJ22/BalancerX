@@ -31,24 +31,24 @@ public class CuadreMapper {
     }
 
     public Cuadre toDomain(JpaCuadre entity) {
-        return Cuadre.builder()
-                .id(entity.getId())
-                .fecha(entity.getFecha())
-                .puntoVentaId(entity.getPuntoVentaId())
-                .estado(entity.getEstado())
-                .totalTirilla(entity.getTotalTirilla())
-                .totalBancos(entity.getTotalBancos())
-                .totalContable(entity.getTotalContable())
-                .pdfPath(entity.getPdfPath())
-                .checksumPdf(entity.getChecksumPdf())
-                .creadoPor(entity.getCreadoPor())
-                .actualizadoPor(entity.getActualizadoPor())
-                .firmadoElabora(entity.isFirmadoElabora())
-                .firmadoAutoriza(entity.isFirmadoAutoriza())
-                .firmadoAudita(entity.isFirmadoAudita())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .version(entity.getVersion())
-                .build();
+        return new Cuadre(
+                entity.getId(),
+                entity.getFecha(),
+                entity.getPuntoVentaId(),
+                entity.getEstado(),
+                entity.getTotalTirilla(),
+                entity.getTotalBancos(),
+                entity.getTotalContable(),
+                entity.getPdfPath(),
+                entity.getChecksumPdf(),
+                entity.getCreadoPor(),
+                entity.getActualizadoPor(),
+                entity.isFirmadoElabora(),
+                entity.isFirmadoAutoriza(),
+                entity.isFirmadoAudita(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt(),
+                entity.getVersion()
+        );
     }
 }

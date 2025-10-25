@@ -49,4 +49,78 @@ public class JpaMatch {
 
     @Column(name = "decided_at")
     private Instant decidedAt;
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setMovimientoBancarioId(UUID movimientoBancarioId) {
+        this.movimientoBancarioId = movimientoBancarioId;
+    }
+
+    public void setDocumentoId(UUID documentoId) {
+        this.documentoId = documentoId;
+    }
+
+    public void setEstrategia(EstrategiaMatch estrategia) {
+        this.estrategia = estrategia;
+    }
+
+    public void setScore(BigDecimal score) {
+        this.score = score;
+    }
+
+    public void setEstado(EstadoMatch estado) {
+        this.estado = estado;
+    }
+
+    public void setRazonesJson(String razonesJson) {
+        this.razonesJson = razonesJson;
+    }
+
+    public void setDecidedBy(UUID decidedBy) {
+        this.decidedBy = decidedBy;
+    }
+
+    public void setDecidedAt(Instant decidedAt) {
+        this.decidedAt = decidedAt;
+    }
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public UUID getMovimientoBancarioId() {
+        return movimientoBancarioId;
+    }
+
+    public UUID getDocumentoId() {
+        return documentoId;
+    }
+
+    public EstrategiaMatch getEstrategia() {
+        return estrategia;
+    }
+
+    public BigDecimal getScore() {
+        return score;
+    }
+
+    public EstadoMatch getEstado() {
+        return estado;
+    }
+
+    public String getRazonesJson() {
+        return razonesJson;
+    }
+
+    public UUID getDecidedBy() {
+        return decidedBy;
+    }
+
+    public Instant getDecidedAt() {
+        return decidedAt;
+    }
 }

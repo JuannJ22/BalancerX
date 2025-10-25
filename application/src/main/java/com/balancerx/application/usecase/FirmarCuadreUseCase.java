@@ -8,17 +8,28 @@ import com.balancerx.domain.repository.CuadreRepository;
 import com.balancerx.domain.repository.FirmaRepository;
 import com.balancerx.domain.repository.UsuarioRepository;
 import com.balancerx.domain.service.FirmaAutomaticaService;
-import lombok.RequiredArgsConstructor;
+import com.balancerx.domain.valueobject.RolUsuario;
+import java.time.Clock;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class FirmarCuadreUseCase {
     private final CuadreRepository cuadreRepository;
-    private final UsuarioRepository usuarioRepository;
     private final FirmaRepository firmaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final FirmaAutomaticaService firmaAutomaticaService;
+    private final Clock clock;
+
+    public FirmarCuadreUseCase(CuadreRepository cuadreRepository, FirmaRepository firmaRepository, 
+                               UsuarioRepository usuarioRepository, FirmaAutomaticaService firmaAutomaticaService, 
+                               Clock clock) {
+        this.cuadreRepository = cuadreRepository;
+        this.firmaRepository = firmaRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.firmaAutomaticaService = firmaAutomaticaService;
+        this.clock = clock;
+    }
 
     @Transactional
     public Firma handle(FirmarCuadreCommand command) {

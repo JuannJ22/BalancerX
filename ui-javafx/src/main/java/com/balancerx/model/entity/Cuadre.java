@@ -30,7 +30,7 @@ public class Cuadre {
      * Enumeración para los posibles estados de un cuadre.
      */
     public enum EstadoCuadre {
-        BORRADOR, ENVIADO, OBSERVADO, APROBADO, RECHAZADO
+        BORRADOR, ENVIADO, OBSERVADO, APROBADO, RECHAZADO, PENDIENTE
     }
 
     // Constructores

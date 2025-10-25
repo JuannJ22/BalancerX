@@ -7,13 +7,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.With;
 
-@Getter
-@Builder(toBuilder = true)
-@With
 public class Cuadre {
     private final UUID id;
     private final LocalDate fecha;
@@ -33,12 +27,51 @@ public class Cuadre {
     private final Instant updatedAt;
     private final long version;
 
+    public Cuadre(UUID id, LocalDate fecha, UUID puntoVentaId, EstadoCuadre estado,
+                  BigDecimal totalTirilla, BigDecimal totalBancos, BigDecimal totalContable,
+                  String pdfPath, String checksumPdf, UUID creadoPor, UUID actualizadoPor,
+                  boolean firmadoElabora, boolean firmadoAutoriza, boolean firmadoAudita,
+                  Instant createdAt, Instant updatedAt, long version) {
+        this.id = id;
+        this.fecha = fecha;
+        this.puntoVentaId = puntoVentaId;
+        this.estado = estado;
+        this.totalTirilla = totalTirilla;
+        this.totalBancos = totalBancos;
+        this.totalContable = totalContable;
+        this.pdfPath = pdfPath;
+        this.checksumPdf = checksumPdf;
+        this.creadoPor = creadoPor;
+        this.actualizadoPor = actualizadoPor;
+        this.firmadoElabora = firmadoElabora;
+        this.firmadoAutoriza = firmadoAutoriza;
+        this.firmadoAudita = firmadoAudita;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.version = version;
+    }
+
     public Cuadre changeEstado(EstadoCuadre nuevoEstado, UUID actorId) {
         Objects.requireNonNull(nuevoEstado, "nuevoEstado");
-        return toBuilder()
-                .estado(nuevoEstado)
-                .actualizadoPor(actorId)
-                .build();
+        return new Cuadre(
+                this.id,
+                this.fecha,
+                this.puntoVentaId,
+                nuevoEstado,
+                this.totalTirilla,
+                this.totalBancos,
+                this.totalContable,
+                this.pdfPath,
+                this.checksumPdf,
+                this.creadoPor,
+                actorId,
+                this.firmadoElabora,
+                this.firmadoAutoriza,
+                this.firmadoAudita,
+                this.createdAt,
+                this.updatedAt,
+                this.version
+        );
     }
 
     public boolean isFirmadoPorElabora() {
@@ -59,5 +92,66 @@ public class Cuadre {
 
     public Optional<String> getChecksumPdf() {
         return Optional.ofNullable(checksumPdf);
+    }
+
+    // Getters
+    public UUID getId() {
+        return id;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public UUID getPuntoVentaId() {
+        return puntoVentaId;
+    }
+
+    public EstadoCuadre getEstado() {
+        return estado;
+    }
+
+    public BigDecimal getTotalTirilla() {
+        return totalTirilla;
+    }
+
+    public BigDecimal getTotalBancos() {
+        return totalBancos;
+    }
+
+    public BigDecimal getTotalContable() {
+        return totalContable;
+    }
+
+    public UUID getCreadoPor() {
+        return creadoPor;
+    }
+
+    public UUID getActualizadoPor() {
+        return actualizadoPor;
+    }
+
+    public boolean isFirmadoElabora() {
+        return firmadoElabora;
+    }
+
+    public boolean isFirmadoAutoriza() {
+        return firmadoAutoriza;
+    }
+
+    public boolean isFirmadoAudita() {
+        return firmadoAudita;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
     }
 }

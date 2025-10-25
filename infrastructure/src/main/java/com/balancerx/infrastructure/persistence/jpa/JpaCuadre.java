@@ -71,4 +71,13 @@ public class JpaCuadre {
 
     @Version
     private long version;
+
+    // Métodos getter manuales para resolver errores de compilación
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
 }
