@@ -1,5 +1,6 @@
 package com.balancerx.viewcontroller;
 
+import com.balancerx.AppContext;
 import com.balancerx.controller.PuntoVentaController;
 import com.balancerx.model.entity.PuntoVenta;
 import com.balancerx.model.entity.Usuario;
@@ -8,7 +9,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import java.time.LocalDateTime;
 
 /**
  * Controlador de vista para la gestión de puntos de venta.
@@ -68,31 +68,42 @@ public class PuntosVentaViewController {
     
     @FXML
     private Button btnLimpiarBusqueda;
-    
+
+    @FXML
+    private Button btnEliminar;
+
     private PuntoVentaController puntoVentaController;
     private ObservableList<PuntoVenta> puntosVentaList;
     private ObservableList<PuntoVenta> puntosVentaListFiltrada;
     private Usuario usuarioActual;
     private PuntoVenta puntoVentaSeleccionado;
-    
+    private AppContext appContext;
+
     /**
      * Inicializa el controlador con el usuario autenticado.
      * @param usuario Usuario autenticado
      */
     public void inicializar(Usuario usuario) {
         this.usuarioActual = usuario;
-        this.puntoVentaController = new PuntoVentaController(new com.balancerx.model.service.impl.PuntoVentaServiceImpl());
+        if (puntoVentaController == null) {
+            setAppContext(AppContext.getInstance());
+        }
         this.puntosVentaList = FXCollections.observableArrayList();
         this.puntosVentaListFiltrada = FXCollections.observableArrayList();
-        
+
         // Configurar la tabla
         configurarTabla();
-        
+
         // Cargar datos
         cargarPuntosVenta();
-        
+
         // Configurar eventos
         configurarEventos();
+    }
+
+    public void setAppContext(AppContext appContext) {
+        this.appContext = appContext;
+        this.puntoVentaController = appContext.getPuntoVentaController();
     }
     
     /**
@@ -101,34 +112,33 @@ public class PuntosVentaViewController {
     private void configurarTabla() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
+        colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
         colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
         colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
-        
+
         tablaPuntosVenta.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 puntoVentaSeleccionado = newSelection;
                 mostrarDetallesPuntoVenta(puntoVentaSeleccionado);
+                btnEliminar.setDisable(false);
+            } else {
+                puntoVentaSeleccionado = null;
+                btnEliminar.setDisable(true);
             }
         });
     }
-    
+
     /**
      * Carga los puntos de venta en la tabla.
      */
     private void cargarPuntosVenta() {
         try {
-            puntosVentaList.clear();
-            // En una implementación real, esto cargaría desde el controlador
-            // puntosVentaList.addAll(puntoVentaController.obtenerTodos());
-            
-            // Por ahora, agregamos datos de ejemplo
-            puntosVentaList.add(new PuntoVenta(1L, "PV001", "Punto de Venta Centro", "Calle 123 #45-67", "555-0001", "centro@balancerx.com", true, LocalDateTime.now()));
-            puntosVentaList.add(new PuntoVenta(2L, "PV002", "Punto de Venta Norte", "Carrera 89 #12-34", "555-0002", "norte@balancerx.com", true, LocalDateTime.now()));
-            puntosVentaList.add(new PuntoVenta(3L, "PV003", "Punto de Venta Sur", "Avenida 56 #78-90", "555-0003", "sur@balancerx.com", false, LocalDateTime.now()));
-            
+            puntosVentaList.setAll(puntoVentaController.obtenerTodos());
             tablaPuntosVenta.setItems(puntosVentaList);
+            tablaPuntosVenta.getSelectionModel().clearSelection();
+            actualizarTextoBotonEstado();
         } catch (Exception e) {
             mostrarError("Error al cargar puntos de venta", e.getMessage());
         }
@@ -142,7 +152,8 @@ public class PuntosVentaViewController {
         btnGuardar.setOnAction(event -> guardarPuntoVenta());
         btnBuscar.setOnAction(event -> buscarPuntosVenta());
         btnLimpiarBusqueda.setOnAction(event -> limpiarBusqueda());
-        
+        btnEliminar.setOnAction(event -> cambiarEstadoPuntoVenta());
+
         // Búsqueda en tiempo real
         txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.trim().isEmpty()) {
@@ -162,6 +173,7 @@ public class PuntosVentaViewController {
         txtTelefono.setText(puntoVenta.getTelefono());
         txtEmail.setText(puntoVenta.getEmail());
         chkActivo.setSelected(puntoVenta.isActivo());
+        actualizarTextoBotonEstado();
     }
     
     /**
@@ -176,6 +188,9 @@ public class PuntosVentaViewController {
         txtEmail.clear();
         chkActivo.setSelected(true);
         txtCodigo.requestFocus();
+        puntoVentaSeleccionado = null;
+        btnEliminar.setDisable(true);
+        actualizarTextoBotonEstado();
     }
     
     /**
@@ -189,41 +204,57 @@ public class PuntosVentaViewController {
             String telefono = txtTelefono.getText().trim();
             String email = txtEmail.getText().trim();
             boolean activo = chkActivo.isSelected();
-            
+
             if (codigo.isEmpty() || nombre.isEmpty()) {
                 mostrarError("Error de validación", "El código y nombre del punto de venta son obligatorios");
                 return;
             }
-            
+
             if (puntoVentaSeleccionado == null) {
                 // Crear nuevo punto de venta
-                PuntoVenta nuevoPuntoVenta = new PuntoVenta(null, codigo, nombre, direccion, telefono, email, activo, LocalDateTime.now());
-                // En una implementación real, esto guardaría usando el controlador
-                // puntoVentaController.guardar(nuevoPuntoVenta);
-                
-                // Por ahora, simulamos la asignación de un ID
-                nuevoPuntoVenta.setId((long) (puntosVentaList.size() + 1));
+                PuntoVenta nuevoPuntoVenta = puntoVentaController.guardar(codigo, nombre, direccion, telefono, email, activo);
                 puntosVentaList.add(nuevoPuntoVenta);
             } else {
                 // Actualizar punto de venta existente
-                puntoVentaSeleccionado.setCodigo(codigo);
-                puntoVentaSeleccionado.setNombre(nombre);
-                puntoVentaSeleccionado.setDireccion(direccion);
-                puntoVentaSeleccionado.setTelefono(telefono);
-                puntoVentaSeleccionado.setEmail(email);
-                puntoVentaSeleccionado.setActivo(activo);
-                // En una implementación real, esto actualizaría usando el controlador
-                // puntoVentaController.actualizar(puntoVentaSeleccionado);
-                
-                // Actualizar la tabla
+                puntoVentaSeleccionado = puntoVentaController.actualizar(
+                        puntoVentaSeleccionado.getId(), codigo, nombre, direccion, telefono, email, activo);
                 tablaPuntosVenta.refresh();
+                actualizarTextoBotonEstado();
             }
-            
+
             limpiarFormulario();
             mostrarMensaje("Punto de venta guardado", "El punto de venta ha sido guardado correctamente.");
+            cargarPuntosVenta();
         } catch (Exception e) {
             mostrarError("Error al guardar punto de venta", e.getMessage());
         }
+    }
+
+    private void cambiarEstadoPuntoVenta() {
+        if (puntoVentaSeleccionado == null) {
+            mostrarError("Sin selección", "Seleccione un punto de venta para cambiar su estado");
+            return;
+        }
+
+        boolean nuevoEstado = !puntoVentaSeleccionado.isActivo();
+
+        if (!nuevoEstado) {
+            puntoVentaController.desactivar(puntoVentaSeleccionado.getId());
+        } else {
+            puntoVentaSeleccionado = puntoVentaController.actualizar(
+                    puntoVentaSeleccionado.getId(),
+                    puntoVentaSeleccionado.getCodigo(),
+                    puntoVentaSeleccionado.getNombre(),
+                    puntoVentaSeleccionado.getDireccion(),
+                    puntoVentaSeleccionado.getTelefono(),
+                    puntoVentaSeleccionado.getEmail(),
+                    true
+            );
+        }
+
+        puntoVentaSeleccionado.setActivo(nuevoEstado);
+        tablaPuntosVenta.refresh();
+        actualizarTextoBotonEstado();
     }
     
     /**
@@ -262,11 +293,11 @@ public class PuntosVentaViewController {
         
         for (PuntoVenta puntoVenta : puntosVentaList) {
             boolean coincide = textoBusqueda.isEmpty() ||
-                puntoVenta.getCodigo().toLowerCase().contains(textoBusqueda) ||
-                puntoVenta.getNombre().toLowerCase().contains(textoBusqueda) ||
-                puntoVenta.getDireccion().toLowerCase().contains(textoBusqueda) ||
-                puntoVenta.getTelefono().toLowerCase().contains(textoBusqueda) ||
-                puntoVenta.getEmail().toLowerCase().contains(textoBusqueda);
+                containsIgnoreCase(puntoVenta.getCodigo(), textoBusqueda) ||
+                containsIgnoreCase(puntoVenta.getNombre(), textoBusqueda) ||
+                containsIgnoreCase(puntoVenta.getDireccion(), textoBusqueda) ||
+                containsIgnoreCase(puntoVenta.getTelefono(), textoBusqueda) ||
+                containsIgnoreCase(puntoVenta.getEmail(), textoBusqueda);
             
             if (coincide) {
                 puntosVentaListFiltrada.add(puntoVenta);
@@ -275,12 +306,35 @@ public class PuntosVentaViewController {
         
         tablaPuntosVenta.setItems(puntosVentaListFiltrada);
     }
-    
+
     /**
      * Limpia la búsqueda y muestra todos los puntos de venta.
      */
     private void limpiarBusqueda() {
         txtBuscar.clear();
         tablaPuntosVenta.setItems(puntosVentaList);
+        tablaPuntosVenta.refresh();
+        puntosVentaListFiltrada.clear();
+        actualizarTextoBotonEstado();
+    }
+
+    private void actualizarTextoBotonEstado() {
+        if (btnEliminar == null) {
+            return;
+        }
+
+        if (puntoVentaSeleccionado == null) {
+            btnEliminar.setText("Desactivar");
+            return;
+        }
+
+        btnEliminar.setText(puntoVentaSeleccionado.isActivo() ? "Desactivar" : "Activar");
+    }
+
+    private boolean containsIgnoreCase(String value, String search) {
+        if (value == null) {
+            return false;
+        }
+        return value.toLowerCase().contains(search);
     }
 }

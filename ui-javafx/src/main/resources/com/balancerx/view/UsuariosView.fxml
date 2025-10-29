@@ -78,7 +78,7 @@
                 <Region VBox.vgrow="ALWAYS" />
                 
                 <HBox spacing="12.0" alignment="CENTER_RIGHT">
-                    <Button fx:id="btnEliminar" text="Eliminar" styleClass="button, secondary" />
+                    <Button fx:id="btnEliminar" text="Desactivar" styleClass="button, secondary" />
                     <Button fx:id="btnGuardar" text="Guardar" styleClass="button" />
                 </HBox>
             </VBox>

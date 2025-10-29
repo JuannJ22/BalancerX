@@ -1,5 +1,6 @@
 package com.balancerx.viewcontroller;
 
+import com.balancerx.AppContext;
 import com.balancerx.controller.UsuarioController;
 import com.balancerx.model.entity.Usuario;
 import javafx.collections.FXCollections;
@@ -8,9 +9,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controlador de vista para la gestión de usuarios.
@@ -64,12 +65,16 @@ public class UsuariosViewController {
     
     @FXML
     private Button btnLimpiarBusqueda;
-    
+
+    @FXML
+    private Button btnEliminar;
+
     private UsuarioController usuarioController;
     private ObservableList<Usuario> usuariosList;
     private ObservableList<Usuario> usuariosListFiltrada;
     private Usuario usuarioActual;
     private Usuario usuarioSeleccionado;
+    private AppContext appContext;
     
     /**
      * Inicializa el controlador con el usuario autenticado.
@@ -77,10 +82,12 @@ public class UsuariosViewController {
      */
     public void inicializar(Usuario usuario) {
         this.usuarioActual = usuario;
-        this.usuarioController = new UsuarioController(new com.balancerx.model.service.impl.UsuarioServiceImpl());
+        if (usuarioController == null) {
+            setAppContext(AppContext.getInstance());
+        }
         this.usuariosList = FXCollections.observableArrayList();
         this.usuariosListFiltrada = FXCollections.observableArrayList();
-        
+
         // Configurar la tabla
         configurarTabla();
         
@@ -92,6 +99,11 @@ public class UsuariosViewController {
         
         // Configurar eventos
         configurarEventos();
+    }
+
+    public void setAppContext(AppContext appContext) {
+        this.appContext = appContext;
+        this.usuarioController = appContext.getUsuarioController();
     }
     
     /**
@@ -108,6 +120,10 @@ public class UsuariosViewController {
             if (newSelection != null) {
                 usuarioSeleccionado = newSelection;
                 mostrarDetallesUsuario(usuarioSeleccionado);
+                btnEliminar.setDisable(false);
+            } else {
+                usuarioSeleccionado = null;
+                btnEliminar.setDisable(true);
             }
         });
     }
@@ -120,8 +136,10 @@ public class UsuariosViewController {
         List<String> roles = Arrays.asList("ADMIN", "ELABORADOR", "BANCO", "ASIGNADOR", "AUDITOR");
         cbRol.setItems(FXCollections.observableArrayList(roles));
         cbRol.getSelectionModel().selectFirst();
-        
+
         chkActivo.setSelected(true);
+
+        btnEliminar.setDisable(true);
     }
     
     /**
@@ -129,17 +147,10 @@ public class UsuariosViewController {
      */
     private void cargarUsuarios() {
         try {
-            usuariosList.clear();
-            // En una implementación real, esto cargaría desde el controlador
-            // usuariosList.addAll(usuarioController.obtenerTodos());
-            
-            // Por ahora, agregamos datos de ejemplo
-            Usuario admin = new Usuario(1L, "Administrador", "admin@balancerx.com", "ADMIN", "hash123", true, LocalDateTime.now());
-            Usuario elaborador = new Usuario(2L, "Elaborador", "elaborador@balancerx.com", "ELABORADOR", "hash456", true, LocalDateTime.now());
-            Usuario auditor = new Usuario(3L, "Auditor", "auditor@balancerx.com", "AUDITOR", "hash789", true, LocalDateTime.now());
-            
-            usuariosList.addAll(admin, elaborador, auditor);
+            usuariosList.setAll(usuarioController.obtenerTodosLosUsuarios());
             tablaUsuarios.setItems(usuariosList);
+            tablaUsuarios.getSelectionModel().clearSelection();
+            actualizarTextoBotonEstado();
         } catch (Exception e) {
             mostrarError("Error al cargar usuarios", e.getMessage());
         }
@@ -153,7 +164,8 @@ public class UsuariosViewController {
         btnGuardar.setOnAction(event -> guardarUsuario());
         btnBuscar.setOnAction(event -> buscarUsuarios());
         btnLimpiarBusqueda.setOnAction(event -> limpiarBusqueda());
-        
+        btnEliminar.setOnAction(event -> cambiarEstadoUsuario());
+
         // Búsqueda en tiempo real
         txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.trim().isEmpty()) {
@@ -172,6 +184,7 @@ public class UsuariosViewController {
         txtPassword.clear(); // No mostramos la contraseña por seguridad
         cbRol.setValue(usuario.getRol());
         chkActivo.setSelected(usuario.isActivo());
+        actualizarTextoBotonEstado();
     }
     
     /**
@@ -185,6 +198,8 @@ public class UsuariosViewController {
         cbRol.getSelectionModel().selectFirst();
         chkActivo.setSelected(true);
         txtNombre.requestFocus();
+        btnEliminar.setDisable(true);
+        actualizarTextoBotonEstado();
     }
     
     /**
@@ -197,7 +212,7 @@ public class UsuariosViewController {
             String password = txtPassword.getText();
             String rol = cbRol.getValue();
             boolean activo = chkActivo.isSelected();
-            
+
             // Validaciones
             if (nombre.isEmpty() || email.isEmpty()) {
                 mostrarError("Error de validación", "El nombre y el email son obligatorios");
@@ -208,42 +223,48 @@ public class UsuariosViewController {
                 mostrarError("Error de validación", "La contraseña es obligatoria para nuevos usuarios");
                 return;
             }
-            
+
             if (usuarioSeleccionado == null) {
                 // Crear nuevo usuario
-                Usuario nuevoUsuario = new Usuario(null, nombre, email, rol, "hash_" + password, activo, LocalDateTime.now());
-                
-                // En una implementación real, esto guardaría usando el controlador
-                // usuarioController.registrar(nombre, email, password, rol);
-                
-                // Por ahora, simulamos la asignación de un ID
-                nuevoUsuario.setId((long) (usuariosList.size() + 1));
+                Usuario nuevoUsuario = usuarioController.registrarUsuario(nombre, email, password, rol, activo);
                 usuariosList.add(nuevoUsuario);
             } else {
                 // Actualizar usuario existente
-                usuarioSeleccionado.setNombre(nombre);
-                usuarioSeleccionado.setEmail(email);
-                usuarioSeleccionado.setRol(rol);
-                usuarioSeleccionado.setActivo(activo);
-                
-                if (!password.isEmpty()) {
-                    usuarioSeleccionado.setHashPassword("hash_" + password);
+                Optional<Usuario> actualizado = usuarioController.actualizarUsuario(
+                        usuarioSeleccionado.getId(), nombre, email, rol, activo, password.isEmpty() ? null : password);
+
+                if (actualizado.isPresent()) {
+                    usuarioSeleccionado = actualizado.get();
+                    tablaUsuarios.refresh();
+                    actualizarTextoBotonEstado();
+                } else {
+                    mostrarError("Usuario no encontrado", "No se pudo actualizar el usuario seleccionado");
                 }
-                
-                // En una implementación real, esto actualizaría usando el controlador
-                // usuarioController.actualizar(usuarioSeleccionado.getId(), nombre, email, rol);
-                // if (!password.isEmpty()) {
-                //     usuarioController.cambiarPassword(usuarioSeleccionado.getId(), password);
-                // }
-                
-                // Actualizar la tabla
-                tablaUsuarios.refresh();
             }
-            
+
             limpiarFormulario();
             mostrarMensaje("Usuario guardado", "El usuario ha sido guardado correctamente.");
+            cargarUsuarios();
         } catch (Exception e) {
             mostrarError("Error al guardar usuario", e.getMessage());
+        }
+    }
+
+    private void cambiarEstadoUsuario() {
+        if (usuarioSeleccionado == null) {
+            mostrarError("Sin selección", "Seleccione un usuario para cambiar su estado");
+            return;
+        }
+
+        boolean nuevoEstado = !usuarioSeleccionado.isActivo();
+        Optional<Usuario> actualizado = usuarioController.cambiarEstadoActivacion(usuarioSeleccionado.getId(), nuevoEstado);
+
+        if (actualizado.isPresent()) {
+            usuarioSeleccionado = actualizado.get();
+            tablaUsuarios.refresh();
+            actualizarTextoBotonEstado();
+        } else {
+            mostrarError("Error", "No se pudo actualizar el estado del usuario");
         }
     }
     
@@ -292,7 +313,7 @@ public class UsuariosViewController {
                 usuariosListFiltrada.add(usuario);
             }
         }
-        
+
         tablaUsuarios.setItems(usuariosListFiltrada);
     }
     
@@ -302,5 +323,21 @@ public class UsuariosViewController {
     private void limpiarBusqueda() {
         txtBuscar.clear();
         tablaUsuarios.setItems(usuariosList);
+        tablaUsuarios.refresh();
+        usuariosListFiltrada.clear();
+        actualizarTextoBotonEstado();
+    }
+
+    private void actualizarTextoBotonEstado() {
+        if (btnEliminar == null) {
+            return;
+        }
+
+        if (usuarioSeleccionado == null) {
+            btnEliminar.setText("Desactivar");
+            return;
+        }
+
+        btnEliminar.setText(usuarioSeleccionado.isActivo() ? "Desactivar" : "Activar");
     }
 }
