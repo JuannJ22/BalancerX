@@ -43,4 +43,70 @@ public class JpaArchivo {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public TipoArchivo getTipo() {
+        return tipo;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getChecksum() {
+        return checksum;
+    }
+
+    public String getMetadataJson() {
+        return metadataJson;
+    }
+
+    public UUID getSubidoPor() {
+        return subidoPor;
+    }
+
+    public UUID getCuadreId() {
+        return cuadreId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setTipo(TipoArchivo tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setChecksum(String checksum) {
+        this.checksum = checksum;
+    }
+
+    public void setMetadataJson(String metadataJson) {
+        this.metadataJson = metadataJson;
+    }
+
+    public void setSubidoPor(UUID subidoPor) {
+        this.subidoPor = subidoPor;
+    }
+
+    public void setCuadreId(UUID cuadreId) {
+        this.cuadreId = cuadreId;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
 }

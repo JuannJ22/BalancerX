@@ -80,4 +80,133 @@ public class JpaCuadre {
     public long getVersion() {
         return version;
     }
+
+    public boolean isFirmadoAudita() {
+        return firmadoAudita;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public UUID getCreadoPor() {
+        return creadoPor;
+    }
+
+    public UUID getActualizadoPor() {
+        return actualizadoPor;
+    }
+
+    public boolean isFirmadoElabora() {
+        return firmadoElabora;
+    }
+
+    public boolean isFirmadoAutoriza() {
+        return firmadoAutoriza;
+    }
+
+    public UUID getId() {
+        return id;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public UUID getPuntoVentaId() {
+        return puntoVentaId;
+    }
+
+    public EstadoCuadre getEstado() {
+        return estado;
+    }
+
+    public BigDecimal getTotalTirilla() {
+        return totalTirilla;
+    }
+
+    public BigDecimal getTotalBancos() {
+        return totalBancos;
+    }
+
+    public BigDecimal getTotalContable() {
+        return totalContable;
+    }
+
+    public String getPdfPath() {
+        return pdfPath;
+    }
+
+    public String getChecksumPdf() {
+        return checksumPdf;
+    }
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public void setPuntoVentaId(UUID puntoVentaId) {
+        this.puntoVentaId = puntoVentaId;
+    }
+
+    public void setEstado(EstadoCuadre estado) {
+        this.estado = estado;
+    }
+
+    public void setTotalTirilla(BigDecimal totalTirilla) {
+        this.totalTirilla = totalTirilla;
+    }
+
+    public void setTotalBancos(BigDecimal totalBancos) {
+        this.totalBancos = totalBancos;
+    }
+
+    public void setTotalContable(BigDecimal totalContable) {
+        this.totalContable = totalContable;
+    }
+
+    public void setPdfPath(String pdfPath) {
+        this.pdfPath = pdfPath;
+    }
+
+    public void setChecksumPdf(String checksumPdf) {
+        this.checksumPdf = checksumPdf;
+    }
+
+    public void setCreadoPor(UUID creadoPor) {
+        this.creadoPor = creadoPor;
+    }
+
+    public void setActualizadoPor(UUID actualizadoPor) {
+        this.actualizadoPor = actualizadoPor;
+    }
+
+    public void setFirmadoElabora(boolean firmadoElabora) {
+        this.firmadoElabora = firmadoElabora;
+    }
+
+    public void setFirmadoAutoriza(boolean firmadoAutoriza) {
+        this.firmadoAutoriza = firmadoAutoriza;
+    }
+
+    public void setFirmadoAudita(boolean firmadoAudita) {
+        this.firmadoAudita = firmadoAudita;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
+    }
 }

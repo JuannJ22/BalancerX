@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
  */
 public class PuntoVenta {
     private Long id;
+    private String codigo;
     private String nombre;
+    private String direccion;
+    private String telefono;
+    private String email;
     private boolean activo;
     private LocalDateTime createdAt;
 
@@ -21,6 +25,17 @@ public class PuntoVenta {
         this.activo = activo;
         this.createdAt = createdAt;
     }
+    
+    public PuntoVenta(Long id, String codigo, String nombre, String direccion, String telefono, String email, boolean activo, LocalDateTime createdAt) {
+        this.id = id;
+        this.codigo = codigo;
+        this.nombre = nombre;
+        this.direccion = direccion;
+        this.telefono = telefono;
+        this.email = email;
+        this.activo = activo;
+        this.createdAt = createdAt;
+    }
 
     // Getters y Setters
     public Long getId() {
@@ -30,6 +45,14 @@ public class PuntoVenta {
     public void setId(Long id) {
         this.id = id;
     }
+    
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
 
     public String getNombre() {
         return nombre;
@@ -37,6 +60,30 @@ public class PuntoVenta {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+    
+    public String getDireccion() {
+        return direccion;
+    }
+
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
+    
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public boolean isActivo() {

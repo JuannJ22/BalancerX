@@ -94,6 +94,10 @@ public class LoginViewController {
             scene.getStylesheets().add(getClass().getResource("/com/balancerx/view/styles.css").toExternalForm());
             stage.setScene(scene);
             stage.setTitle("BalancerX - Menú Principal");
+            stage.setResizable(true);
+            stage.setMaximized(true); // Inicia maximizada
+            stage.setMinWidth(1000);   // Tamaño mínimo más grande para el menú principal
+            stage.setMinHeight(700);
             stage.centerOnScreen();
             
         } catch (IOException e) {

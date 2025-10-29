@@ -8,15 +8,20 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
+
 public class CuadreRepositoryAdapter implements CuadreRepository {
     private final CuadreJpaRepository jpaRepository;
     private final CuadreMapper mapper;
+
+    public CuadreRepositoryAdapter(CuadreJpaRepository jpaRepository, CuadreMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public Cuadre save(Cuadre cuadre) {

@@ -25,4 +25,38 @@ public class JpaPuntoVenta {
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
 }

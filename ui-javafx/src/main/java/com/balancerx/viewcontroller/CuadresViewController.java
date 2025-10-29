@@ -53,8 +53,21 @@ public class CuadresViewController {
     @FXML
     private Button btnNuevo;
     
+    @FXML
+    private TextField txtBuscar;
+    
+    @FXML
+    private ComboBox<String> cbFiltroEstado;
+    
+    @FXML
+    private Button btnBuscar;
+    
+    @FXML
+    private Button btnLimpiarBusqueda;
+    
     private CuadreController cuadreController;
     private ObservableList<Cuadre> cuadresList;
+    private ObservableList<Cuadre> cuadresListFiltrada;
     private Usuario usuarioActual;
     private Cuadre cuadreSeleccionado;
     
@@ -66,6 +79,7 @@ public class CuadresViewController {
         this.usuarioActual = usuario;
         this.cuadreController = new CuadreController(new com.balancerx.model.service.impl.CuadreServiceImpl());
         this.cuadresList = FXCollections.observableArrayList();
+        this.cuadresListFiltrada = FXCollections.observableArrayList();
         
         // Configurar la tabla
         configurarTabla();
@@ -113,6 +127,13 @@ public class CuadresViewController {
         );
         cbPuntoVenta.setItems(puntosVenta);
         cbPuntoVenta.getSelectionModel().selectFirst();
+        
+        // Configurar filtro de estados
+        ObservableList<String> estados = FXCollections.observableArrayList(
+            "Todos", "BORRADOR", "APROBADO", "RECHAZADO"
+        );
+        cbFiltroEstado.setItems(estados);
+        cbFiltroEstado.getSelectionModel().selectFirst();
     }
     
     /**
@@ -158,6 +179,18 @@ public class CuadresViewController {
     private void configurarEventos() {
         btnNuevo.setOnAction(event -> limpiarFormulario());
         btnGuardar.setOnAction(event -> guardarCuadre());
+        btnBuscar.setOnAction(event -> buscarCuadres());
+        btnLimpiarBusqueda.setOnAction(event -> limpiarBusqueda());
+        
+        // Filtrado automático por estado
+        cbFiltroEstado.setOnAction(event -> aplicarFiltros());
+        
+        // Búsqueda en tiempo real
+        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.trim().isEmpty() && cbFiltroEstado.getValue().equals("Todos")) {
+                limpiarBusqueda();
+            }
+        });
     }
     
     /**
@@ -266,5 +299,47 @@ public class CuadresViewController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+    
+    /**
+     * Busca cuadres según el texto ingresado y filtros aplicados.
+     */
+    private void buscarCuadres() {
+        aplicarFiltros();
+    }
+    
+    /**
+     * Aplica los filtros de búsqueda y estado.
+     */
+    private void aplicarFiltros() {
+        String textoBusqueda = txtBuscar.getText().trim().toLowerCase();
+        String estadoFiltro = cbFiltroEstado.getValue();
+        
+        cuadresListFiltrada.clear();
+        
+        for (Cuadre cuadre : cuadresList) {
+            boolean coincideTexto = textoBusqueda.isEmpty() ||
+                cuadre.getId().toString().contains(textoBusqueda) ||
+                cuadre.getFecha().toString().contains(textoBusqueda) ||
+                ("Punto de Venta " + cuadre.getPuntoVentaId()).toLowerCase().contains(textoBusqueda);
+            
+            boolean coincideEstado = estadoFiltro.equals("Todos") ||
+                cuadre.getEstado().toString().equals(estadoFiltro);
+            
+            if (coincideTexto && coincideEstado) {
+                cuadresListFiltrada.add(cuadre);
+            }
+        }
+        
+        tablaCuadres.setItems(cuadresListFiltrada);
+    }
+    
+    /**
+     * Limpia la búsqueda y filtros, mostrando todos los cuadres.
+     */
+    private void limpiarBusqueda() {
+        txtBuscar.clear();
+        cbFiltroEstado.getSelectionModel().selectFirst(); // "Todos"
+        tablaCuadres.setItems(cuadresList);
     }
 }

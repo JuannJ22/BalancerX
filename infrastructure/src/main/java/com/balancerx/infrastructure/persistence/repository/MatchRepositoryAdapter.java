@@ -6,15 +6,21 @@ import com.balancerx.infrastructure.persistence.mapper.MatchMapper;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
+
 public class MatchRepositoryAdapter implements MatchRepository {
     private final MatchJpaRepository jpaRepository;
     private final DocumentoContableJpaRepository documentoContableJpaRepository;
     private final MatchMapper mapper;
+
+    public MatchRepositoryAdapter(MatchJpaRepository jpaRepository, DocumentoContableJpaRepository documentoContableJpaRepository, MatchMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.documentoContableJpaRepository = documentoContableJpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public Match save(Match match) {

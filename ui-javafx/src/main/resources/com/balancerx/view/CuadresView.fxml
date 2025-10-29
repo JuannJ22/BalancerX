@@ -4,53 +4,84 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 
-<VBox spacing="10.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.balancerx.viewcontroller.CuadresViewController">
+<VBox spacing="16.0" styleClass="content-panel" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.balancerx.viewcontroller.CuadresViewController">
     <padding>
-        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
     </padding>
     
-    <Label text="Gestión de Cuadres" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+    <!-- Header con título y búsqueda -->
+    <HBox spacing="16.0" alignment="CENTER_LEFT" styleClass="tool-bar">
+        <padding>
+            <Insets bottom="12.0" left="16.0" right="16.0" top="12.0" />
+        </padding>
+        <Label text="Gestión de Cuadres" styleClass="title" />
+        <Region HBox.hgrow="ALWAYS" />
+        <TextField fx:id="txtBuscar" promptText="Buscar cuadres..." prefWidth="200" styleClass="text-field" />
+        <ComboBox fx:id="cbFiltroEstado" promptText="Filtrar por estado" prefWidth="150" styleClass="combo-box" />
+        <Button fx:id="btnBuscar" text="Buscar" styleClass="button, secondary" />
+        <Button fx:id="btnLimpiarBusqueda" text="Limpiar" styleClass="button, secondary" />
+        <Button fx:id="btnNuevo" text="Nuevo Cuadre" styleClass="button, accent" />
+    </HBox>
     
-    <SplitPane dividerPositions="0.6" VBox.vgrow="ALWAYS">
-        <VBox spacing="5.0">
-            <TableView fx:id="tablaCuadres" VBox.vgrow="ALWAYS">
+    <SplitPane dividerPositions="0.65" VBox.vgrow="ALWAYS" styleClass="content-panel">
+        <!-- Lista de Cuadres -->
+        <VBox spacing="12.0" styleClass="content-panel">
+            <padding>
+                <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+            </padding>
+            
+            <Label text="Lista de Cuadres" styleClass="subtitle" />
+            
+            <TableView fx:id="tablaCuadres" VBox.vgrow="ALWAYS" styleClass="table-view">
                 <columns>
-                    <TableColumn fx:id="colId" text="ID" prefWidth="50" />
-                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="100" />
-                    <TableColumn fx:id="colPuntoVenta" text="Punto de Venta" prefWidth="150" />
-                    <TableColumn fx:id="colEstado" text="Estado" prefWidth="100" />
+                    <TableColumn fx:id="colId" text="ID" prefWidth="60" />
+                    <TableColumn fx:id="colFecha" text="Fecha" prefWidth="120" />
+                    <TableColumn fx:id="colPuntoVenta" text="Punto de Venta" prefWidth="180" />
+                    <TableColumn fx:id="colEstado" text="Estado" prefWidth="120" />
                 </columns>
             </TableView>
         </VBox>
         
-        <VBox spacing="10.0">
+        <!-- Panel de Detalles -->
+        <VBox spacing="16.0" styleClass="content-panel">
             <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
             </padding>
             
-            <Label text="Detalles del Cuadre" style="-fx-font-weight: bold;" />
+            <Label text="Detalles del Cuadre" styleClass="subtitle" />
             
-            <GridPane hgap="10" vgap="10">
-                <Label text="Fecha:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
-                <DatePicker fx:id="dpFecha" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <VBox spacing="16.0" styleClass="form-container">
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Fecha:" styleClass="label" />
+                    <DatePicker fx:id="dpFecha" styleClass="text-field" />
+                </VBox>
                 
-                <Label text="Punto de Venta:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
-                <ComboBox fx:id="cbPuntoVenta" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Punto de Venta:" styleClass="label" />
+                    <ComboBox fx:id="cbPuntoVenta" styleClass="text-field" maxWidth="Infinity" />
+                </VBox>
                 
-                <Label text="Total Tirilla:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
-                <TextField fx:id="txtTotalTirilla" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Total Tirilla:" styleClass="label" />
+                    <TextField fx:id="txtTotalTirilla" styleClass="text-field" promptText="0.00" />
+                </VBox>
                 
-                <Label text="Total Bancos:" GridPane.columnIndex="0" GridPane.rowIndex="3" />
-                <TextField fx:id="txtTotalBancos" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Total Bancos:" styleClass="label" />
+                    <TextField fx:id="txtTotalBancos" styleClass="text-field" promptText="0.00" />
+                </VBox>
                 
-                <Label text="Total Contable:" GridPane.columnIndex="0" GridPane.rowIndex="4" />
-                <TextField fx:id="txtTotalContable" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-            </GridPane>
-            
-            <HBox spacing="10.0" alignment="CENTER_RIGHT">
-                <Button fx:id="btnNuevo" text="Nuevo" />
-                <Button fx:id="btnGuardar" text="Guardar" />
-            </HBox>
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Total Contable:" styleClass="label" />
+                    <TextField fx:id="txtTotalContable" styleClass="text-field" promptText="0.00" />
+                </VBox>
+                
+                <Region VBox.vgrow="ALWAYS" />
+                
+                <HBox spacing="12.0" alignment="CENTER_RIGHT">
+                    <Button fx:id="btnGuardar" text="Guardar" styleClass="button" />
+                </HBox>
+            </VBox>
         </VBox>
     </SplitPane>
 </VBox>

@@ -8,17 +8,19 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class LocalFileStorageAdapter implements FileStoragePort {
     private static final Logger log = LoggerFactory.getLogger(LocalFileStorageAdapter.class);
     private final ChecksumService checksumService;
+
+    public LocalFileStorageAdapter(ChecksumService checksumService) {
+        this.checksumService = checksumService;
+    }
 
     @Value("${balancerx.storage.root:files}")
     private String rootDir;

@@ -142,7 +142,10 @@ public class DocumentoContable {
         return Optional.ofNullable(observacion);
     }
 
-
+    // Método with para crear nueva instancia con cuadreId modificado
+    public DocumentoContable withCuadreId(UUID cuadreId) {
+        return new DocumentoContable(id, tipo, numero, fecha, valor, referencia, cuadreId, observacion);
+    }
 
     @Override
     public boolean equals(Object o) {

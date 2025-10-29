@@ -10,13 +10,15 @@ import com.balancerx.domain.valueobject.RolUsuario;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class ShaFirmaAutomaticaService implements FirmaAutomaticaService {
     private final ChecksumService checksumService;
+
+    public ShaFirmaAutomaticaService(ChecksumService checksumService) {
+        this.checksumService = checksumService;
+    }
 
     @Override
     public Firma firmar(Cuadre cuadre, Usuario usuario, RolUsuario rol) {

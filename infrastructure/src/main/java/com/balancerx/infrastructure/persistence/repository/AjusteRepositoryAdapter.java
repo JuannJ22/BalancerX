@@ -5,14 +5,19 @@ import com.balancerx.domain.repository.AjusteRepository;
 import com.balancerx.infrastructure.persistence.mapper.AjusteMapper;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
+
 public class AjusteRepositoryAdapter implements AjusteRepository {
     private final AjusteJpaRepository jpaRepository;
     private final AjusteMapper mapper;
+
+    public AjusteRepositoryAdapter(AjusteJpaRepository jpaRepository, AjusteMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public Ajuste save(Ajuste ajuste) {

@@ -7,14 +7,17 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
 public class MovimientoBancarioRepositoryAdapter implements MovimientoBancarioRepository {
     private final MovimientoBancarioJpaRepository jpaRepository;
     private final MovimientoBancarioMapper mapper;
+
+    public MovimientoBancarioRepositoryAdapter(MovimientoBancarioJpaRepository jpaRepository, MovimientoBancarioMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public MovimientoBancario save(MovimientoBancario movimiento) {

@@ -57,4 +57,102 @@ public class JpaMovimientoBancario {
 
     @Version
     private long version;
+
+    // Métodos getter manuales para resolver errores de compilación
+    public UUID getId() {
+        return id;
+    }
+
+    public TipoMovimientoBancario getTipo() {
+        return tipo;
+    }
+
+    public String getBanco() {
+        return banco;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public BigDecimal getValor() {
+        return valor;
+    }
+
+    public String getReferenciaBanco() {
+        return referenciaBanco;
+    }
+
+    public FuenteMovimiento getFuente() {
+        return fuente;
+    }
+
+    public UUID getAsignadoPor() {
+        return asignadoPor;
+    }
+
+    public UUID getPuntoVentaId() {
+        return puntoVentaId;
+    }
+
+    public UUID getCuadreId() {
+        return cuadreId;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    // Métodos setter manuales para resolver errores de compilación
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public void setTipo(TipoMovimientoBancario tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setBanco(String banco) {
+        this.banco = banco;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public void setValor(BigDecimal valor) {
+        this.valor = valor;
+    }
+
+    public void setReferenciaBanco(String referenciaBanco) {
+        this.referenciaBanco = referenciaBanco;
+    }
+
+    public void setFuente(FuenteMovimiento fuente) {
+        this.fuente = fuente;
+    }
+
+    public void setAsignadoPor(UUID asignadoPor) {
+        this.asignadoPor = asignadoPor;
+    }
+
+    public void setPuntoVentaId(UUID puntoVentaId) {
+        this.puntoVentaId = puntoVentaId;
+    }
+
+    public void setCuadreId(UUID cuadreId) {
+        this.cuadreId = cuadreId;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
+    }
 }

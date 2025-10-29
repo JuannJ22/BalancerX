@@ -18,7 +18,6 @@ import com.balancerx.domain.valueobject.EstadoCuadre;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/cuadres")
-@RequiredArgsConstructor
 public class CuadreController {
     private final CreateCuadreUseCase createCuadreUseCase;
     private final PreConciliarUseCase preConciliarUseCase;
@@ -39,6 +37,17 @@ public class CuadreController {
     private final AprobarCuadreUseCase aprobarCuadreUseCase;
     private final GenerarReporteUseCase generarReporteUseCase;
     private final CuadreRepository cuadreRepository;
+
+    public CuadreController(CreateCuadreUseCase createCuadreUseCase, PreConciliarUseCase preConciliarUseCase, 
+                           EnviarCuadreUseCase enviarCuadreUseCase, AprobarCuadreUseCase aprobarCuadreUseCase,
+                           GenerarReporteUseCase generarReporteUseCase, CuadreRepository cuadreRepository) {
+        this.createCuadreUseCase = createCuadreUseCase;
+        this.preConciliarUseCase = preConciliarUseCase;
+        this.enviarCuadreUseCase = enviarCuadreUseCase;
+        this.aprobarCuadreUseCase = aprobarCuadreUseCase;
+        this.generarReporteUseCase = generarReporteUseCase;
+        this.cuadreRepository = cuadreRepository;
+    }
 
     @PostMapping
     public Cuadre crear(@RequestBody CreateCuadreRequest request) {

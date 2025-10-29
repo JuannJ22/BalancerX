@@ -6,13 +6,15 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Map;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor
 public class MatchMapper {
     private final ObjectMapper objectMapper;
+
+    public MatchMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     public JpaMatch toEntity(Match match) {
         JpaMatch entity = new JpaMatch();

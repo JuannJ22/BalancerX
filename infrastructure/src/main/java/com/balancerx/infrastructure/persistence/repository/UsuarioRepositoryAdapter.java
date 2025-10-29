@@ -6,14 +6,17 @@ import com.balancerx.infrastructure.persistence.mapper.UsuarioMapper;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
 public class UsuarioRepositoryAdapter implements UsuarioRepository {
     private final UsuarioJpaRepository jpaRepository;
     private final UsuarioMapper mapper;
+
+    public UsuarioRepositoryAdapter(UsuarioJpaRepository jpaRepository, UsuarioMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public Usuario save(Usuario usuario) {

@@ -21,7 +21,10 @@ public class MenuPrincipalViewController {
     private BorderPane mainContainer;
     
     @FXML
-    private Label lblUsuarioActual;
+    private Label lblUsuario;
+    
+    @FXML
+    private Label lblRol;
     
     @FXML
     private Button btnCuadres;
@@ -35,6 +38,25 @@ public class MenuPrincipalViewController {
     @FXML
     private Button btnCerrarSesion;
     
+    // Nuevos elementos del dashboard
+    @FXML
+    private Label lblCuadresHoy;
+    
+    @FXML
+    private Label lblPuntosVenta;
+    
+    @FXML
+    private Label lblUsuarios;
+    
+    @FXML
+    private Button btnNuevoCuadre;
+    
+    @FXML
+    private Button btnReportes;
+    
+    @FXML
+    private Button btnConfiguracion;
+    
     private Usuario usuarioActual;
     
     /**
@@ -45,16 +67,25 @@ public class MenuPrincipalViewController {
         this.usuarioActual = usuario;
         
         // Configurar la interfaz según el usuario
-        lblUsuarioActual.setText("Usuario: " + usuario.getNombre() + " (" + usuario.getRol() + ")");
+        lblUsuario.setText(usuario.getNombre());
+        lblRol.setText(usuario.getRol());
         
         // Configurar visibilidad de botones según el rol
         configurarPermisosUI(usuario.getRol());
         
-        // Configurar eventos
+        // Configurar eventos de navegación
         btnCuadres.setOnAction(event -> mostrarModuloCuadres());
         btnPuntosVenta.setOnAction(event -> mostrarModuloPuntosVenta());
         btnUsuarios.setOnAction(event -> mostrarModuloUsuarios());
         btnCerrarSesion.setOnAction(event -> cerrarSesion());
+        
+        // Configurar eventos del dashboard
+        btnNuevoCuadre.setOnAction(event -> mostrarModuloCuadres());
+        btnReportes.setOnAction(event -> mostrarReportes());
+        btnConfiguracion.setOnAction(event -> mostrarConfiguracion());
+        
+        // Actualizar estadísticas del dashboard
+        actualizarEstadisticasDashboard();
     }
     
     /**
@@ -162,6 +193,45 @@ public class MenuPrincipalViewController {
         } catch (IOException e) {
             mostrarError("Error al cerrar sesión", e.getMessage());
         }
+    }
+    
+    /**
+     * Actualiza las estadísticas mostradas en el dashboard.
+     */
+    private void actualizarEstadisticasDashboard() {
+        // En una implementación real, estos datos vendrían de la base de datos
+        lblCuadresHoy.setText("5");
+        lblPuntosVenta.setText("3");
+        lblUsuarios.setText("8");
+    }
+    
+    /**
+     * Muestra el módulo de reportes.
+     */
+    private void mostrarReportes() {
+        // Implementación futura para reportes
+        mostrarInfo("Reportes", "Módulo de reportes en desarrollo");
+    }
+    
+    /**
+     * Muestra el módulo de configuración.
+     */
+    private void mostrarConfiguracion() {
+        // Implementación futura para configuración
+        mostrarInfo("Configuración", "Módulo de configuración en desarrollo");
+    }
+    
+    /**
+     * Muestra un mensaje informativo.
+     * @param titulo Título del mensaje
+     * @param mensaje Contenido del mensaje
+     */
+    private void mostrarInfo(String titulo, String mensaje) {
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
     }
     
     /**

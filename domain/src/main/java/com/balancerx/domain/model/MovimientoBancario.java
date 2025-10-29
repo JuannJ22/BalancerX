@@ -199,6 +199,25 @@ public class MovimientoBancario {
         return Optional.ofNullable(cuadreId);
     }
 
+    // Métodos with para crear nuevas instancias con campos modificados
+    public MovimientoBancario withCreatedAt(Instant createdAt) {
+        return new MovimientoBancario(id, tipo, banco, fecha, valor, referenciaBanco, 
+                                      fuente, asignadoPor, puntoVentaId, cuadreId, 
+                                      createdAt, version);
+    }
+
+    public MovimientoBancario withCuadreId(UUID cuadreId) {
+        return new MovimientoBancario(id, tipo, banco, fecha, valor, referenciaBanco, 
+                                      fuente, asignadoPor, puntoVentaId, cuadreId, 
+                                      createdAt, version);
+    }
+
+    public MovimientoBancario withAsignadoPor(UUID asignadoPor) {
+        return new MovimientoBancario(id, tipo, banco, fecha, valor, referenciaBanco, 
+                                      fuente, asignadoPor, puntoVentaId, cuadreId, 
+                                      createdAt, version);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

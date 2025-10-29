@@ -38,11 +38,77 @@
     </top>
     
     <center>
-        <StackPane styleClass="content-panel">
+        <StackPane fx:id="contentArea" styleClass="content-panel">
             <padding>
                 <Insets bottom="32.0" left="32.0" right="32.0" top="32.0" />
             </padding>
-            <Label text="Seleccione una opción del menú" styleClass="subtitle" />
+            
+            <!-- Dashboard principal -->
+            <VBox fx:id="dashboardContent" spacing="24.0" alignment="TOP_CENTER">
+                <Label text="Dashboard - BalancerX" styleClass="title" />
+                
+                <!-- Tarjetas de resumen -->
+                <HBox spacing="20.0" alignment="CENTER">
+                    <VBox styleClass="info-card, primary" spacing="8.0" alignment="CENTER" prefWidth="200" prefHeight="120">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <Label text="Cuadres Hoy" styleClass="caption" />
+                        <Label fx:id="lblCuadresHoy" text="5" styleClass="title" />
+                        <Label text="Pendientes: 2" styleClass="caption" />
+                    </VBox>
+                    
+                    <VBox styleClass="info-card, accent" spacing="8.0" alignment="CENTER" prefWidth="200" prefHeight="120">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <Label text="Puntos de Venta" styleClass="caption" />
+                        <Label fx:id="lblPuntosVenta" text="3" styleClass="title" />
+                        <Label text="Activos" styleClass="caption" />
+                    </VBox>
+                    
+                    <VBox styleClass="info-card" spacing="8.0" alignment="CENTER" prefWidth="200" prefHeight="120">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <Label text="Usuarios" styleClass="caption" />
+                        <Label fx:id="lblUsuarios" text="8" styleClass="title" />
+                        <Label text="Registrados" styleClass="caption" />
+                    </VBox>
+                </HBox>
+                
+                <!-- Acciones rápidas -->
+                <VBox spacing="16.0" alignment="CENTER">
+                    <Label text="Acciones Rápidas" styleClass="subtitle" />
+                    <HBox spacing="16.0" alignment="CENTER">
+                        <Button fx:id="btnNuevoCuadre" text="Nuevo Cuadre" styleClass="button, accent" prefWidth="150" />
+                        <Button fx:id="btnReportes" text="Ver Reportes" styleClass="button" prefWidth="150" />
+                        <Button fx:id="btnConfiguracion" text="Configuración" styleClass="button, secondary" prefWidth="150" />
+                    </HBox>
+                </VBox>
+                
+                <!-- Actividad reciente -->
+                <VBox spacing="12.0" alignment="CENTER" maxWidth="600">
+                    <Label text="Actividad Reciente" styleClass="subtitle" />
+                    <VBox styleClass="content-panel" spacing="8.0">
+                        <padding>
+                            <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+                        </padding>
+                        <HBox spacing="8.0" alignment="CENTER_LEFT">
+                            <Label text="•" styleClass="accent" />
+                            <Label text="Cuadre #001 - Punto de Venta 1 - Aprobado" styleClass="caption" />
+                        </HBox>
+                        <HBox spacing="8.0" alignment="CENTER_LEFT">
+                            <Label text="•" styleClass="accent" />
+                            <Label text="Usuario 'admin' inició sesión" styleClass="caption" />
+                        </HBox>
+                        <HBox spacing="8.0" alignment="CENTER_LEFT">
+                            <Label text="•" styleClass="accent" />
+                            <Label text="Nuevo punto de venta configurado" styleClass="caption" />
+                        </HBox>
+                    </VBox>
+                </VBox>
+            </VBox>
         </StackPane>
     </center>
     

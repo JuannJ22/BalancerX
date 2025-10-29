@@ -10,7 +10,7 @@
     <artifactId>balancerx-ui-javafx</artifactId>
     <packaging>jar</packaging>
     <properties>
-        <javafx.version>21.0.3</javafx.version>
+        <javafx.version>23.0.1</javafx.version>
         <mssql-jdbc.version>12.4.2.jre11</mssql-jdbc.version>
     </properties>
     <dependencies>
@@ -79,11 +79,24 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>24</release>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>com.balancerx.BalancerXDesktopApp</mainClass>
+                    <commandlineArgs>
+                        --add-opens javafx.fxml/javafx.fxml=ALL-UNNAMED
+                        --add-opens javafx.controls/javafx.scene.control.skin=ALL-UNNAMED
+                        --add-opens javafx.graphics/javafx.scene=ALL-UNNAMED
+                    </commandlineArgs>
                 </configuration>
             </plugin>
         </plugins>

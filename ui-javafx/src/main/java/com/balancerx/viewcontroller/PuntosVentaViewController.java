@@ -22,13 +22,37 @@ public class PuntosVentaViewController {
     private TableColumn<PuntoVenta, Long> colId;
     
     @FXML
+    private TableColumn<PuntoVenta, String> colCodigo;
+    
+    @FXML
     private TableColumn<PuntoVenta, String> colNombre;
+    
+    @FXML
+    private TableColumn<PuntoVenta, String> colDireccion;
+    
+    @FXML
+    private TableColumn<PuntoVenta, String> colTelefono;
     
     @FXML
     private TableColumn<PuntoVenta, Boolean> colActivo;
     
     @FXML
+    private TextField txtCodigo;
+    
+    @FXML
     private TextField txtNombre;
+    
+    @FXML
+    private TextField txtDireccion;
+    
+    @FXML
+    private TextField txtTelefono;
+    
+    @FXML
+    private TextField txtEmail;
+    
+    @FXML
+    private TextField txtBuscar;
     
     @FXML
     private CheckBox chkActivo;
@@ -39,8 +63,15 @@ public class PuntosVentaViewController {
     @FXML
     private Button btnNuevo;
     
+    @FXML
+    private Button btnBuscar;
+    
+    @FXML
+    private Button btnLimpiarBusqueda;
+    
     private PuntoVentaController puntoVentaController;
     private ObservableList<PuntoVenta> puntosVentaList;
+    private ObservableList<PuntoVenta> puntosVentaListFiltrada;
     private Usuario usuarioActual;
     private PuntoVenta puntoVentaSeleccionado;
     
@@ -52,6 +83,7 @@ public class PuntosVentaViewController {
         this.usuarioActual = usuario;
         this.puntoVentaController = new PuntoVentaController(new com.balancerx.model.service.impl.PuntoVentaServiceImpl());
         this.puntosVentaList = FXCollections.observableArrayList();
+        this.puntosVentaListFiltrada = FXCollections.observableArrayList();
         
         // Configurar la tabla
         configurarTabla();
@@ -68,7 +100,10 @@ public class PuntosVentaViewController {
      */
     private void configurarTabla() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        colCodigo.setCellValueFactory(new PropertyValueFactory<>("codigo"));
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
+        colDireccion.setCellValueFactory(new PropertyValueFactory<>("direccion"));
+        colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
         colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
         
         tablaPuntosVenta.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -89,9 +124,9 @@ public class PuntosVentaViewController {
             // puntosVentaList.addAll(puntoVentaController.obtenerTodos());
             
             // Por ahora, agregamos datos de ejemplo
-            puntosVentaList.add(new PuntoVenta(1L, "Punto de Venta 1", true, LocalDateTime.now()));
-            puntosVentaList.add(new PuntoVenta(2L, "Punto de Venta 2", true, LocalDateTime.now()));
-            puntosVentaList.add(new PuntoVenta(3L, "Punto de Venta 3", false, LocalDateTime.now()));
+            puntosVentaList.add(new PuntoVenta(1L, "PV001", "Punto de Venta Centro", "Calle 123 #45-67", "555-0001", "centro@balancerx.com", true, LocalDateTime.now()));
+            puntosVentaList.add(new PuntoVenta(2L, "PV002", "Punto de Venta Norte", "Carrera 89 #12-34", "555-0002", "norte@balancerx.com", true, LocalDateTime.now()));
+            puntosVentaList.add(new PuntoVenta(3L, "PV003", "Punto de Venta Sur", "Avenida 56 #78-90", "555-0003", "sur@balancerx.com", false, LocalDateTime.now()));
             
             tablaPuntosVenta.setItems(puntosVentaList);
         } catch (Exception e) {
@@ -105,6 +140,15 @@ public class PuntosVentaViewController {
     private void configurarEventos() {
         btnNuevo.setOnAction(event -> limpiarFormulario());
         btnGuardar.setOnAction(event -> guardarPuntoVenta());
+        btnBuscar.setOnAction(event -> buscarPuntosVenta());
+        btnLimpiarBusqueda.setOnAction(event -> limpiarBusqueda());
+        
+        // Búsqueda en tiempo real
+        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.trim().isEmpty()) {
+                limpiarBusqueda();
+            }
+        });
     }
     
     /**
@@ -112,7 +156,11 @@ public class PuntosVentaViewController {
      * @param puntoVenta Punto de venta seleccionado
      */
     private void mostrarDetallesPuntoVenta(PuntoVenta puntoVenta) {
+        txtCodigo.setText(puntoVenta.getCodigo());
         txtNombre.setText(puntoVenta.getNombre());
+        txtDireccion.setText(puntoVenta.getDireccion());
+        txtTelefono.setText(puntoVenta.getTelefono());
+        txtEmail.setText(puntoVenta.getEmail());
         chkActivo.setSelected(puntoVenta.isActivo());
     }
     
@@ -121,9 +169,13 @@ public class PuntosVentaViewController {
      */
     private void limpiarFormulario() {
         puntoVentaSeleccionado = null;
+        txtCodigo.clear();
         txtNombre.clear();
+        txtDireccion.clear();
+        txtTelefono.clear();
+        txtEmail.clear();
         chkActivo.setSelected(true);
-        txtNombre.requestFocus();
+        txtCodigo.requestFocus();
     }
     
     /**
@@ -131,17 +183,21 @@ public class PuntosVentaViewController {
      */
     private void guardarPuntoVenta() {
         try {
+            String codigo = txtCodigo.getText().trim();
             String nombre = txtNombre.getText().trim();
+            String direccion = txtDireccion.getText().trim();
+            String telefono = txtTelefono.getText().trim();
+            String email = txtEmail.getText().trim();
             boolean activo = chkActivo.isSelected();
             
-            if (nombre.isEmpty()) {
-                mostrarError("Error de validación", "El nombre del punto de venta es obligatorio");
+            if (codigo.isEmpty() || nombre.isEmpty()) {
+                mostrarError("Error de validación", "El código y nombre del punto de venta son obligatorios");
                 return;
             }
             
             if (puntoVentaSeleccionado == null) {
                 // Crear nuevo punto de venta
-                PuntoVenta nuevoPuntoVenta = new PuntoVenta(null, nombre, activo, LocalDateTime.now());
+                PuntoVenta nuevoPuntoVenta = new PuntoVenta(null, codigo, nombre, direccion, telefono, email, activo, LocalDateTime.now());
                 // En una implementación real, esto guardaría usando el controlador
                 // puntoVentaController.guardar(nuevoPuntoVenta);
                 
@@ -150,7 +206,11 @@ public class PuntosVentaViewController {
                 puntosVentaList.add(nuevoPuntoVenta);
             } else {
                 // Actualizar punto de venta existente
+                puntoVentaSeleccionado.setCodigo(codigo);
                 puntoVentaSeleccionado.setNombre(nombre);
+                puntoVentaSeleccionado.setDireccion(direccion);
+                puntoVentaSeleccionado.setTelefono(telefono);
+                puntoVentaSeleccionado.setEmail(email);
                 puntoVentaSeleccionado.setActivo(activo);
                 // En una implementación real, esto actualizaría usando el controlador
                 // puntoVentaController.actualizar(puntoVentaSeleccionado);
@@ -160,6 +220,7 @@ public class PuntosVentaViewController {
             }
             
             limpiarFormulario();
+            mostrarMensaje("Punto de venta guardado", "El punto de venta ha sido guardado correctamente.");
         } catch (Exception e) {
             mostrarError("Error al guardar punto de venta", e.getMessage());
         }
@@ -176,5 +237,50 @@ public class PuntosVentaViewController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+    
+    /**
+     * Muestra un mensaje informativo.
+     * @param titulo Título del mensaje
+     * @param mensaje Contenido del mensaje
+     */
+    private void mostrarMensaje(String titulo, String mensaje) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+    
+    /**
+     * Busca puntos de venta según el texto ingresado.
+     */
+    private void buscarPuntosVenta() {
+        String textoBusqueda = txtBuscar.getText().trim().toLowerCase();
+        
+        puntosVentaListFiltrada.clear();
+        
+        for (PuntoVenta puntoVenta : puntosVentaList) {
+            boolean coincide = textoBusqueda.isEmpty() ||
+                puntoVenta.getCodigo().toLowerCase().contains(textoBusqueda) ||
+                puntoVenta.getNombre().toLowerCase().contains(textoBusqueda) ||
+                puntoVenta.getDireccion().toLowerCase().contains(textoBusqueda) ||
+                puntoVenta.getTelefono().toLowerCase().contains(textoBusqueda) ||
+                puntoVenta.getEmail().toLowerCase().contains(textoBusqueda);
+            
+            if (coincide) {
+                puntosVentaListFiltrada.add(puntoVenta);
+            }
+        }
+        
+        tablaPuntosVenta.setItems(puntosVentaListFiltrada);
+    }
+    
+    /**
+     * Limpia la búsqueda y muestra todos los puntos de venta.
+     */
+    private void limpiarBusqueda() {
+        txtBuscar.clear();
+        tablaPuntosVenta.setItems(puntosVentaList);
     }
 }

@@ -5,14 +5,19 @@ import com.balancerx.domain.repository.FirmaRepository;
 import com.balancerx.infrastructure.persistence.mapper.FirmaMapper;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
+
 public class FirmaRepositoryAdapter implements FirmaRepository {
     private final FirmaJpaRepository jpaRepository;
     private final FirmaMapper mapper;
+
+    public FirmaRepositoryAdapter(FirmaJpaRepository jpaRepository, FirmaMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public Firma save(Firma firma) {

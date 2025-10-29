@@ -28,7 +28,10 @@ public class BalancerXDesktopApp extends Application {
 
         stage.setTitle("BalancerX - Sistema de Cuadre de Caja");
         stage.setScene(scene);
-        stage.setResizable(false);
+        stage.setResizable(true);
+        stage.setMaximized(true); // Inicia maximizada
+        stage.setMinWidth(800);   // Tamaño mínimo
+        stage.setMinHeight(600);
         stage.centerOnScreen();
         stage.show();
     }

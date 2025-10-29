@@ -56,8 +56,18 @@ public class UsuariosViewController {
     @FXML
     private Button btnNuevo;
     
+    @FXML
+    private TextField txtBuscar;
+    
+    @FXML
+    private Button btnBuscar;
+    
+    @FXML
+    private Button btnLimpiarBusqueda;
+    
     private UsuarioController usuarioController;
     private ObservableList<Usuario> usuariosList;
+    private ObservableList<Usuario> usuariosListFiltrada;
     private Usuario usuarioActual;
     private Usuario usuarioSeleccionado;
     
@@ -69,6 +79,7 @@ public class UsuariosViewController {
         this.usuarioActual = usuario;
         this.usuarioController = new UsuarioController(new com.balancerx.model.service.impl.UsuarioServiceImpl());
         this.usuariosList = FXCollections.observableArrayList();
+        this.usuariosListFiltrada = FXCollections.observableArrayList();
         
         // Configurar la tabla
         configurarTabla();
@@ -140,6 +151,15 @@ public class UsuariosViewController {
     private void configurarEventos() {
         btnNuevo.setOnAction(event -> limpiarFormulario());
         btnGuardar.setOnAction(event -> guardarUsuario());
+        btnBuscar.setOnAction(event -> buscarUsuarios());
+        btnLimpiarBusqueda.setOnAction(event -> limpiarBusqueda());
+        
+        // Búsqueda en tiempo real
+        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.trim().isEmpty()) {
+                limpiarBusqueda();
+            }
+        });
     }
     
     /**
@@ -251,5 +271,36 @@ public class UsuariosViewController {
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
+    }
+    
+    /**
+     * Busca usuarios según el texto ingresado.
+     */
+    private void buscarUsuarios() {
+        String textoBusqueda = txtBuscar.getText().trim().toLowerCase();
+        
+        if (textoBusqueda.isEmpty()) {
+            limpiarBusqueda();
+            return;
+        }
+        
+        usuariosListFiltrada.clear();
+        for (Usuario usuario : usuariosList) {
+            if (usuario.getNombre().toLowerCase().contains(textoBusqueda) ||
+                usuario.getEmail().toLowerCase().contains(textoBusqueda) ||
+                usuario.getRol().toLowerCase().contains(textoBusqueda)) {
+                usuariosListFiltrada.add(usuario);
+            }
+        }
+        
+        tablaUsuarios.setItems(usuariosListFiltrada);
+    }
+    
+    /**
+     * Limpia la búsqueda y muestra todos los usuarios.
+     */
+    private void limpiarBusqueda() {
+        txtBuscar.clear();
+        tablaUsuarios.setItems(usuariosList);
     }
 }

@@ -6,14 +6,18 @@ import com.balancerx.infrastructure.persistence.mapper.ArchivoMapper;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
 public class ArchivoRepositoryAdapter implements ArchivoRepository {
     private final ArchivoJpaRepository jpaRepository;
     private final ArchivoMapper mapper;
+
+    public ArchivoRepositoryAdapter(ArchivoJpaRepository jpaRepository, ArchivoMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public Archivo save(Archivo archivo) {

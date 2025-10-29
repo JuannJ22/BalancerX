@@ -7,14 +7,18 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
 public class PuntoVentaRepositoryAdapter implements PuntoVentaRepository {
     private final PuntoVentaJpaRepository jpaRepository;
     private final PuntoVentaMapper mapper;
+
+    public PuntoVentaRepositoryAdapter(PuntoVentaJpaRepository jpaRepository, PuntoVentaMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public PuntoVenta save(PuntoVenta puntoVenta) {

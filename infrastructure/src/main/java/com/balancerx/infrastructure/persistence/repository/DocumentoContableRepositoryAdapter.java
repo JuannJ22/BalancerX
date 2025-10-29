@@ -7,14 +7,19 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.stereotype.Repository;
 
 @Repository
-@RequiredArgsConstructor
+
 public class DocumentoContableRepositoryAdapter implements DocumentoContableRepository {
     private final DocumentoContableJpaRepository jpaRepository;
     private final DocumentoContableMapper mapper;
+
+    public DocumentoContableRepositoryAdapter(DocumentoContableJpaRepository jpaRepository, DocumentoContableMapper mapper) {
+        this.jpaRepository = jpaRepository;
+        this.mapper = mapper;
+    }
 
     @Override
     public DocumentoContable save(DocumentoContable documento) {

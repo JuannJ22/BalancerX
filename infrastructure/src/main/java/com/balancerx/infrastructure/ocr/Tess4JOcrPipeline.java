@@ -10,7 +10,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class Tess4JOcrPipeline implements OcrPipeline {
     private static final Logger log = LoggerFactory.getLogger(Tess4JOcrPipeline.class);
     private static final List<String> ORDEN_OBLIGATORIO = List.of(
@@ -75,4 +73,4 @@ public class Tess4JOcrPipeline implements OcrPipeline {
         }
     }
 }
-
+

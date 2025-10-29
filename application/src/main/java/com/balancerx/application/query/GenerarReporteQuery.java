@@ -19,4 +19,21 @@ public class GenerarReporteQuery {
         this.hasta = hasta;
         this.puntoVentaId = puntoVentaId;
     }
+
+    // Métodos getter manuales para resolver errores de compilación
+    public String getTipo() {
+        return tipo;
+    }
+
+    public LocalDate getDesde() {
+        return desde;
+    }
+
+    public LocalDate getHasta() {
+        return hasta;
+    }
+
+    public UUID getPuntoVentaId() {
+        return puntoVentaId;
+    }
 }
