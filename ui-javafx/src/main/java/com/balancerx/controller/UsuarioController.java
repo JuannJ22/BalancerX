@@ -38,17 +38,18 @@ public class UsuarioController {
      * @param email Email del usuario
      * @param password Contraseña del usuario
      * @param rol Rol del usuario
+     * @param activo Estado de activación inicial
      * @return El usuario registrado
      */
-    public Usuario registrarUsuario(String nombre, String email, String password, String rol) {
+    public Usuario registrarUsuario(String nombre, String email, String password, String rol, boolean activo) {
         Usuario nuevoUsuario = new Usuario();
         nuevoUsuario.setNombre(nombre);
         nuevoUsuario.setEmail(email);
         nuevoUsuario.setRol(rol);
         // En un caso real, aquí se haría el hash de la contraseña
         nuevoUsuario.setHashPassword(password);
-        nuevoUsuario.setActivo(true);
-        
+        nuevoUsuario.setActivo(activo);
+
         return usuarioService.registrarUsuario(nuevoUsuario);
     }
     
@@ -66,20 +67,28 @@ public class UsuarioController {
      * @param nombre Nuevo nombre
      * @param email Nuevo email
      * @param rol Nuevo rol
+     * @param activo Estado activo actualizado
+     * @param password Nueva contraseña opcional (puede ser null)
      * @return El usuario actualizado
      */
-    public Optional<Usuario> actualizarUsuario(Long id, String nombre, String email, String rol) {
+    public Optional<Usuario> actualizarUsuario(Long id, String nombre, String email, String rol,
+                                               boolean activo, String password) {
         Optional<Usuario> usuarioOpt = usuarioService.obtenerUsuarioPorId(id);
-        
+
         if (usuarioOpt.isPresent()) {
             Usuario usuario = usuarioOpt.get();
             usuario.setNombre(nombre);
             usuario.setEmail(email);
             usuario.setRol(rol);
-            
+            usuario.setActivo(activo);
+
+            if (password != null && !password.isBlank()) {
+                usuario.setHashPassword(password);
+            }
+
             return Optional.of(usuarioService.actualizarUsuario(usuario));
         }
-        
+
         return Optional.empty();
     }
     

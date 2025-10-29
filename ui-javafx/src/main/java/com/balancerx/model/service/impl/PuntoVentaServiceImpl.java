@@ -27,18 +27,25 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
     }
     
     private void inicializarDatos() {
-        puntosVenta.add(new PuntoVenta(idGenerator.getAndIncrement(), "Punto de Venta Principal", true, LocalDateTime.now()));
-        puntosVenta.add(new PuntoVenta(idGenerator.getAndIncrement(), "Punto de Venta Secundario", true, LocalDateTime.now()));
-        puntosVenta.add(new PuntoVenta(idGenerator.getAndIncrement(), "Punto de Venta Temporal", false, LocalDateTime.now()));
+        puntosVenta.add(new PuntoVenta(idGenerator.getAndIncrement(), "PV-001", "Punto de Venta Principal",
+                "Calle 10 #20-30", "555-0101", "principal@balancerx.com", true, LocalDateTime.now()));
+        puntosVenta.add(new PuntoVenta(idGenerator.getAndIncrement(), "PV-002", "Punto de Venta Norte",
+                "Carrera 45 #12-45", "555-0102", "norte@balancerx.com", true, LocalDateTime.now()));
+        puntosVenta.add(new PuntoVenta(idGenerator.getAndIncrement(), "PV-003", "Punto de Venta Temporal",
+                "Av. Siempre Viva 123", "555-0103", "temporal@balancerx.com", false, LocalDateTime.now()));
     }
-    
+
     @Override
     public PuntoVenta guardar(PuntoVenta puntoVenta) {
         if (puntoVenta.getId() == null) {
             // Nuevo punto de venta
             PuntoVenta nuevo = new PuntoVenta(
                 idGenerator.getAndIncrement(),
+                puntoVenta.getCodigo(),
                 puntoVenta.getNombre(),
+                puntoVenta.getDireccion(),
+                puntoVenta.getTelefono(),
+                puntoVenta.getEmail(),
                 puntoVenta.isActivo(),
                 LocalDateTime.now()
             );
@@ -74,7 +81,11 @@ public class PuntoVentaServiceImpl implements PuntoVentaService {
         Optional<PuntoVenta> existente = buscarPorId(id);
         if (existente.isPresent()) {
             PuntoVenta pv = existente.get();
+            pv.setCodigo(puntoVentaActualizado.getCodigo());
             pv.setNombre(puntoVentaActualizado.getNombre());
+            pv.setDireccion(puntoVentaActualizado.getDireccion());
+            pv.setTelefono(puntoVentaActualizado.getTelefono());
+            pv.setEmail(puntoVentaActualizado.getEmail());
             pv.setActivo(puntoVentaActualizado.isActivo());
             return pv;
         }

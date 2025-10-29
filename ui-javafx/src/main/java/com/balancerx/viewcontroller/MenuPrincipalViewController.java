@@ -1,16 +1,22 @@
 package com.balancerx.viewcontroller;
 
+import com.balancerx.AppContext;
+import com.balancerx.controller.CuadreController;
+import com.balancerx.controller.PuntoVentaController;
+import com.balancerx.controller.UsuarioController;
 import com.balancerx.model.entity.Usuario;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 /**
  * Controlador de vista para la pantalla principal del sistema.
@@ -56,9 +62,25 @@ public class MenuPrincipalViewController {
     
     @FXML
     private Button btnConfiguracion;
-    
+
     private Usuario usuarioActual;
-    
+    private AppContext appContext;
+    private UsuarioController usuarioController;
+    private PuntoVentaController puntoVentaController;
+    private CuadreController cuadreController;
+
+    @FXML
+    private void initialize() {
+        setAppContext(AppContext.getInstance());
+    }
+
+    public void setAppContext(AppContext appContext) {
+        this.appContext = appContext;
+        this.usuarioController = appContext.getUsuarioController();
+        this.puntoVentaController = appContext.getPuntoVentaController();
+        this.cuadreController = appContext.getCuadreController();
+    }
+
     /**
      * Inicializa el controlador con el usuario autenticado.
      * @param usuario Usuario autenticado
@@ -83,7 +105,7 @@ public class MenuPrincipalViewController {
         btnNuevoCuadre.setOnAction(event -> mostrarModuloCuadres());
         btnReportes.setOnAction(event -> mostrarReportes());
         btnConfiguracion.setOnAction(event -> mostrarConfiguracion());
-        
+
         // Actualizar estadísticas del dashboard
         actualizarEstadisticasDashboard();
     }
@@ -130,11 +152,13 @@ public class MenuPrincipalViewController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/balancerx/view/CuadresView.fxml"));
             Parent view = loader.load();
-            
+
             CuadresViewController controller = loader.getController();
+            controller.setAppContext(appContext);
             controller.inicializar(usuarioActual);
-            
+
             mainContainer.setCenter(view);
+            marcarBotonActivo(btnCuadres);
         } catch (IOException e) {
             mostrarError("Error al cargar el módulo de cuadres", e.getMessage());
         }
@@ -147,11 +171,13 @@ public class MenuPrincipalViewController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/balancerx/view/PuntosVentaView.fxml"));
             Parent view = loader.load();
-            
+
             PuntosVentaViewController controller = loader.getController();
+            controller.setAppContext(appContext);
             controller.inicializar(usuarioActual);
-            
+
             mainContainer.setCenter(view);
+            marcarBotonActivo(btnPuntosVenta);
         } catch (IOException e) {
             mostrarError("Error al cargar el módulo de puntos de venta", e.getMessage());
         }
@@ -164,11 +190,13 @@ public class MenuPrincipalViewController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/balancerx/view/UsuariosView.fxml"));
             Parent view = loader.load();
-            
+
             UsuariosViewController controller = loader.getController();
+            controller.setAppContext(appContext);
             controller.inicializar(usuarioActual);
-            
+
             mainContainer.setCenter(view);
+            marcarBotonActivo(btnUsuarios);
         } catch (IOException e) {
             mostrarError("Error al cargar el módulo de usuarios", e.getMessage());
         }
@@ -181,7 +209,10 @@ public class MenuPrincipalViewController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/balancerx/view/Login.fxml"));
             Parent root = loader.load();
-            
+
+            LoginViewController loginController = loader.getController();
+            loginController.setUsuarioController(usuarioController);
+
             Stage stage = (Stage) mainContainer.getScene().getWindow();
             Scene scene = new Scene(root);
             // Adjuntar hoja de estilos global
@@ -199,10 +230,15 @@ public class MenuPrincipalViewController {
      * Actualiza las estadísticas mostradas en el dashboard.
      */
     private void actualizarEstadisticasDashboard() {
-        // En una implementación real, estos datos vendrían de la base de datos
-        lblCuadresHoy.setText("5");
-        lblPuntosVenta.setText("3");
-        lblUsuarios.setText("8");
+        int cuadresHoy = (int) cuadreController.obtenerTodos().stream()
+                .filter(c -> LocalDate.now().equals(c.getFecha()))
+                .count();
+        int totalPuntos = puntoVentaController.obtenerTodos().size();
+        int totalUsuarios = usuarioController.obtenerTodosLosUsuarios().size();
+
+        lblCuadresHoy.setText(String.valueOf(cuadresHoy));
+        lblPuntosVenta.setText(String.valueOf(totalPuntos));
+        lblUsuarios.setText(String.valueOf(totalUsuarios));
     }
     
     /**
@@ -227,20 +263,33 @@ public class MenuPrincipalViewController {
      * @param mensaje Contenido del mensaje
      */
     private void mostrarInfo(String titulo, String mensaje) {
-        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.INFORMATION);
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(titulo);
         alert.setHeaderText(null);
         alert.setContentText(mensaje);
         alert.showAndWait();
     }
-    
+
     /**
      * Muestra un mensaje de error.
      * @param titulo Título del error
      * @param mensaje Mensaje del error
      */
     private void mostrarError(String titulo, String mensaje) {
-        System.err.println(titulo + ": " + mensaje);
-        // Aquí se podría mostrar un diálogo de error
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(titulo);
+        alert.setHeaderText(null);
+        alert.setContentText(mensaje);
+        alert.showAndWait();
+    }
+
+    private void marcarBotonActivo(Button botonActivo) {
+        btnCuadres.getStyleClass().remove("active");
+        btnPuntosVenta.getStyleClass().remove("active");
+        btnUsuarios.getStyleClass().remove("active");
+
+        if (!botonActivo.getStyleClass().contains("active")) {
+            botonActivo.getStyleClass().add("active");
+        }
     }
 }

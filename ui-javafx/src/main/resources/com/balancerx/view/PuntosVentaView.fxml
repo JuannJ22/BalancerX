@@ -34,12 +34,15 @@
             <TableView fx:id="tablaPuntosVenta" VBox.vgrow="ALWAYS" styleClass="table-view">
                 <columns>
                     <TableColumn fx:id="colId" text="ID" prefWidth="60" />
-                    <TableColumn fx:id="colNombre" text="Nombre" prefWidth="250" />
+                    <TableColumn fx:id="colCodigo" text="Código" prefWidth="100" />
+                    <TableColumn fx:id="colNombre" text="Nombre" prefWidth="180" />
+                    <TableColumn fx:id="colDireccion" text="Dirección" prefWidth="200" />
+                    <TableColumn fx:id="colTelefono" text="Teléfono" prefWidth="120" />
                     <TableColumn fx:id="colActivo" text="Activo" prefWidth="80" />
                 </columns>
             </TableView>
         </VBox>
-        
+
         <!-- Panel de Detalles -->
         <VBox spacing="16.0" styleClass="content-panel">
             <padding>
@@ -50,18 +53,38 @@
             
             <VBox spacing="16.0" styleClass="form-container">
                 <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Código:" styleClass="label" />
+                    <TextField fx:id="txtCodigo" styleClass="text-field" promptText="PV-001" />
+                </VBox>
+
+                <VBox spacing="8.0" styleClass="form-field">
                     <Label text="Nombre:" styleClass="label" />
                     <TextField fx:id="txtNombre" styleClass="text-field" promptText="Ingrese el nombre del punto de venta" />
                 </VBox>
-                
+
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Dirección:" styleClass="label" />
+                    <TextField fx:id="txtDireccion" styleClass="text-field" promptText="Dirección física" />
+                </VBox>
+
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Teléfono:" styleClass="label" />
+                    <TextField fx:id="txtTelefono" styleClass="text-field" promptText="555-0101" />
+                </VBox>
+
+                <VBox spacing="8.0" styleClass="form-field">
+                    <Label text="Email de contacto:" styleClass="label" />
+                    <TextField fx:id="txtEmail" styleClass="text-field" promptText="contacto@balancerx.com" />
+                </VBox>
+
                 <VBox spacing="8.0" styleClass="form-field">
                     <CheckBox fx:id="chkActivo" text="Punto de Venta Activo" styleClass="label" />
                 </VBox>
-                
+
                 <Region VBox.vgrow="ALWAYS" />
-                
+
                 <HBox spacing="12.0" alignment="CENTER_RIGHT">
-                    <Button fx:id="btnEliminar" text="Eliminar" styleClass="button, secondary" />
+                    <Button fx:id="btnEliminar" text="Desactivar" styleClass="button, secondary" />
                     <Button fx:id="btnGuardar" text="Guardar" styleClass="button" />
                 </HBox>
             </VBox>

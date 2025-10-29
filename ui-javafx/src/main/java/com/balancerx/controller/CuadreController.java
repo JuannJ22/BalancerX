@@ -98,4 +98,12 @@ public class CuadreController {
     public boolean firmarCuadre(Long cuadreId, Long usuarioId, String rol) {
         return cuadreService.firmarCuadre(cuadreId, usuarioId, rol);
     }
+
+    /**
+     * Obtiene todos los cuadres disponibles en el servicio en memoria.
+     * @return Lista de cuadres
+     */
+    public List<Cuadre> obtenerTodos() {
+        return cuadreService.obtenerTodos();
+    }
 }

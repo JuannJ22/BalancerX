@@ -5,10 +5,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import com.balancerx.viewcontroller.LoginViewController;
-import com.balancerx.controller.UsuarioController;
-import com.balancerx.model.service.impl.UsuarioServiceImpl;
-
 /**
  * Clase principal de la aplicación BalancerX.
  * Punto de entrada para la aplicación JavaFX.
@@ -18,10 +14,6 @@ public class BalancerXDesktopApp extends Application {
     public void start(Stage stage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/balancerx/view/Login.fxml"));
         Scene scene = new Scene(loader.load(), 480, 320);
-
-        // Inyectar UsuarioController al LoginViewController
-        LoginViewController controller = loader.getController();
-        controller.initialize(new UsuarioController(new UsuarioServiceImpl()));
 
         // Adjuntar hoja de estilos global
         scene.getStylesheets().add(getClass().getResource("/com/balancerx/view/styles.css").toExternalForm());

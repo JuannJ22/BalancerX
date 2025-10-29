@@ -1,7 +1,10 @@
 package com.balancerx.viewcontroller;
 
+import com.balancerx.AppContext;
 import com.balancerx.controller.CuadreController;
+import com.balancerx.controller.PuntoVentaController;
 import com.balancerx.model.entity.Cuadre;
+import com.balancerx.model.entity.PuntoVenta;
 import com.balancerx.model.entity.Usuario;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,6 +14,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Controlador de vista para la gestión de cuadres.
@@ -70,28 +76,39 @@ public class CuadresViewController {
     private ObservableList<Cuadre> cuadresListFiltrada;
     private Usuario usuarioActual;
     private Cuadre cuadreSeleccionado;
-    
+    private AppContext appContext;
+    private PuntoVentaController puntoVentaController;
+    private final Map<Long, String> nombresPuntosVenta = new HashMap<>();
+
     /**
      * Inicializa el controlador con el usuario autenticado.
      * @param usuario Usuario autenticado
      */
     public void inicializar(Usuario usuario) {
         this.usuarioActual = usuario;
-        this.cuadreController = new CuadreController(new com.balancerx.model.service.impl.CuadreServiceImpl());
+        if (cuadreController == null) {
+            setAppContext(AppContext.getInstance());
+        }
         this.cuadresList = FXCollections.observableArrayList();
         this.cuadresListFiltrada = FXCollections.observableArrayList();
-        
+
         // Configurar la tabla
         configurarTabla();
-        
+
         // Configurar controles
         configurarControles();
-        
+
         // Cargar datos
         cargarCuadres();
-        
+
         // Configurar eventos
         configurarEventos();
+    }
+
+    public void setAppContext(AppContext appContext) {
+        this.appContext = appContext;
+        this.cuadreController = appContext.getCuadreController();
+        this.puntoVentaController = appContext.getPuntoVentaController();
     }
     
     /**
@@ -100,34 +117,28 @@ public class CuadresViewController {
     private void configurarTabla() {
         colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         colFecha.setCellValueFactory(new PropertyValueFactory<>("fecha"));
-        colPuntoVenta.setCellValueFactory(cellData -> {
-            // En una implementación real, esto obtendría el nombre del punto de venta
-            return javafx.beans.binding.Bindings.createStringBinding(() -> 
-                "Punto de Venta " + cellData.getValue().getPuntoVentaId());
-        });
+        colPuntoVenta.setCellValueFactory(cellData -> javafx.beans.binding.Bindings.createStringBinding(() ->
+                nombresPuntosVenta.getOrDefault(cellData.getValue().getPuntoVentaId(),
+                        "PV " + cellData.getValue().getPuntoVentaId())));
         colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
-        
+
         tablaCuadres.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
                 cuadreSeleccionado = newSelection;
                 mostrarDetallesCuadre(cuadreSeleccionado);
+                btnGuardar.setText("Actualizar");
             }
         });
     }
-    
+
     /**
      * Configura los controles del formulario.
      */
     private void configurarControles() {
         dpFecha.setValue(LocalDate.now());
-        
-        // Cargar puntos de venta en el combo
-        ObservableList<String> puntosVenta = FXCollections.observableArrayList(
-            "Punto de Venta 1", "Punto de Venta 2", "Punto de Venta 3"
-        );
-        cbPuntoVenta.setItems(puntosVenta);
-        cbPuntoVenta.getSelectionModel().selectFirst();
-        
+
+        cargarPuntosDeVenta();
+
         // Configurar filtro de estados
         ObservableList<String> estados = FXCollections.observableArrayList(
             "Todos", "BORRADOR", "APROBADO", "RECHAZADO"
@@ -141,33 +152,10 @@ public class CuadresViewController {
      */
     private void cargarCuadres() {
         try {
-            cuadresList.clear();
-            // En una implementación real, esto cargaría desde el controlador
-            // cuadresList.addAll(cuadreController.obtenerTodos());
-            
-            // Por ahora, agregamos datos de ejemplo
-            Cuadre cuadre1 = new Cuadre();
-            cuadre1.setId(1L);
-            cuadre1.setFecha(LocalDate.now());
-            cuadre1.setPuntoVentaId(1L);
-            cuadre1.setEstado(Cuadre.EstadoCuadre.BORRADOR);
-            cuadre1.setTotalTirilla(new BigDecimal("1000.00"));
-            cuadre1.setTotalBancos(new BigDecimal("950.00"));
-            cuadre1.setTotalContable(new BigDecimal("975.00"));
-            
-            Cuadre cuadre2 = new Cuadre();
-            cuadre2.setId(2L);
-            cuadre2.setFecha(LocalDate.now().minusDays(1));
-            cuadre2.setPuntoVentaId(2L);
-            cuadre2.setEstado(Cuadre.EstadoCuadre.APROBADO);
-            cuadre2.setTotalTirilla(new BigDecimal("2000.00"));
-            cuadre2.setTotalBancos(new BigDecimal("2000.00"));
-            cuadre2.setTotalContable(new BigDecimal("2000.00"));
-            
-            cuadresList.add(cuadre1);
-            cuadresList.add(cuadre2);
-            
+            cuadresList.setAll(cuadreController.obtenerTodos());
             tablaCuadres.setItems(cuadresList);
+            tablaCuadres.getSelectionModel().clearSelection();
+            btnGuardar.setText("Guardar");
         } catch (Exception e) {
             mostrarError("Error al cargar cuadres", e.getMessage());
         }
@@ -199,8 +187,10 @@ public class CuadresViewController {
      */
     private void mostrarDetallesCuadre(Cuadre cuadre) {
         dpFecha.setValue(cuadre.getFecha());
-        cbPuntoVenta.getSelectionModel().select("Punto de Venta " + cuadre.getPuntoVentaId());
-        
+        String opcion = cuadre.getPuntoVentaId() + " - " +
+                nombresPuntosVenta.getOrDefault(cuadre.getPuntoVentaId(), "Punto de Venta");
+        cbPuntoVenta.getSelectionModel().select(opcion);
+
         txtTotalTirilla.setText(cuadre.getTotalTirilla() != null ? cuadre.getTotalTirilla().toString() : "");
         txtTotalBancos.setText(cuadre.getTotalBancos() != null ? cuadre.getTotalBancos().toString() : "");
         txtTotalContable.setText(cuadre.getTotalContable() != null ? cuadre.getTotalContable().toString() : "");
@@ -212,10 +202,13 @@ public class CuadresViewController {
     private void limpiarFormulario() {
         cuadreSeleccionado = null;
         dpFecha.setValue(LocalDate.now());
-        cbPuntoVenta.getSelectionModel().selectFirst();
+        if (!cbPuntoVenta.getItems().isEmpty()) {
+            cbPuntoVenta.getSelectionModel().selectFirst();
+        }
         txtTotalTirilla.clear();
         txtTotalBancos.clear();
         txtTotalContable.clear();
+        btnGuardar.setText("Guardar");
     }
     
     /**
@@ -225,33 +218,24 @@ public class CuadresViewController {
         try {
             LocalDate fecha = dpFecha.getValue();
             String puntoVentaStr = cbPuntoVenta.getValue();
-            Long puntoVentaId = Long.parseLong(puntoVentaStr.replace("Punto de Venta ", ""));
+            if (puntoVentaStr == null || puntoVentaStr.isBlank()) {
+                mostrarError("Error de validación", "Seleccione un punto de venta válido");
+                return;
+            }
+            Long puntoVentaId = Long.parseLong(puntoVentaStr.split(" - ")[0]);
             
             BigDecimal totalTirilla = txtTotalTirilla.getText().isEmpty() ? 
                 BigDecimal.ZERO : new BigDecimal(txtTotalTirilla.getText());
             BigDecimal totalBancos = txtTotalBancos.getText().isEmpty() ? 
                 BigDecimal.ZERO : new BigDecimal(txtTotalBancos.getText());
-            BigDecimal totalContable = txtTotalContable.getText().isEmpty() ? 
+            BigDecimal totalContable = txtTotalContable.getText().isEmpty() ?
                 BigDecimal.ZERO : new BigDecimal(txtTotalContable.getText());
-            
+
             if (cuadreSeleccionado == null) {
                 // Crear nuevo cuadre
-                Cuadre nuevoCuadre = new Cuadre();
-                nuevoCuadre.setFecha(fecha);
-                nuevoCuadre.setPuntoVentaId(puntoVentaId);
-                nuevoCuadre.setEstado(Cuadre.EstadoCuadre.BORRADOR);
-                nuevoCuadre.setTotalTirilla(totalTirilla);
-                nuevoCuadre.setTotalBancos(totalBancos);
-                nuevoCuadre.setTotalContable(totalContable);
-                nuevoCuadre.setCreadoPor(usuarioActual.getId());
-                
-                // En una implementación real, esto guardaría usando el controlador
-                // cuadreController.crearCuadre(fecha, puntoVentaId, usuarioActual.getId());
-                // cuadreController.actualizarTotales(nuevoCuadre.getId(), totalTirilla, totalBancos, totalContable);
-                
-                // Por ahora, simulamos la asignación de un ID
-                nuevoCuadre.setId((long) (cuadresList.size() + 1));
-                cuadresList.add(nuevoCuadre);
+                Cuadre nuevoCuadre = cuadreController.crearCuadre(fecha, puntoVentaId,
+                        usuarioActual != null ? usuarioActual.getId() : null);
+                cuadreController.actualizarTotales(nuevoCuadre.getId(), totalTirilla, totalBancos, totalContable);
             } else {
                 // Actualizar cuadre existente
                 cuadreSeleccionado.setFecha(fecha);
@@ -260,16 +244,14 @@ public class CuadresViewController {
                 cuadreSeleccionado.setTotalBancos(totalBancos);
                 cuadreSeleccionado.setTotalContable(totalContable);
                 cuadreSeleccionado.setActualizadoPor(usuarioActual.getId());
-                
-                // En una implementación real, esto actualizaría usando el controlador
-                // cuadreController.actualizarTotales(cuadreSeleccionado.getId(), totalTirilla, totalBancos, totalContable);
-                
-                // Actualizar la tabla
+
+                cuadreController.actualizarTotales(cuadreSeleccionado.getId(), totalTirilla, totalBancos, totalContable);
                 tablaCuadres.refresh();
             }
-            
+
             limpiarFormulario();
             mostrarMensaje("Cuadre guardado", "El cuadre ha sido guardado correctamente.");
+            cargarCuadres();
         } catch (Exception e) {
             mostrarError("Error al guardar cuadre", e.getMessage());
         }
@@ -321,11 +303,12 @@ public class CuadresViewController {
             boolean coincideTexto = textoBusqueda.isEmpty() ||
                 cuadre.getId().toString().contains(textoBusqueda) ||
                 cuadre.getFecha().toString().contains(textoBusqueda) ||
-                ("Punto de Venta " + cuadre.getPuntoVentaId()).toLowerCase().contains(textoBusqueda);
-            
+                nombresPuntosVenta.getOrDefault(cuadre.getPuntoVentaId(), "")
+                        .toLowerCase().contains(textoBusqueda);
+
             boolean coincideEstado = estadoFiltro.equals("Todos") ||
                 cuadre.getEstado().toString().equals(estadoFiltro);
-            
+
             if (coincideTexto && coincideEstado) {
                 cuadresListFiltrada.add(cuadre);
             }
@@ -341,5 +324,22 @@ public class CuadresViewController {
         txtBuscar.clear();
         cbFiltroEstado.getSelectionModel().selectFirst(); // "Todos"
         tablaCuadres.setItems(cuadresList);
+        tablaCuadres.refresh();
+    }
+
+    private void cargarPuntosDeVenta() {
+        List<PuntoVenta> puntosVenta = puntoVentaController.obtenerTodos();
+        nombresPuntosVenta.clear();
+        puntosVenta.forEach(pv -> nombresPuntosVenta.put(pv.getId(), pv.getNombre()));
+
+        ObservableList<String> opciones = FXCollections.observableArrayList();
+        for (PuntoVenta pv : puntosVenta) {
+            opciones.add(pv.getId() + " - " + pv.getNombre());
+        }
+
+        cbPuntoVenta.setItems(opciones);
+        if (!opciones.isEmpty()) {
+            cbPuntoVenta.getSelectionModel().selectFirst();
+        }
     }
 }

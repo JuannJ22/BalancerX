@@ -72,4 +72,10 @@ public interface CuadreService {
      * @return true si la firma fue exitosa, false en caso contrario
      */
     boolean firmarCuadre(Long cuadreId, Long usuarioId, String rol);
+
+    /**
+     * Obtiene todos los cuadres registrados en memoria.
+     * @return Lista de cuadres
+     */
+    List<Cuadre> obtenerTodos();
 }
