@@ -24,8 +24,19 @@ public class TransferenciaMapper {
         entity.setAsignadoEn(transferencia.getAsignadoEn().orElse(null));
         entity.setCuentaContable(transferencia.getCuentaContable().orElse(null));
         entity.setCuentaBancaria(transferencia.getCuentaBancaria().orElse(null));
+        entity.setPuntoVentaTexto(transferencia.getPuntoVentaTexto().orElse(null));
+        entity.setValorTexto(transferencia.getValorTexto().orElse(null));
+        entity.setFechaTexto(transferencia.getFechaTexto().orElse(null));
         entity.setActualizadoPor(transferencia.getActualizadoPor().orElse(null));
         entity.setActualizadoEn(transferencia.getActualizadoEn().orElse(null));
+        entity.setReceptorId(transferencia.getReceptorId().orElse(null));
+        entity.setFirmadaPor(transferencia.getFirmadaPor().orElse(null));
+        entity.setFirmadaEn(transferencia.getFirmadaEn().orElse(null));
+        entity.setRecibidaPor(transferencia.getRecibidaPor().orElse(null));
+        entity.setRecibidaEn(transferencia.getRecibidaEn().orElse(null));
+        entity.setImpresaPor(transferencia.getImpresaPor().orElse(null));
+        entity.setImpresaEn(transferencia.getImpresaEn().orElse(null));
+        entity.setComentarioRecepcion(transferencia.getComentarioRecepcion().orElse(null));
         entity.setVersion(transferencia.getVersion());
         return entity;
     }
@@ -41,6 +52,17 @@ public class TransferenciaMapper {
                 .cargadoPor(entity.getCargadoPor())
                 .createdAt(entity.getCreatedAt())
                 .estado(entity.getEstado() != null ? entity.getEstado() : EstadoTransferencia.REGISTRADA)
+                .puntoVentaTexto(entity.getPuntoVentaTexto())
+                .valorTexto(entity.getValorTexto())
+                .fechaTexto(entity.getFechaTexto())
+                .firmadaPor(entity.getFirmadaPor())
+                .firmadaEn(entity.getFirmadaEn())
+                .recibidaPor(entity.getRecibidaPor())
+                .recibidaEn(entity.getRecibidaEn())
+                .impresaPor(entity.getImpresaPor())
+                .impresaEn(entity.getImpresaEn())
+                .comentarioRecepcion(entity.getComentarioRecepcion())
+                .receptorId(entity.getReceptorId())
                 .version(entity.getVersion());
 
         if (entity.getTipoAsignacion() != null) {

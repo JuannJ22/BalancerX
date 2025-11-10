@@ -1,19 +1,23 @@
 package com.balancerx.api.controller;
 
 import com.balancerx.api.dto.AsignarTransferenciaRequest;
+import com.balancerx.api.dto.RecepcionarTransferenciaRequest;
 import com.balancerx.api.dto.RegistrarTransferenciaRequest;
 import com.balancerx.api.dto.TransferenciaHistorialResponse;
 import com.balancerx.api.dto.TransferenciaResponse;
 import com.balancerx.application.command.AsignarTransferenciaCommand;
+import com.balancerx.application.command.RegistrarRecepcionTransferenciaCommand;
 import com.balancerx.application.command.RegistrarTransferenciaCommand;
 import com.balancerx.application.query.ConsultarTransferenciasQuery;
 import com.balancerx.application.usecase.AsignarTransferenciaUseCase;
 import com.balancerx.application.usecase.ConsultarHistorialTransferenciaUseCase;
 import com.balancerx.application.usecase.ConsultarTransferenciasUseCase;
+import com.balancerx.application.usecase.RegistrarRecepcionTransferenciaUseCase;
 import com.balancerx.application.usecase.RegistrarTransferenciaUseCase;
 import com.balancerx.domain.valueobject.BancoTransferencia;
 import com.balancerx.domain.valueobject.EstadoTransferencia;
 import com.balancerx.domain.valueobject.TipoAsignacionTransferencia;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -36,15 +40,18 @@ public class TransferenciaController {
     private final AsignarTransferenciaUseCase asignarTransferenciaUseCase;
     private final ConsultarTransferenciasUseCase consultarTransferenciasUseCase;
     private final ConsultarHistorialTransferenciaUseCase consultarHistorialTransferenciaUseCase;
+    private final RegistrarRecepcionTransferenciaUseCase registrarRecepcionTransferenciaUseCase;
 
     public TransferenciaController(RegistrarTransferenciaUseCase registrarTransferenciaUseCase,
                                    AsignarTransferenciaUseCase asignarTransferenciaUseCase,
                                    ConsultarTransferenciasUseCase consultarTransferenciasUseCase,
-                                   ConsultarHistorialTransferenciaUseCase consultarHistorialTransferenciaUseCase) {
+                                   ConsultarHistorialTransferenciaUseCase consultarHistorialTransferenciaUseCase,
+                                   RegistrarRecepcionTransferenciaUseCase registrarRecepcionTransferenciaUseCase) {
         this.registrarTransferenciaUseCase = registrarTransferenciaUseCase;
         this.asignarTransferenciaUseCase = asignarTransferenciaUseCase;
         this.consultarTransferenciasUseCase = consultarTransferenciasUseCase;
         this.consultarHistorialTransferenciaUseCase = consultarHistorialTransferenciaUseCase;
+        this.registrarRecepcionTransferenciaUseCase = registrarRecepcionTransferenciaUseCase;
     }
 
     @PostMapping
@@ -61,8 +68,10 @@ public class TransferenciaController {
                 request.fecha(),
                 request.valor(),
                 request.comentario(),
+                request.puntoVenta(),
                 tipoAsignacion,
-                request.destinoId()
+                request.destinoId(),
+                request.receptorId()
         );
 
         return TransferenciaResponse.fromDomain(registrarTransferenciaUseCase.handle(command));
@@ -91,6 +100,8 @@ public class TransferenciaController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
             @RequestParam(required = false) String estado,
+            @RequestParam(required = false) BigDecimal valorMin,
+            @RequestParam(required = false) BigDecimal valorMax,
             @RequestParam(required = false) String tipoAsignacion,
             @RequestParam(required = false) UUID destinoId) {
 
@@ -98,6 +109,8 @@ public class TransferenciaController {
                 banco != null ? BancoTransferencia.fromString(banco) : null,
                 fechaDesde,
                 fechaHasta,
+                valorMin,
+                valorMax,
                 parseTipoAsignacion(tipoAsignacion),
                 destinoId,
                 estado != null ? EstadoTransferencia.valueOf(estado.toUpperCase()) : null
@@ -113,6 +126,21 @@ public class TransferenciaController {
         return consultarHistorialTransferenciaUseCase.handle(id).stream()
                 .map(TransferenciaHistorialResponse::fromDomain)
                 .toList();
+    }
+
+    @PostMapping("/{id}/recepcion")
+    public TransferenciaResponse registrarRecepcion(@PathVariable UUID id,
+                                                    @RequestBody RecepcionarTransferenciaRequest request) {
+        UUID usuarioId = Optional.ofNullable(request.usuarioId())
+                .orElseThrow(() -> new IllegalArgumentException("El usuario receptor es obligatorio"));
+
+        RegistrarRecepcionTransferenciaCommand command = new RegistrarRecepcionTransferenciaCommand(
+                id,
+                usuarioId,
+                request.comentario()
+        );
+
+        return TransferenciaResponse.fromDomain(registrarRecepcionTransferenciaUseCase.handle(command));
     }
 
     private TipoAsignacionTransferencia parseTipoAsignacion(String raw) {

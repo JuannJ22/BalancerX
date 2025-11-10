@@ -39,6 +39,12 @@ public class JpaUsuario {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @Column(name = "firma_path")
+    private String firmaPath;
+
+    @Column(name = "firma_checksum")
+    private String firmaChecksum;
+
     // Métodos getter manuales para resolver errores de compilación
     public UUID getId() {
         return id;
@@ -95,5 +101,21 @@ public class JpaUsuario {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getFirmaPath() {
+        return firmaPath;
+    }
+
+    public void setFirmaPath(String firmaPath) {
+        this.firmaPath = firmaPath;
+    }
+
+    public String getFirmaChecksum() {
+        return firmaChecksum;
+    }
+
+    public void setFirmaChecksum(String firmaChecksum) {
+        this.firmaChecksum = firmaChecksum;
     }
 }
