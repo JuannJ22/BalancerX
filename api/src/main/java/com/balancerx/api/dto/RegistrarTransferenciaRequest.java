@@ -12,6 +12,8 @@ public record RegistrarTransferenciaRequest(
         LocalDate fecha,
         BigDecimal valor,
         String comentario,
+        String puntoVenta,
         String destinoTipo,
-        UUID destinoId) {
+        UUID destinoId,
+        UUID receptorId) {
 }

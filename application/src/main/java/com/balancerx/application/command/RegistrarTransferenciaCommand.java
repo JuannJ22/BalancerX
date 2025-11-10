@@ -15,13 +15,17 @@ public class RegistrarTransferenciaCommand {
     private final LocalDate fecha;
     private final BigDecimal valor;
     private final String comentario;
+    private final String puntoVenta;
     private final TipoAsignacionTransferencia tipoAsignacion;
     private final UUID destinoId;
+    private final UUID receptorId;
 
     public RegistrarTransferenciaCommand(UUID usuarioId, String nombreArchivo, byte[] contenido,
                                          BancoTransferencia banco, LocalDate fecha, BigDecimal valor,
-                                         String comentario, TipoAsignacionTransferencia tipoAsignacion,
-                                         UUID destinoId) {
+                                         String comentario, String puntoVenta,
+                                         TipoAsignacionTransferencia tipoAsignacion,
+                                         UUID destinoId,
+                                         UUID receptorId) {
         this.usuarioId = usuarioId;
         this.nombreArchivo = nombreArchivo;
         this.contenido = contenido;
@@ -29,8 +33,10 @@ public class RegistrarTransferenciaCommand {
         this.fecha = fecha;
         this.valor = valor;
         this.comentario = comentario;
+        this.puntoVenta = puntoVenta;
         this.tipoAsignacion = tipoAsignacion;
         this.destinoId = destinoId;
+        this.receptorId = receptorId;
     }
 
     public UUID getUsuarioId() {
@@ -61,11 +67,19 @@ public class RegistrarTransferenciaCommand {
         return comentario;
     }
 
+    public Optional<String> getPuntoVenta() {
+        return Optional.ofNullable(puntoVenta);
+    }
+
     public Optional<TipoAsignacionTransferencia> getTipoAsignacion() {
         return Optional.ofNullable(tipoAsignacion);
     }
 
     public Optional<UUID> getDestinoId() {
         return Optional.ofNullable(destinoId);
+    }
+
+    public Optional<UUID> getReceptorId() {
+        return Optional.ofNullable(receptorId);
     }
 }

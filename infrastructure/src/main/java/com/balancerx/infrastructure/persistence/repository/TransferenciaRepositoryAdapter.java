@@ -7,6 +7,7 @@ import com.balancerx.domain.valueobject.EstadoTransferencia;
 import com.balancerx.domain.valueobject.TipoAsignacionTransferencia;
 import com.balancerx.infrastructure.persistence.jpa.JpaTransferencia;
 import com.balancerx.infrastructure.persistence.mapper.TransferenciaMapper;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +46,8 @@ public class TransferenciaRepositoryAdapter implements TransferenciaRepository {
     public List<Transferencia> search(Optional<BancoTransferencia> banco,
                                       Optional<LocalDate> fechaDesde,
                                       Optional<LocalDate> fechaHasta,
+                                      Optional<BigDecimal> valorMin,
+                                      Optional<BigDecimal> valorMax,
                                       Optional<TipoAsignacionTransferencia> tipoAsignacion,
                                       Optional<UUID> destinoId,
                                       Optional<EstadoTransferencia> estado) {
@@ -58,6 +61,12 @@ public class TransferenciaRepositoryAdapter implements TransferenciaRepository {
         }
         if (fechaHasta.isPresent()) {
             spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("fecha"), fechaHasta.get()));
+        }
+        if (valorMin.isPresent()) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("valor"), valorMin.get()));
+        }
+        if (valorMax.isPresent()) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("valor"), valorMax.get()));
         }
         if (tipoAsignacion.isPresent()) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("tipoAsignacion"), tipoAsignacion.get()));

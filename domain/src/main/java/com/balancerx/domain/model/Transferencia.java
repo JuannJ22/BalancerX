@@ -26,8 +26,19 @@ public class Transferencia {
     private final Instant asignadoEn;
     private final String cuentaContable;
     private final String cuentaBancaria;
+    private final String puntoVentaTexto;
+    private final String valorTexto;
+    private final String fechaTexto;
     private final UUID actualizadoPor;
     private final Instant actualizadoEn;
+    private final UUID receptorId;
+    private final UUID firmadaPor;
+    private final Instant firmadaEn;
+    private final UUID recibidaPor;
+    private final Instant recibidaEn;
+    private final UUID impresaPor;
+    private final Instant impresaEn;
+    private final String comentarioRecepcion;
     private final long version;
 
     private Transferencia(Builder builder) {
@@ -46,8 +57,19 @@ public class Transferencia {
         this.asignadoEn = builder.asignadoEn;
         this.cuentaContable = builder.cuentaContable;
         this.cuentaBancaria = builder.cuentaBancaria;
+        this.puntoVentaTexto = builder.puntoVentaTexto;
+        this.valorTexto = builder.valorTexto;
+        this.fechaTexto = builder.fechaTexto;
         this.actualizadoPor = builder.actualizadoPor;
         this.actualizadoEn = builder.actualizadoEn;
+        this.receptorId = builder.receptorId;
+        this.firmadaPor = builder.firmadaPor;
+        this.firmadaEn = builder.firmadaEn;
+        this.recibidaPor = builder.recibidaPor;
+        this.recibidaEn = builder.recibidaEn;
+        this.impresaPor = builder.impresaPor;
+        this.impresaEn = builder.impresaEn;
+        this.comentarioRecepcion = builder.comentarioRecepcion;
         this.version = builder.version;
     }
 
@@ -79,8 +101,19 @@ public class Transferencia {
                 .asignadoEn(instante)
                 .cuentaContable(cuentaContable)
                 .cuentaBancaria(cuentaBancaria)
+                .puntoVentaTexto(puntoVentaTexto)
+                .valorTexto(valorTexto)
+                .fechaTexto(fechaTexto)
                 .actualizadoPor(usuarioId)
                 .actualizadoEn(instante)
+                .receptorId(receptorId)
+                .firmadaPor(firmadaPor)
+                .firmadaEn(firmadaEn)
+                .recibidaPor(recibidaPor)
+                .recibidaEn(recibidaEn)
+                .impresaPor(impresaPor)
+                .impresaEn(impresaEn)
+                .comentarioRecepcion(comentarioRecepcion)
                 .version(version)
                 .build();
     }
@@ -103,8 +136,90 @@ public class Transferencia {
                 .asignadoEn(asignadoEn)
                 .cuentaContable(cuentaContable)
                 .cuentaBancaria(cuentaBancaria)
+                .puntoVentaTexto(puntoVentaTexto)
+                .valorTexto(valorTexto)
+                .fechaTexto(fechaTexto)
                 .actualizadoPor(usuarioId)
                 .actualizadoEn(instante)
+                .receptorId(receptorId)
+                .firmadaPor(firmadaPor)
+                .firmadaEn(firmadaEn)
+                .recibidaPor(recibidaPor)
+                .recibidaEn(recibidaEn)
+                .impresaPor(impresaPor)
+                .impresaEn(impresaEn)
+                .comentarioRecepcion(comentarioRecepcion)
+                .version(version)
+                .build();
+    }
+
+    public Transferencia marcarFirmada(UUID usuarioId, Instant instante) {
+        return Transferencia.builder()
+                .id(id)
+                .banco(banco)
+                .fecha(fecha)
+                .valor(valor)
+                .comentario(comentario)
+                .archivoId(archivoId)
+                .cargadoPor(cargadoPor)
+                .createdAt(createdAt)
+                .estado(estado)
+                .tipoAsignacion(tipoAsignacion)
+                .destinoId(destinoId)
+                .asignadoPor(asignadoPor)
+                .asignadoEn(asignadoEn)
+                .cuentaContable(cuentaContable)
+                .cuentaBancaria(cuentaBancaria)
+                .puntoVentaTexto(puntoVentaTexto)
+                .valorTexto(valorTexto)
+                .fechaTexto(fechaTexto)
+                .actualizadoPor(usuarioId)
+                .actualizadoEn(instante)
+                .receptorId(receptorId)
+                .firmadaPor(usuarioId)
+                .firmadaEn(instante)
+                .recibidaPor(recibidaPor)
+                .recibidaEn(recibidaEn)
+                .impresaPor(impresaPor)
+                .impresaEn(impresaEn)
+                .comentarioRecepcion(comentarioRecepcion)
+                .version(version)
+                .build();
+    }
+
+    public Transferencia registrarRecepcion(UUID usuarioId, Instant instante, String comentarioUso) {
+        if (impresaEn != null) {
+            throw new IllegalStateException("La transferencia ya fue impresa");
+        }
+        return Transferencia.builder()
+                .id(id)
+                .banco(banco)
+                .fecha(fecha)
+                .valor(valor)
+                .comentario(comentario)
+                .archivoId(archivoId)
+                .cargadoPor(cargadoPor)
+                .createdAt(createdAt)
+                .estado(estado)
+                .tipoAsignacion(tipoAsignacion)
+                .destinoId(destinoId)
+                .asignadoPor(asignadoPor)
+                .asignadoEn(asignadoEn)
+                .cuentaContable(cuentaContable)
+                .cuentaBancaria(cuentaBancaria)
+                .puntoVentaTexto(puntoVentaTexto)
+                .valorTexto(valorTexto)
+                .fechaTexto(fechaTexto)
+                .actualizadoPor(usuarioId)
+                .actualizadoEn(instante)
+                .receptorId(receptorId)
+                .firmadaPor(firmadaPor)
+                .firmadaEn(firmadaEn)
+                .recibidaPor(usuarioId)
+                .recibidaEn(instante)
+                .impresaPor(usuarioId)
+                .impresaEn(instante)
+                .comentarioRecepcion(comentarioUso)
                 .version(version)
                 .build();
     }
@@ -169,12 +284,56 @@ public class Transferencia {
         return Optional.ofNullable(cuentaBancaria);
     }
 
+    public Optional<String> getPuntoVentaTexto() {
+        return Optional.ofNullable(puntoVentaTexto);
+    }
+
+    public Optional<String> getValorTexto() {
+        return Optional.ofNullable(valorTexto);
+    }
+
+    public Optional<String> getFechaTexto() {
+        return Optional.ofNullable(fechaTexto);
+    }
+
     public Optional<UUID> getActualizadoPor() {
         return Optional.ofNullable(actualizadoPor);
     }
 
     public Optional<Instant> getActualizadoEn() {
         return Optional.ofNullable(actualizadoEn);
+    }
+
+    public Optional<UUID> getReceptorId() {
+        return Optional.ofNullable(receptorId);
+    }
+
+    public Optional<UUID> getFirmadaPor() {
+        return Optional.ofNullable(firmadaPor);
+    }
+
+    public Optional<Instant> getFirmadaEn() {
+        return Optional.ofNullable(firmadaEn);
+    }
+
+    public Optional<UUID> getRecibidaPor() {
+        return Optional.ofNullable(recibidaPor);
+    }
+
+    public Optional<Instant> getRecibidaEn() {
+        return Optional.ofNullable(recibidaEn);
+    }
+
+    public Optional<UUID> getImpresaPor() {
+        return Optional.ofNullable(impresaPor);
+    }
+
+    public Optional<Instant> getImpresaEn() {
+        return Optional.ofNullable(impresaEn);
+    }
+
+    public Optional<String> getComentarioRecepcion() {
+        return Optional.ofNullable(comentarioRecepcion);
     }
 
     public long getVersion() {
@@ -204,6 +363,8 @@ public class Transferencia {
                 ", estado=" + estado +
                 ", tipoAsignacion=" + tipoAsignacion +
                 ", destinoId=" + destinoId +
+                ", receptorId=" + receptorId +
+                ", puntoVentaTexto='" + puntoVentaTexto + '\'' +
                 '}';
     }
 
@@ -223,8 +384,19 @@ public class Transferencia {
         private Instant asignadoEn;
         private String cuentaContable;
         private String cuentaBancaria;
+        private String puntoVentaTexto;
+        private String valorTexto;
+        private String fechaTexto;
         private UUID actualizadoPor;
         private Instant actualizadoEn;
+        private UUID receptorId;
+        private UUID firmadaPor;
+        private Instant firmadaEn;
+        private UUID recibidaPor;
+        private Instant recibidaEn;
+        private UUID impresaPor;
+        private Instant impresaEn;
+        private String comentarioRecepcion;
         private long version;
 
         private Builder() {
@@ -305,6 +477,21 @@ public class Transferencia {
             return this;
         }
 
+        public Builder puntoVentaTexto(String puntoVentaTexto) {
+            this.puntoVentaTexto = puntoVentaTexto != null ? puntoVentaTexto.trim() : null;
+            return this;
+        }
+
+        public Builder valorTexto(String valorTexto) {
+            this.valorTexto = valorTexto != null ? valorTexto.trim() : null;
+            return this;
+        }
+
+        public Builder fechaTexto(String fechaTexto) {
+            this.fechaTexto = fechaTexto != null ? fechaTexto.trim() : null;
+            return this;
+        }
+
         public Builder actualizadoPor(UUID actualizadoPor) {
             this.actualizadoPor = actualizadoPor;
             return this;
@@ -312,6 +499,46 @@ public class Transferencia {
 
         public Builder actualizadoEn(Instant actualizadoEn) {
             this.actualizadoEn = actualizadoEn;
+            return this;
+        }
+
+        public Builder receptorId(UUID receptorId) {
+            this.receptorId = receptorId;
+            return this;
+        }
+
+        public Builder firmadaPor(UUID firmadaPor) {
+            this.firmadaPor = firmadaPor;
+            return this;
+        }
+
+        public Builder firmadaEn(Instant firmadaEn) {
+            this.firmadaEn = firmadaEn;
+            return this;
+        }
+
+        public Builder recibidaPor(UUID recibidaPor) {
+            this.recibidaPor = recibidaPor;
+            return this;
+        }
+
+        public Builder recibidaEn(Instant recibidaEn) {
+            this.recibidaEn = recibidaEn;
+            return this;
+        }
+
+        public Builder impresaPor(UUID impresaPor) {
+            this.impresaPor = impresaPor;
+            return this;
+        }
+
+        public Builder impresaEn(Instant impresaEn) {
+            this.impresaEn = impresaEn;
+            return this;
+        }
+
+        public Builder comentarioRecepcion(String comentarioRecepcion) {
+            this.comentarioRecepcion = comentarioRecepcion != null ? comentarioRecepcion.trim() : null;
             return this;
         }
 

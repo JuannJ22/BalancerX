@@ -17,6 +17,8 @@ public class UsuarioMapper {
         entity.setHashPassword(usuario.getHashPassword());
         entity.setActivo(usuario.isActivo());
         entity.setCreatedAt(usuario.getCreatedAt() != null ? usuario.getCreatedAt() : Instant.now());
+        entity.setFirmaPath(usuario.getFirmaPath().orElse(null));
+        entity.setFirmaChecksum(usuario.getFirmaChecksum().orElse(null));
         return entity;
     }
 
@@ -28,7 +30,9 @@ public class UsuarioMapper {
                 entity.getRol(),
                 entity.getHashPassword(),
                 entity.isActivo(),
-                entity.getCreatedAt()
+                entity.getCreatedAt(),
+                entity.getFirmaPath(),
+                entity.getFirmaChecksum()
         );
     }
 }

@@ -66,11 +66,44 @@ public class JpaTransferencia {
     @Column(name = "cuenta_bancaria")
     private String cuentaBancaria;
 
+    @Column(name = "punto_venta_texto")
+    private String puntoVentaTexto;
+
+    @Column(name = "valor_texto")
+    private String valorTexto;
+
+    @Column(name = "fecha_texto")
+    private String fechaTexto;
+
     @Column(name = "actualizado_por")
     private UUID actualizadoPor;
 
     @Column(name = "actualizado_en")
     private Instant actualizadoEn;
+
+    @Column(name = "receptor_id")
+    private UUID receptorId;
+
+    @Column(name = "firmada_por")
+    private UUID firmadaPor;
+
+    @Column(name = "firmada_en")
+    private Instant firmadaEn;
+
+    @Column(name = "recibida_por")
+    private UUID recibidaPor;
+
+    @Column(name = "recibida_en")
+    private Instant recibidaEn;
+
+    @Column(name = "impresa_por")
+    private UUID impresaPor;
+
+    @Column(name = "impresa_en")
+    private Instant impresaEn;
+
+    @Column(name = "comentario_recepcion", columnDefinition = "TEXT")
+    private String comentarioRecepcion;
 
     @Version
     private long version;
@@ -195,6 +228,30 @@ public class JpaTransferencia {
         this.cuentaBancaria = cuentaBancaria;
     }
 
+    public String getPuntoVentaTexto() {
+        return puntoVentaTexto;
+    }
+
+    public void setPuntoVentaTexto(String puntoVentaTexto) {
+        this.puntoVentaTexto = puntoVentaTexto;
+    }
+
+    public String getValorTexto() {
+        return valorTexto;
+    }
+
+    public void setValorTexto(String valorTexto) {
+        this.valorTexto = valorTexto;
+    }
+
+    public String getFechaTexto() {
+        return fechaTexto;
+    }
+
+    public void setFechaTexto(String fechaTexto) {
+        this.fechaTexto = fechaTexto;
+    }
+
     public UUID getActualizadoPor() {
         return actualizadoPor;
     }
@@ -209,6 +266,70 @@ public class JpaTransferencia {
 
     public void setActualizadoEn(Instant actualizadoEn) {
         this.actualizadoEn = actualizadoEn;
+    }
+
+    public UUID getReceptorId() {
+        return receptorId;
+    }
+
+    public void setReceptorId(UUID receptorId) {
+        this.receptorId = receptorId;
+    }
+
+    public UUID getFirmadaPor() {
+        return firmadaPor;
+    }
+
+    public void setFirmadaPor(UUID firmadaPor) {
+        this.firmadaPor = firmadaPor;
+    }
+
+    public Instant getFirmadaEn() {
+        return firmadaEn;
+    }
+
+    public void setFirmadaEn(Instant firmadaEn) {
+        this.firmadaEn = firmadaEn;
+    }
+
+    public UUID getRecibidaPor() {
+        return recibidaPor;
+    }
+
+    public void setRecibidaPor(UUID recibidaPor) {
+        this.recibidaPor = recibidaPor;
+    }
+
+    public Instant getRecibidaEn() {
+        return recibidaEn;
+    }
+
+    public void setRecibidaEn(Instant recibidaEn) {
+        this.recibidaEn = recibidaEn;
+    }
+
+    public UUID getImpresaPor() {
+        return impresaPor;
+    }
+
+    public void setImpresaPor(UUID impresaPor) {
+        this.impresaPor = impresaPor;
+    }
+
+    public Instant getImpresaEn() {
+        return impresaEn;
+    }
+
+    public void setImpresaEn(Instant impresaEn) {
+        this.impresaEn = impresaEn;
+    }
+
+    public String getComentarioRecepcion() {
+        return comentarioRecepcion;
+    }
+
+    public void setComentarioRecepcion(String comentarioRecepcion) {
+        this.comentarioRecepcion = comentarioRecepcion;
     }
 
     public long getVersion() {

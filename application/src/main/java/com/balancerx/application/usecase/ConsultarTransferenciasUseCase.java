@@ -19,6 +19,8 @@ public class ConsultarTransferenciasUseCase {
                 query.getBanco(),
                 query.getFechaDesde(),
                 query.getFechaHasta(),
+                query.getValorMin(),
+                query.getValorMax(),
                 query.getTipoAsignacion(),
                 query.getDestinoId(),
                 query.getEstado()
