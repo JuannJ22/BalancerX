@@ -1,3 +1,4 @@
+using System;
 using BalancerX.Application.Contratos;
 using BalancerX.Domain.Entidades;
 using BalancerX.Infrastructure.Datos;
@@ -22,7 +23,13 @@ public class UsuarioRepositorio : IUsuarioRepositorio
     public Task<bool> ValidarPinAdminAsync(int usuarioId, string pinAdminPlano, CancellationToken cancellationToken)
     {
         var hash = contexto.Usuarios.Where(x => x.Id == usuarioId).Select(x => x.PinAdminHash).FirstOrDefault();
-        var resultado = hash is not null && passwordHasher.VerifyHashedPassword("PIN", hash, pinAdminPlano) != PasswordVerificationResult.Failed;
+        var resultado = false;
+        if (!string.IsNullOrWhiteSpace(hash))
+        {
+            resultado = hash.StartsWith("{PLAIN}", StringComparison.Ordinal)
+                ? string.Equals(hash[7..], pinAdminPlano, StringComparison.Ordinal)
+                : passwordHasher.VerifyHashedPassword("PIN", hash, pinAdminPlano) != PasswordVerificationResult.Failed;
+        }
         return Task.FromResult(resultado);
     }
 }

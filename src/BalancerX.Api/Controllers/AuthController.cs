@@ -1,3 +1,4 @@
+using System;
 using BalancerX.Application.Contratos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,10 @@ public class AuthController : ControllerBase
         var usuario = await usuarioRepositorio.ObtenerPorUsuarioNombreAsync(loginRequest.Usuario, cancellationToken);
         if (usuario is null) return Unauthorized(new ProblemDetails { Title = "Credenciales inválidas", Status = 401 });
 
-        var valido = passwordHasher.VerifyHashedPassword("PWD", usuario.PasswordHash, loginRequest.Password) != PasswordVerificationResult.Failed;
+        var passwordHash = usuario.PasswordHash ?? string.Empty;
+        var valido = passwordHash.StartsWith("{PLAIN}", StringComparison.Ordinal)
+            ? string.Equals(passwordHash[7..], loginRequest.Password, StringComparison.Ordinal)
+            : passwordHasher.VerifyHashedPassword("PWD", passwordHash, loginRequest.Password) != PasswordVerificationResult.Failed;
         if (!valido) return Unauthorized(new ProblemDetails { Title = "Credenciales inválidas", Status = 401 });
 
         return Ok(new { token = jwtTokenServicio.GenerarToken(usuario) });
