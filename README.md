@@ -96,3 +96,21 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 ## Base de datos
 - Script de esquema: `database/schema.sql`
 - Script de datos iniciales: `database/seed.sql`
+
+
+## Troubleshooting rápido
+
+### 1) `/swagger` devuelve 404
+- Verifica entorno local en Development:
+  - `set ASPNETCORE_ENVIRONMENT=Development`
+- Si el puerto 5000 está ocupado, usa otro:
+  - `set ASPNETCORE_URLS=http://localhost:5080`
+
+### 2) Login falla con error de columnas (`Invalid column name 'Activo'`, `Id`, `Nombre`)
+- Ese error sucede cuando la base está en collation case-sensitive y el mapeo no coincide.
+- Esta rama ya incluye mapeo explícito de columnas en `BalancerXDbContext`.
+
+### 3) Login falla por conexión SQL remota
+- Si usas servidor en red con usuario `sa`, **no** uses `Trusted_Connection=True`.
+- Usa cadena con `User ID` y `Password`, por ejemplo:
+  - `Server=tcp:192.168.5.10,14330;Database=BalancerX;User ID=sa;Password=***;TrustServerCertificate=True;Encrypt=False`

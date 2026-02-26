@@ -18,50 +18,68 @@ public class BalancerXDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("bx");
-        modelBuilder.Entity<Usuario>().ToTable("users");
-        modelBuilder.Entity<Rol>().ToTable("roles");
-        modelBuilder.Entity<UsuarioRol>().ToTable("user_roles").HasKey(x => new { x.UsuarioId, x.RolId });
-        modelBuilder.Entity<UsuarioRol>().HasOne(x => x.Usuario).WithMany(x => x.Roles).HasForeignKey(x => x.UsuarioId);
-        modelBuilder.Entity<UsuarioRol>().HasOne(x => x.Rol).WithMany().HasForeignKey(x => x.RolId);
-        modelBuilder.Entity<Transferencia>().ToTable("transferencias");
-        modelBuilder.Entity<TransferenciaArchivo>().ToTable("transferencia_archivos");
-        modelBuilder.Entity<EventoImpresion>().ToTable("print_events");
-        modelBuilder.Entity<EventoAuditoria>().ToTable("audit_events");
 
-        modelBuilder.Entity<Usuario>().Property(x => x.UsuarioNombre).HasColumnName("username");
-        modelBuilder.Entity<Usuario>().Property(x => x.PasswordHash).HasColumnName("password_hash");
-        modelBuilder.Entity<Usuario>().Property(x => x.PinAdminHash).HasColumnName("admin_pin_hash");
+        var entidadUsuario = modelBuilder.Entity<Usuario>();
+        entidadUsuario.ToTable("users");
+        entidadUsuario.Property(x => x.Id).HasColumnName("id");
+        entidadUsuario.Property(x => x.UsuarioNombre).HasColumnName("username");
+        entidadUsuario.Property(x => x.PasswordHash).HasColumnName("password_hash");
+        entidadUsuario.Property(x => x.PinAdminHash).HasColumnName("admin_pin_hash");
+        entidadUsuario.Property(x => x.Activo).HasColumnName("activo");
 
-        modelBuilder.Entity<UsuarioRol>().Property(x => x.UsuarioId).HasColumnName("usuario_id");
-        modelBuilder.Entity<UsuarioRol>().Property(x => x.RolId).HasColumnName("rol_id");
+        var entidadRol = modelBuilder.Entity<Rol>();
+        entidadRol.ToTable("roles");
+        entidadRol.Property(x => x.Id).HasColumnName("id");
+        entidadRol.Property(x => x.Nombre).HasColumnName("nombre");
 
-        modelBuilder.Entity<Transferencia>().Property(x => x.PuntoVentaId).HasColumnName("punto_venta_id");
-        modelBuilder.Entity<Transferencia>().Property(x => x.VendedorId).HasColumnName("vendedor_id");
-        modelBuilder.Entity<Transferencia>().Property(x => x.CreadoPorUsuarioId).HasColumnName("created_by");
+        var entidadUsuarioRol = modelBuilder.Entity<UsuarioRol>();
+        entidadUsuarioRol.ToTable("user_roles").HasKey(x => new { x.UsuarioId, x.RolId });
+        entidadUsuarioRol.Property(x => x.UsuarioId).HasColumnName("usuario_id");
+        entidadUsuarioRol.Property(x => x.RolId).HasColumnName("rol_id");
+        entidadUsuarioRol.HasOne(x => x.Usuario).WithMany(x => x.Roles).HasForeignKey(x => x.UsuarioId);
+        entidadUsuarioRol.HasOne(x => x.Rol).WithMany().HasForeignKey(x => x.RolId);
 
-        modelBuilder.Entity<TransferenciaArchivo>().Property(x => x.TransferenciaId).HasColumnName("transferencia_id");
-        modelBuilder.Entity<TransferenciaArchivo>().Property(x => x.NombreOriginal).HasColumnName("nombre_original");
-        modelBuilder.Entity<Transferencia>().Property(x => x.CreadoEnUtc).HasColumnName("created_at");
-        modelBuilder.Entity<Transferencia>().Property(x => x.CreadoPorUsuarioId).HasColumnName("created_by");
-        modelBuilder.Entity<Transferencia>().Property(x => x.ImpresaEnUtc).HasColumnName("printed_at");
+        var entidadTransferencia = modelBuilder.Entity<Transferencia>();
+        entidadTransferencia.ToTable("transferencias");
+        entidadTransferencia.Property(x => x.Id).HasColumnName("id");
+        entidadTransferencia.Property(x => x.Monto).HasColumnName("monto");
+        entidadTransferencia.Property(x => x.PuntoVentaId).HasColumnName("punto_venta_id");
+        entidadTransferencia.Property(x => x.VendedorId).HasColumnName("vendedor_id");
+        entidadTransferencia.Property(x => x.Observacion).HasColumnName("observacion");
+        entidadTransferencia.Property(x => x.Estado).HasColumnName("estado");
+        entidadTransferencia.Property(x => x.CreadoEnUtc).HasColumnName("created_at");
+        entidadTransferencia.Property(x => x.CreadoPorUsuarioId).HasColumnName("created_by");
+        entidadTransferencia.Property(x => x.ImpresaEnUtc).HasColumnName("printed_at");
 
-        modelBuilder.Entity<TransferenciaArchivo>().Property(x => x.RutaInterna).HasColumnName("internal_path");
-        modelBuilder.Entity<TransferenciaArchivo>().Property(x => x.TamanoBytes).HasColumnName("size_bytes");
-        modelBuilder.Entity<TransferenciaArchivo>().Property(x => x.SubidoEnUtc).HasColumnName("uploaded_at");
-        modelBuilder.Entity<TransferenciaArchivo>().Property(x => x.SubidoPorUsuarioId).HasColumnName("uploaded_by");
+        var entidadTransferenciaArchivo = modelBuilder.Entity<TransferenciaArchivo>();
+        entidadTransferenciaArchivo.ToTable("transferencia_archivos");
+        entidadTransferenciaArchivo.Property(x => x.Id).HasColumnName("id");
+        entidadTransferenciaArchivo.Property(x => x.TransferenciaId).HasColumnName("transferencia_id");
+        entidadTransferenciaArchivo.Property(x => x.NombreOriginal).HasColumnName("nombre_original");
+        entidadTransferenciaArchivo.Property(x => x.RutaInterna).HasColumnName("internal_path");
+        entidadTransferenciaArchivo.Property(x => x.Sha256).HasColumnName("sha256");
+        entidadTransferenciaArchivo.Property(x => x.TamanoBytes).HasColumnName("size_bytes");
+        entidadTransferenciaArchivo.Property(x => x.SubidoEnUtc).HasColumnName("uploaded_at");
+        entidadTransferenciaArchivo.Property(x => x.SubidoPorUsuarioId).HasColumnName("uploaded_by");
 
-        modelBuilder.Entity<EventoImpresion>().Property(x => x.EventoEnUtc).HasColumnName("event_at");
-        modelBuilder.Entity<EventoImpresion>().Property(x => x.EsReimpresion).HasColumnName("is_reprint");
-        modelBuilder.Entity<EventoImpresion>().Property(x => x.TransferenciaId).HasColumnName("transferencia_id");
-        modelBuilder.Entity<EventoImpresion>().Property(x => x.EjecutadoPorUsuarioId).HasColumnName("executed_by");
-        modelBuilder.Entity<EventoImpresion>().Property(x => x.AutorizadoPorUsuarioId).HasColumnName("authorized_by");
-        modelBuilder.Entity<EventoImpresion>().Property(x => x.Razon).HasColumnName("razon");
+        var entidadEventoImpresion = modelBuilder.Entity<EventoImpresion>();
+        entidadEventoImpresion.ToTable("print_events");
+        entidadEventoImpresion.Property(x => x.Id).HasColumnName("id");
+        entidadEventoImpresion.Property(x => x.TransferenciaId).HasColumnName("transferencia_id");
+        entidadEventoImpresion.Property(x => x.EventoEnUtc).HasColumnName("event_at");
+        entidadEventoImpresion.Property(x => x.EsReimpresion).HasColumnName("is_reprint");
+        entidadEventoImpresion.Property(x => x.EjecutadoPorUsuarioId).HasColumnName("executed_by");
+        entidadEventoImpresion.Property(x => x.AutorizadoPorUsuarioId).HasColumnName("authorized_by");
+        entidadEventoImpresion.Property(x => x.Razon).HasColumnName("razon");
 
-        modelBuilder.Entity<EventoAuditoria>().Property(x => x.Accion).HasColumnName("accion");
-        modelBuilder.Entity<EventoAuditoria>().Property(x => x.Entidad).HasColumnName("entidad");
-        modelBuilder.Entity<EventoAuditoria>().Property(x => x.EntidadId).HasColumnName("entity_id");
-        modelBuilder.Entity<EventoAuditoria>().Property(x => x.Detalle).HasColumnName("detalle");
-        modelBuilder.Entity<EventoAuditoria>().Property(x => x.EventoEnUtc).HasColumnName("event_at");
-        modelBuilder.Entity<EventoAuditoria>().Property(x => x.EjecutadoPorUsuarioId).HasColumnName("executed_by");
+        var entidadEventoAuditoria = modelBuilder.Entity<EventoAuditoria>();
+        entidadEventoAuditoria.ToTable("audit_events");
+        entidadEventoAuditoria.Property(x => x.Id).HasColumnName("id");
+        entidadEventoAuditoria.Property(x => x.Accion).HasColumnName("accion");
+        entidadEventoAuditoria.Property(x => x.Entidad).HasColumnName("entidad");
+        entidadEventoAuditoria.Property(x => x.EntidadId).HasColumnName("entity_id");
+        entidadEventoAuditoria.Property(x => x.Detalle).HasColumnName("detalle");
+        entidadEventoAuditoria.Property(x => x.EventoEnUtc).HasColumnName("event_at");
+        entidadEventoAuditoria.Property(x => x.EjecutadoPorUsuarioId).HasColumnName("executed_by");
     }
 }
