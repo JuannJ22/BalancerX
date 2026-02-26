@@ -48,13 +48,13 @@ public class TransferenciaServicio
         => (await transferenciaRepositorio.ListarAsync(filtroTransferenciaRequest, cancellationToken))
             .Select(registro => new TransferenciaResponse(registro.Id, registro.Monto, registro.PuntoVentaId, registro.VendedorId, registro.Observacion, registro.Estado, registro.CreadoEnUtc, registro.ImpresaEnUtc)).ToList();
 
-    public async Task<TransferenciaArchivo> SubirPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int usuarioId, CancellationToken cancellationToken)
+    public async Task<SubirPdfResponse> SubirPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int usuarioId, CancellationToken cancellationToken)
     {
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         var archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, cancellationToken);
         var guardado = await transferenciaRepositorio.GuardarArchivoAsync(archivo, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.SubirArchivo, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "PDF subido", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
-        return guardado;
+        return new SubirPdfResponse(guardado.Id, guardado.TransferenciaId, guardado.NombreOriginal, guardado.TamanoBytes, guardado.SubidoEnUtc);
     }
 
     public async Task<(Stream Contenido, string NombreOriginal)> DescargarPdfAsync(long transferenciaId, CancellationToken cancellationToken)
