@@ -5,7 +5,6 @@ using System.Text;
 using BalancerX.Application.Contratos;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
-using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Extgstate;
 using iText.Kernel.Pdf.Canvas;
