@@ -11,7 +11,6 @@ using iText.Kernel.Pdf.Extgstate;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Properties;
-using iText.Layout.Canvas;
 using iText.Layout.Element;
 using iText.IO.Font.Constants;
 using BalancerX.Domain.Entidades;
