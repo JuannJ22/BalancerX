@@ -34,6 +34,14 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
         return await consulta.OrderByDescending(x => x.CreadoEnUtc).ToListAsync(cancellationToken);
     }
 
+
+    public async Task<Transferencia> ActualizarAsync(Transferencia transferencia, CancellationToken cancellationToken)
+    {
+        contexto.Transferencias.Update(transferencia);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return transferencia;
+    }
+
     public async Task<bool> MarcarImpresaPrimeraVezAsync(long transferenciaId, DateTime fechaUtc, CancellationToken cancellationToken)
     {
         await using var transaccion = await contexto.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);

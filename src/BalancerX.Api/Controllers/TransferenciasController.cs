@@ -30,6 +30,16 @@ public class TransferenciasController : ControllerBase
     public async Task<IActionResult> Listar([FromQuery] FiltroTransferenciaRequest filtroTransferenciaRequest, CancellationToken cancellationToken)
         => Ok(await transferenciaServicio.ListarAsync(filtroTransferenciaRequest, cancellationToken));
 
+
+    [HttpPut("{id:long}")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> Actualizar([FromRoute] long id, [FromBody] ActualizarTransferenciaRequest actualizarTransferenciaRequest, CancellationToken cancellationToken)
+    {
+        if (actualizarTransferenciaRequest.Monto <= 0) return BadRequest(new ProblemDetails { Title = "El monto debe ser mayor a 0", Status = 400 });
+        var respuesta = await transferenciaServicio.ActualizarAsync(id, actualizarTransferenciaRequest, ObtenerUsuarioId(), cancellationToken);
+        return Ok(respuesta);
+    }
+
     [HttpPost("{id:long}/archivo")]
     [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> SubirPdf([FromRoute] long id, IFormFile archivo, CancellationToken cancellationToken)

@@ -88,8 +88,10 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         var nombreInterno = $"transferencia_{transferenciaId}_{Guid.NewGuid():N}.pdf";
         var rutaInterna = Path.Combine(carpeta, nombreInterno);
 
-        await using var archivoSalida = File.Create(rutaInterna);
-        await contenidoStream.CopyToAsync(archivoSalida, cancellationToken);
+        await using (var archivoSalida = File.Create(rutaInterna))
+        {
+            await contenidoStream.CopyToAsync(archivoSalida, cancellationToken);
+        }
 
         await using var lectura = File.OpenRead(rutaInterna);
         var shaBytes = await SHA256.HashDataAsync(lectura, cancellationToken);
