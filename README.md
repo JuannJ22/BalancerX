@@ -38,11 +38,14 @@ dotnet run --project src/BalancerX.Api
 
 ## Flujo principal
 1. Login en `/api/auth/login` para obtener JWT.
-2. Crear transferencia en `POST /api/transferencias`.
+2. Crear transferencia en `POST /api/transferencias` (incluye `bancoId` y `cuentaContableId`).
 3. Subir PDF en `POST /api/transferencias/{id}/archivo`.
 4. Descargar PDF por API en `GET /api/transferencias/{id}/archivo`.
 5. Imprimir una sola vez en `POST /api/transferencias/{id}/print`.
 6. Reimprimir solo ADMIN en `POST /api/transferencias/{id}/reprint` con PIN y razón.
+7. Actualizar transferencia (solo ADMIN) en `PUT /api/transferencias/{id}`.
+8. Administrar usuarios (solo ADMIN) en `/api/usuarios` (listar/crear/eliminar).
+9. Eliminar PDF o transferencia (solo ADMIN) en `DELETE /api/transferencias/{id}/archivo` y `DELETE /api/transferencias/{id}`.
 
 ## Seguridad de archivos
 Los PDFs se guardan fuera de SQL en:
@@ -69,7 +72,7 @@ curl -X POST http://localhost:5000/api/auth/login \
 curl -X POST http://localhost:5000/api/transferencias \
   -H "Authorization: Bearer <TOKEN>" \
   -H "Content-Type: application/json" \
-  -d '{"monto":15000.50,"puntoVentaId":1,"vendedorId":1,"observacion":"Transferencia semanal"}'
+  -d '{"monto":15000.50,"puntoVentaId":1,"vendedorId":1,"bancoId":1,"cuentaContableId":1,"observacion":"Transferencia semanal"}'
 ```
 
 ### Subir PDF
@@ -114,3 +117,61 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 - Si usas servidor en red con usuario `sa`, **no** uses `Trusted_Connection=True`.
 - Usa cadena con `User ID` y `Password`, por ejemplo:
   - `Server=tcp:192.168.5.10,14330;Database=BalancerX;User ID=sa;Password=***;TrustServerCertificate=True;Encrypt=False`
+
+
+### Actualizar transferencia (solo ADMIN)
+```bash
+curl -X PUT http://localhost:5000/api/transferencias/1 \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{"monto":18000.00,"puntoVentaId":1,"vendedorId":2,"bancoId":1,"cuentaContableId":1,"observacion":"Ajuste autorizado","estado":"CREADA"}'
+```
+
+
+### Crear usuario (solo ADMIN)
+```bash
+curl -X POST http://localhost:5000/api/usuarios \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{"usuario":"operador1","password":"Operador123*","rol":"AUXILIAR","pinAdmin":null,"firmaElectronica":"OPERADOR 1"}'
+```
+
+### Eliminar PDF de una transferencia (solo ADMIN)
+```bash
+curl -X DELETE http://localhost:5000/api/transferencias/1/archivo \
+  -H "Authorization: Bearer <TOKEN_ADMIN>"
+```
+
+### Eliminar transferencia (solo ADMIN)
+```bash
+curl -X DELETE http://localhost:5000/api/transferencias/1 \
+  -H "Authorization: Bearer <TOKEN_ADMIN>"
+```
+
+## Script SQL incremental recomendado
+Si ya tienes la BD creada, ejecuta: `database/alter_v2_admin_bancos_firma.sql`
+
+
+### Ver PDF en visor (inline)
+```bash
+curl -X GET http://localhost:5000/api/transferencias/1/archivo/visor \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+
+### Cambiar password del usuario autenticado
+```bash
+curl -X PUT http://localhost:5000/api/perfil/password \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"passwordActual":"Admin123*","passwordNueva":"Admin1234*"}'
+```
+
+### Actualizar firma electrónica del usuario autenticado
+```bash
+curl -X PUT http://localhost:5000/api/perfil/firma \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "firma=@/ruta/firma.png"
+```
+
+Las firmas se guardan en: `D:\BalancerX_Secure\Firmas\` y al subir PDF se aplica automáticamente la firma (imagen si existe; de lo contrario texto).
