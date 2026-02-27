@@ -7,6 +7,7 @@ public interface ITransferenciaRepositorio
 {
     Task<Transferencia> CrearAsync(Transferencia transferencia, CancellationToken cancellationToken);
     Task<Transferencia?> ObtenerPorIdAsync(long transferenciaId, CancellationToken cancellationToken);
+    Task<Transferencia> ActualizarAsync(Transferencia transferencia, CancellationToken cancellationToken);
     Task<List<Transferencia>> ListarAsync(FiltroTransferenciaRequest filtroTransferenciaRequest, CancellationToken cancellationToken);
     Task<bool> MarcarImpresaPrimeraVezAsync(long transferenciaId, DateTime fechaUtc, CancellationToken cancellationToken);
     Task GuardarEventoImpresionAsync(EventoImpresion eventoImpresion, CancellationToken cancellationToken);

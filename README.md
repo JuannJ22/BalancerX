@@ -43,6 +43,7 @@ dotnet run --project src/BalancerX.Api
 4. Descargar PDF por API en `GET /api/transferencias/{id}/archivo`.
 5. Imprimir una sola vez en `POST /api/transferencias/{id}/print`.
 6. Reimprimir solo ADMIN en `POST /api/transferencias/{id}/reprint` con PIN y razón.
+7. Actualizar transferencia (solo ADMIN) en `PUT /api/transferencias/{id}`.
 
 ## Seguridad de archivos
 Los PDFs se guardan fuera de SQL en:
@@ -114,3 +115,12 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 - Si usas servidor en red con usuario `sa`, **no** uses `Trusted_Connection=True`.
 - Usa cadena con `User ID` y `Password`, por ejemplo:
   - `Server=tcp:192.168.5.10,14330;Database=BalancerX;User ID=sa;Password=***;TrustServerCertificate=True;Encrypt=False`
+
+
+### Actualizar transferencia (solo ADMIN)
+```bash
+curl -X PUT http://localhost:5000/api/transferencias/1 \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{"monto":18000.00,"puntoVentaId":1,"vendedorId":2,"observacion":"Ajuste autorizado","estado":"CREADA"}'
+```
