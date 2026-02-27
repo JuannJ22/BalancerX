@@ -27,6 +27,8 @@ public interface IUsuarioRepositorio
     Task<List<Usuario>> ListarUsuariosAsync(CancellationToken cancellationToken);
     Task<Usuario> CrearUsuarioAsync(Usuario usuario, string rolNombre, CancellationToken cancellationToken);
     Task<bool> EliminarUsuarioAsync(int usuarioId, CancellationToken cancellationToken);
+    Task<bool> CambiarPasswordAsync(int usuarioId, string passwordActual, string passwordNueva, CancellationToken cancellationToken);
+    Task<Usuario> ActualizarFirmaElectronicaAsync(int usuarioId, string firmaElectronica, CancellationToken cancellationToken);
 }
 
 public interface IJwtTokenServicio
@@ -44,4 +46,9 @@ public interface IArchivoSeguroServicio
 public interface IPrintService
 {
     Task<bool> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken);
+}
+
+public interface IFirmaElectronicaServicio
+{
+    Task<string> GuardarFirmaAsync(int usuarioId, string nombreArchivo, Stream contenido, CancellationToken cancellationToken);
 }

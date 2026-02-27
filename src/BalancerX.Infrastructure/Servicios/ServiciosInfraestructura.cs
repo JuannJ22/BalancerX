@@ -31,9 +31,11 @@ public static class ServiciosInfraestructura
         servicios.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
         servicios.AddScoped<IJwtTokenServicio, JwtTokenServicio>();
         servicios.AddScoped<IArchivoSeguroServicio, ArchivoSeguroServicio>();
+        servicios.AddScoped<IFirmaElectronicaServicio, FirmaElectronicaServicio>();
         servicios.AddScoped<IPrintService, StubPrintService>();
         servicios.AddScoped<IAdaptadorImpresionWindows, AdaptadorImpresionWindows>();
         servicios.AddScoped<BalancerX.Application.Servicios.UsuarioAdminServicio>();
+        servicios.AddScoped<BalancerX.Application.Servicios.UsuarioPerfilServicio>();
         return servicios;
     }
 }
@@ -147,6 +149,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         using var writer = new PdfWriter(temporal);
         using var pdf = new PdfDocument(reader, writer);
         var font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+        var esImagenFirma = File.Exists(firma);
 
         for (var i = 1; i <= pdf.GetNumberOfPages(); i++)
         {
@@ -158,13 +161,41 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             canvas.SetExtGState(gs);
 
             using var layoutCanvas = new Canvas(canvas, pageSize);
-            layoutCanvas.SetFont(font).SetFontSize(48).SetFontColor(ColorConstants.GRAY);
-            layoutCanvas.ShowTextAligned(new Paragraph(firma), pageSize.GetWidth() / 2, pageSize.GetHeight() / 2, i, TextAlignment.CENTER, VerticalAlignment.MIDDLE, (float)(Math.PI / 6));
+            if (esImagenFirma)
+            {
+                var imageData = iText.IO.Image.ImageDataFactory.Create(firma);
+                var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.55f, pageSize.GetHeight() * 0.35f);
+                imagen.SetFixedPosition(i, (pageSize.GetWidth() - imagen.GetImageScaledWidth()) / 2, (pageSize.GetHeight() - imagen.GetImageScaledHeight()) / 2);
+                layoutCanvas.Add(imagen);
+            }
+            else
+            {
+                layoutCanvas.SetFont(font).SetFontSize(48).SetFontColor(ColorConstants.GRAY);
+                layoutCanvas.ShowTextAligned(new Paragraph(firma), pageSize.GetWidth() / 2, pageSize.GetHeight() / 2, i, TextAlignment.CENTER, VerticalAlignment.MIDDLE, (float)(Math.PI / 6));
+            }
 
             canvas.RestoreState();
         }
 
         File.Delete(rutaArchivo);
         File.Move(temporal, rutaArchivo);
+    }
+}
+
+
+public class FirmaElectronicaServicio : IFirmaElectronicaServicio
+{
+    private readonly string rutaRaizFirmas = @"D:\BalancerX_Secure\Firmas";
+
+    public async Task<string> GuardarFirmaAsync(int usuarioId, string nombreArchivo, Stream contenido, CancellationToken cancellationToken)
+    {
+        Directory.CreateDirectory(rutaRaizFirmas);
+        var extension = Path.GetExtension(nombreArchivo);
+        if (string.IsNullOrWhiteSpace(extension)) extension = ".png";
+        var ruta = Path.Combine(rutaRaizFirmas, $"firma_usuario_{usuarioId}{extension}");
+
+        await using var salida = File.Create(ruta);
+        await contenido.CopyToAsync(salida, cancellationToken);
+        return ruta;
     }
 }

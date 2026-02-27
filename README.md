@@ -150,3 +150,28 @@ curl -X DELETE http://localhost:5000/api/transferencias/1 \
 
 ## Script SQL incremental recomendado
 Si ya tienes la BD creada, ejecuta: `database/alter_v2_admin_bancos_firma.sql`
+
+
+### Ver PDF en visor (inline)
+```bash
+curl -X GET http://localhost:5000/api/transferencias/1/archivo/visor \
+  -H "Authorization: Bearer <TOKEN>"
+```
+
+
+### Cambiar password del usuario autenticado
+```bash
+curl -X PUT http://localhost:5000/api/perfil/password \
+  -H "Authorization: Bearer <TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"passwordActual":"Admin123*","passwordNueva":"Admin1234*"}'
+```
+
+### Actualizar firma electrónica del usuario autenticado
+```bash
+curl -X PUT http://localhost:5000/api/perfil/firma \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "firma=@/ruta/firma.png"
+```
+
+Las firmas se guardan en: `D:\BalancerX_Secure\Firmas\` y al subir PDF se aplica automáticamente la firma (imagen si existe; de lo contrario texto).

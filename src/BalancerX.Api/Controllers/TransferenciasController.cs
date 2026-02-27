@@ -82,6 +82,15 @@ public class TransferenciasController : ControllerBase
         return File(resultado.Contenido, "application/pdf", resultado.NombreOriginal);
     }
 
+
+    [HttpGet("{id:long}/archivo/visor")]
+    [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
+    public async Task<IActionResult> VerPdf([FromRoute] long id, CancellationToken cancellationToken)
+    {
+        var resultado = await transferenciaServicio.DescargarPdfAsync(id, cancellationToken);
+        return File(resultado.Contenido, "application/pdf");
+    }
+
     [HttpPost("{id:long}/print")]
     [Authorize(Roles = "ADMIN,TESORERIA")]
     public async Task<IActionResult> Imprimir([FromRoute] long id, CancellationToken cancellationToken)

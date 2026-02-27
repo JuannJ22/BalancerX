@@ -172,6 +172,33 @@ WHERE [ur].[{columnaUsuarioId}] = @usuarioId";
         return true;
     }
 
+    public async Task<bool> CambiarPasswordAsync(int usuarioId, string passwordActual, string passwordNueva, CancellationToken cancellationToken)
+    {
+        var usuario = await contexto.Usuarios.FirstOrDefaultAsync(x => x.Id == usuarioId, cancellationToken);
+        if (usuario is null) return false;
+
+        var hashActual = usuario.PasswordHash ?? string.Empty;
+        var valido = hashActual.StartsWith("{PLAIN}", StringComparison.Ordinal)
+            ? string.Equals(hashActual[7..], passwordActual, StringComparison.Ordinal)
+            : passwordHasher.VerifyHashedPassword("PWD", hashActual, passwordActual) != PasswordVerificationResult.Failed;
+
+        if (!valido) return false;
+
+        usuario.PasswordHash = passwordNueva.StartsWith("{PLAIN}", StringComparison.Ordinal) ? passwordNueva : $"{{PLAIN}}{passwordNueva}";
+        await contexto.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<Usuario> ActualizarFirmaElectronicaAsync(int usuarioId, string firmaElectronica, CancellationToken cancellationToken)
+    {
+        var usuario = await contexto.Usuarios.FirstOrDefaultAsync(x => x.Id == usuarioId, cancellationToken)
+            ?? throw new InvalidOperationException("Usuario no encontrado.");
+
+        usuario.FirmaElectronica = firmaElectronica;
+        await contexto.SaveChangesAsync(cancellationToken);
+        return usuario;
+    }
+
     private static async Task<List<string>> ObtenerColumnasTablaAsync(DbConnection conexion, string schema, string tabla, CancellationToken cancellationToken)
     {
         await using var comando = conexion.CreateCommand();

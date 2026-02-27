@@ -11,3 +11,6 @@ public record SubirPdfResponse(long Id, long TransferenciaId, string NombreOrigi
 public record UsuarioAdminResponse(int Id, string Usuario, string Rol, bool Activo, string FirmaElectronica);
 public record CrearUsuarioRequest(string Usuario, string Password, string Rol, string? PinAdmin, string FirmaElectronica);
 public record EliminarPdfResponse(long TransferenciaId, bool Eliminado);
+
+public record CambiarPasswordRequest(string PasswordActual, string PasswordNueva);
+public record ActualizarFirmaResponse(int UsuarioId, string FirmaElectronica);
