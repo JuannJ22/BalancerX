@@ -46,6 +46,7 @@ public class UsuarioRepositorio : IUsuarioRepositorio
         var columnaPassword = ObtenerColumnaExistente(columnasUsers, "password_hash", "PasswordHash", "password");
         var columnaPin = ObtenerColumnaExistente(columnasUsers, "admin_pin_hash", "AdminPinHash", "pin_admin_hash");
         var columnaActivo = ObtenerColumnaExistente(columnasUsers, "activo", "Activo", "is_active", "IsActive");
+        var columnaFirma = ObtenerColumnaExistente(columnasUsers, "firma_electronica", "FirmaElectronica", "firma", "signature");
 
         if (new[] { columnaId, columnaUsername, columnaPassword }.Any(string.IsNullOrWhiteSpace))
         {
@@ -61,7 +62,8 @@ SELECT TOP(1)
     [u].[{columnaUsername}] AS [username],
     [u].[{columnaPassword}] AS [password_hash],
     {BuildNullableColumnExpression("u", columnaPin)} AS [admin_pin_hash],
-    {BuildBooleanExpression("u", columnaActivo)} AS [activo]
+    {BuildBooleanExpression("u", columnaActivo)} AS [activo],
+    {BuildNullableColumnExpression("u", columnaFirma)} AS [firma_electronica]
 FROM [bx].[users] AS [u]
 WHERE [u].[{columnaFiltroReal}] = @valor
   AND {BuildBooleanExpression("u", columnaActivo)} = 1";
@@ -80,6 +82,7 @@ WHERE [u].[{columnaFiltroReal}] = @valor
             PasswordHash = readerUsuario.GetString(readerUsuario.GetOrdinal("password_hash")),
             PinAdminHash = readerUsuario.IsDBNull(readerUsuario.GetOrdinal("admin_pin_hash")) ? string.Empty : readerUsuario.GetString(readerUsuario.GetOrdinal("admin_pin_hash")),
             Activo = readerUsuario.GetBoolean(readerUsuario.GetOrdinal("activo")),
+            FirmaElectronica = readerUsuario.IsDBNull(readerUsuario.GetOrdinal("firma_electronica")) ? string.Empty : readerUsuario.GetString(readerUsuario.GetOrdinal("firma_electronica")),
             Roles = new List<UsuarioRol>()
         };
 
@@ -123,6 +126,50 @@ WHERE [ur].[{columnaUsuarioId}] = @usuarioId";
         }
 
         return usuario;
+    }
+
+
+    public async Task<List<Usuario>> ListarUsuariosAsync(CancellationToken cancellationToken)
+        => await contexto.Usuarios.Include(x => x.Roles).ThenInclude(x => x.Rol).OrderBy(x => x.UsuarioNombre).ToListAsync(cancellationToken);
+
+    public async Task<Usuario> CrearUsuarioAsync(Usuario usuario, string rolNombre, CancellationToken cancellationToken)
+    {
+        var password = string.IsNullOrWhiteSpace(usuario.PasswordHash) ? "Temporal123*" : usuario.PasswordHash;
+        var pin = usuario.PinAdminHash;
+
+        usuario.PasswordHash = password.StartsWith("{PLAIN}", StringComparison.Ordinal) ? password : $"{{PLAIN}}{password}";
+        if (!string.IsNullOrWhiteSpace(pin))
+        {
+            usuario.PinAdminHash = pin.StartsWith("{PLAIN}", StringComparison.Ordinal) ? pin : $"{{PLAIN}}{pin}";
+        }
+
+        var rol = await contexto.Roles.FirstOrDefaultAsync(x => x.Nombre == rolNombre, cancellationToken)
+            ?? throw new InvalidOperationException("Rol no encontrado.");
+
+        contexto.Usuarios.Add(usuario);
+        await contexto.SaveChangesAsync(cancellationToken);
+
+        contexto.UsuariosRoles.Add(new UsuarioRol { UsuarioId = usuario.Id, RolId = rol.Id });
+        await contexto.SaveChangesAsync(cancellationToken);
+
+        usuario.Roles = new List<UsuarioRol>
+        {
+            new() { UsuarioId = usuario.Id, RolId = rol.Id, Rol = rol, Usuario = usuario }
+        };
+
+        return usuario;
+    }
+
+    public async Task<bool> EliminarUsuarioAsync(int usuarioId, CancellationToken cancellationToken)
+    {
+        var usuario = await contexto.Usuarios.FirstOrDefaultAsync(x => x.Id == usuarioId, cancellationToken);
+        if (usuario is null) return false;
+
+        var roles = contexto.UsuariosRoles.Where(x => x.UsuarioId == usuarioId);
+        contexto.UsuariosRoles.RemoveRange(roles);
+        contexto.Usuarios.Remove(usuario);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     private static async Task<List<string>> ObtenerColumnasTablaAsync(DbConnection conexion, string schema, string tabla, CancellationToken cancellationToken)

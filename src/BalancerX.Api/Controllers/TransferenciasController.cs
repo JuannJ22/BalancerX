@@ -21,6 +21,7 @@ public class TransferenciasController : ControllerBase
     public async Task<IActionResult> Crear([FromBody] CrearTransferenciaRequest crearTransferenciaRequest, CancellationToken cancellationToken)
     {
         if (crearTransferenciaRequest.Monto <= 0) return BadRequest(new ProblemDetails { Title = "El monto debe ser mayor a 0", Status = 400 });
+        if (crearTransferenciaRequest.BancoId <= 0 || crearTransferenciaRequest.CuentaContableId <= 0) return BadRequest(new ProblemDetails { Title = "Banco y cuenta contable son obligatorios", Status = 400 });
         var respuesta = await transferenciaServicio.CrearAsync(crearTransferenciaRequest, ObtenerUsuarioId(), cancellationToken);
         return CreatedAtAction(nameof(ObtenerPdf), new { id = respuesta.Id }, respuesta);
     }
@@ -36,6 +37,7 @@ public class TransferenciasController : ControllerBase
     public async Task<IActionResult> Actualizar([FromRoute] long id, [FromBody] ActualizarTransferenciaRequest actualizarTransferenciaRequest, CancellationToken cancellationToken)
     {
         if (actualizarTransferenciaRequest.Monto <= 0) return BadRequest(new ProblemDetails { Title = "El monto debe ser mayor a 0", Status = 400 });
+        if (actualizarTransferenciaRequest.BancoId <= 0 || actualizarTransferenciaRequest.CuentaContableId <= 0) return BadRequest(new ProblemDetails { Title = "Banco y cuenta contable son obligatorios", Status = 400 });
         var respuesta = await transferenciaServicio.ActualizarAsync(id, actualizarTransferenciaRequest, ObtenerUsuarioId(), cancellationToken);
         return Ok(respuesta);
     }
@@ -51,6 +53,25 @@ public class TransferenciasController : ControllerBase
         await using var stream = archivo.OpenReadStream();
         var respuesta = await transferenciaServicio.SubirPdfAsync(id, archivo.FileName, stream, ObtenerUsuarioId(), cancellationToken);
         return Ok(respuesta);
+    }
+
+
+    [HttpDelete("{id:long}/archivo")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> EliminarPdf([FromRoute] long id, CancellationToken cancellationToken)
+    {
+        var respuesta = await transferenciaServicio.EliminarPdfAsync(id, ObtenerUsuarioId(), cancellationToken);
+        if (!respuesta.Eliminado) return NotFound(new ProblemDetails { Title = "No existe PDF para la transferencia", Status = 404 });
+        return Ok(respuesta);
+    }
+
+    [HttpDelete("{id:long}")]
+    [Authorize(Roles = "ADMIN")]
+    public async Task<IActionResult> EliminarTransferencia([FromRoute] long id, CancellationToken cancellationToken)
+    {
+        var eliminado = await transferenciaServicio.EliminarTransferenciaAsync(id, ObtenerUsuarioId(), cancellationToken);
+        if (!eliminado) return NotFound(new ProblemDetails { Title = "Transferencia no encontrada", Status = 404 });
+        return Ok(new { transferenciaId = id, eliminado = true });
     }
 
     [HttpGet("{id:long}/archivo")]

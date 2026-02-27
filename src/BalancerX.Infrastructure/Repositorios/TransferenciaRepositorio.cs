@@ -71,4 +71,33 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
 
     public Task<TransferenciaArchivo?> ObtenerArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
         => contexto.TransferenciasArchivos.OrderByDescending(x => x.SubidoEnUtc).FirstOrDefaultAsync(x => x.TransferenciaId == transferenciaId, cancellationToken);
+
+    public Task<List<TransferenciaArchivo>> ObtenerArchivosPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
+        => contexto.TransferenciasArchivos.Where(x => x.TransferenciaId == transferenciaId).ToListAsync(cancellationToken);
+
+    public async Task<bool> EliminarArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
+    {
+        var archivo = await ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken);
+        if (archivo is null) return false;
+        contexto.TransferenciasArchivos.Remove(archivo);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> EliminarAsync(long transferenciaId, CancellationToken cancellationToken)
+    {
+        var transferencia = await contexto.Transferencias.FirstOrDefaultAsync(x => x.Id == transferenciaId, cancellationToken);
+        if (transferencia is null) return false;
+
+        var eventosImpresion = contexto.EventosImpresion.Where(x => x.TransferenciaId == transferenciaId);
+        var auditoria = contexto.EventosAuditoria.Where(x => x.Entidad == nameof(Transferencia) && x.EntidadId == transferenciaId.ToString());
+        var archivos = contexto.TransferenciasArchivos.Where(x => x.TransferenciaId == transferenciaId);
+
+        contexto.EventosImpresion.RemoveRange(eventosImpresion);
+        contexto.EventosAuditoria.RemoveRange(auditoria);
+        contexto.TransferenciasArchivos.RemoveRange(archivos);
+        contexto.Transferencias.Remove(transferencia);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return true;
+    }
 }
