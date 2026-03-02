@@ -100,4 +100,16 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
         await contexto.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public Task<bool> ExistePuntoVentaAsync(int puntoVentaId, CancellationToken cancellationToken)
+        => contexto.PuntosVenta.AnyAsync(x => x.Id == puntoVentaId, cancellationToken);
+
+    public Task<bool> ExisteVendedorAsync(int vendedorId, CancellationToken cancellationToken)
+        => contexto.Vendedores.AnyAsync(x => x.Id == vendedorId, cancellationToken);
+
+    public Task<bool> ExisteBancoAsync(int bancoId, CancellationToken cancellationToken)
+        => contexto.Bancos.AnyAsync(x => x.Id == bancoId, cancellationToken);
+
+    public Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
+        => contexto.CuentasContables.AnyAsync(x => x.Id == cuentaContableId && x.BancoId == bancoId, cancellationToken);
 }

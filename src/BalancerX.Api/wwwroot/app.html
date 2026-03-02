@@ -11,12 +11,12 @@
     <aside class="sidebar">
       <div class="brand"><h1>BalancerX</h1><p>Panel operacional</p></div>
       <nav class="menu">
-        <button class="nav-btn active" data-target="transferPanel">Transferencias</button>
-        <button class="nav-btn role-admin" data-target="usersPanel">Usuarios</button>
+        <button class="nav-btn active" data-target="transferPanel">Operación de transferencias</button>
+        <button class="nav-btn role-admin" data-target="adminPanel">Funciones de administrador</button>
         <button class="nav-btn" data-target="profilePanel">Mi perfil</button>
       </nav>
       <div class="session-card">
-        <p id="sessionState">Sesión activa</p>
+        <p>Sesión activa</p>
         <p class="small" id="sessionUser">-</p>
         <button id="logoutBtn" class="ghost">Cerrar sesión</button>
       </div>
@@ -24,8 +24,8 @@
 
     <main class="content">
       <header class="page-header">
-        <h2 id="sectionTitle">Transferencias</h2>
-        <p id="sectionHint">Opera únicamente con permisos de tu rol.</p>
+        <h2 id="sectionTitle">Operación de transferencias</h2>
+        <p id="sectionHint">Crea y consulta transferencias con catálogos predefinidos.</p>
       </header>
 
       <section id="transferPanel" class="panel visible">
@@ -34,32 +34,27 @@
             <h3>Nueva transferencia</h3>
             <form id="createTransferForm" class="form-grid two-cols">
               <label>Monto <input type="number" step="0.01" min="0.01" name="monto" required /></label>
-              <label>Punto de venta ID <input type="number" min="1" name="puntoVentaId" required /></label>
-              <label>Vendedor ID <input type="number" min="1" name="vendedorId" required /></label>
-              <label>Banco ID <input type="number" min="1" name="bancoId" required /></label>
-              <label>Cuenta contable ID <input type="number" min="1" name="cuentaContableId" required /></label>
-              <label>Observación <input name="observacion" maxlength="300" placeholder="Opcional" /></label>
-              <button type="submit">Crear</button>
-            </form>
-          </article>
 
-          <article class="card role-admin">
-            <h3>Actualizar (ADMIN)</h3>
-            <form id="updateTransferForm" class="form-grid two-cols">
-              <label>ID <input type="number" min="1" name="id" required /></label>
-              <label>Monto <input type="number" step="0.01" min="0.01" name="monto" required /></label>
-              <label>Punto venta ID <input type="number" min="1" name="puntoVentaId" required /></label>
-              <label>Vendedor ID <input type="number" min="1" name="vendedorId" required /></label>
-              <label>Banco ID <input type="number" min="1" name="bancoId" required /></label>
-              <label>Cuenta contable ID <input type="number" min="1" name="cuentaContableId" required /></label>
-              <label>Estado
-                <select name="estado" required>
-                  <option value="PENDIENTE">PENDIENTE</option>
-                  <option value="IMPRESA">IMPRESA</option>
-                </select>
+              <label>Punto de venta
+                <input list="puntosVentaList" name="puntoVentaTexto" placeholder="Escriba o seleccione" required />
+                <datalist id="puntosVentaList"></datalist>
               </label>
-              <label>Observación <input name="observacion" maxlength="300" /></label>
-              <button type="submit">Guardar cambios</button>
+
+              <label>Vendedor
+                <input list="vendedoresList" name="vendedorTexto" placeholder="Escriba o seleccione" required />
+                <datalist id="vendedoresList"></datalist>
+              </label>
+
+              <label>Banco
+                <select name="bancoId" id="crearBancoId" required></select>
+              </label>
+
+              <label>Cuenta contable (según banco)
+                <select name="cuentaContableId" id="crearCuentaContableId" required></select>
+              </label>
+
+              <label>Observación <input name="observacion" maxlength="300" placeholder="Opcional" /></label>
+              <button type="submit">Crear transferencia</button>
             </form>
           </article>
 
@@ -76,6 +71,7 @@
                 <button type="submit" class="ghost">Ver PDF</button>
               </form>
             </div>
+
             <div class="table-wrap">
               <table>
                 <thead><tr><th>ID</th><th>Monto</th><th>Estado</th><th>Banco</th><th>Cuenta</th><th>Creado</th><th>Acciones</th></tr></thead>
@@ -87,11 +83,47 @@
         </div>
       </section>
 
-      <section id="usersPanel" class="panel role-admin">
+      <section id="adminPanel" class="panel role-admin">
         <div class="panel-grid">
-          <article class="card"><div class="card-header"><h3>Usuarios</h3><button id="listUsersBtn" class="ghost">Listar</button></div>
+          <article class="card">
+            <h3>Actualizar transferencia (solo ADMIN)</h3>
+            <form id="updateTransferForm" class="form-grid two-cols">
+              <label>ID transferencia <input type="number" min="1" name="id" required /></label>
+              <label>Monto <input type="number" step="0.01" min="0.01" name="monto" required /></label>
+
+              <label>Punto de venta
+                <input list="puntosVentaList" name="puntoVentaTexto" placeholder="Escriba o seleccione" required />
+              </label>
+
+              <label>Vendedor
+                <input list="vendedoresList" name="vendedorTexto" placeholder="Escriba o seleccione" required />
+              </label>
+
+              <label>Banco
+                <select name="bancoId" id="adminBancoId" required></select>
+              </label>
+
+              <label>Cuenta contable (según banco)
+                <select name="cuentaContableId" id="adminCuentaContableId" required></select>
+              </label>
+
+              <label>Estado
+                <select name="estado" required>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="IMPRESA">IMPRESA</option>
+                </select>
+              </label>
+
+              <label>Observación <input name="observacion" maxlength="300" /></label>
+              <button type="submit">Guardar cambios</button>
+            </form>
+          </article>
+
+          <article class="card wide">
+            <div class="card-header"><h3>Usuarios</h3><button id="listUsersBtn" class="ghost">Listar</button></div>
             <div class="table-wrap"><table><thead><tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Activo</th><th>Firma</th><th>Acciones</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
           </article>
+
           <article class="card">
             <h3>Crear usuario</h3>
             <form id="createUserForm" class="form-grid two-cols">
@@ -126,7 +158,14 @@
         </div>
       </section>
 
-      <section class="panel output-panel visible"><h3>Resultado</h3><pre id="output">Listo.</pre></section>
+      <section class="panel output-panel visible">
+        <h3>Resultado</h3>
+        <p id="resultMessage" class="result ok">Listo para operar.</p>
+        <details>
+          <summary>Detalles técnicos</summary>
+          <pre id="resultTechnical">Sin eventos.</pre>
+        </details>
+      </section>
     </main>
   </div>
   <script src="/app.js"></script>

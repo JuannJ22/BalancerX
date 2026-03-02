@@ -10,6 +10,8 @@ public class BalancerXDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<UsuarioRol> UsuariosRoles => Set<UsuarioRol>();
+    public DbSet<PuntoVenta> PuntosVenta => Set<PuntoVenta>();
+    public DbSet<Vendedor> Vendedores => Set<Vendedor>();
     public DbSet<Banco> Bancos => Set<Banco>();
     public DbSet<CuentaContable> CuentasContables => Set<CuentaContable>();
     public DbSet<Transferencia> Transferencias => Set<Transferencia>();
@@ -42,6 +44,17 @@ public class BalancerXDbContext : DbContext
         entidadUsuarioRol.HasOne(x => x.Usuario).WithMany(x => x.Roles).HasForeignKey(x => x.UsuarioId);
         entidadUsuarioRol.HasOne(x => x.Rol).WithMany().HasForeignKey(x => x.RolId);
 
+
+
+        var entidadPuntoVenta = modelBuilder.Entity<PuntoVenta>();
+        entidadPuntoVenta.ToTable("puntos_venta");
+        entidadPuntoVenta.Property(x => x.Id).HasColumnName("id");
+        entidadPuntoVenta.Property(x => x.Nombre).HasColumnName("nombre");
+
+        var entidadVendedor = modelBuilder.Entity<Vendedor>();
+        entidadVendedor.ToTable("vendedores");
+        entidadVendedor.Property(x => x.Id).HasColumnName("id");
+        entidadVendedor.Property(x => x.Nombre).HasColumnName("nombre");
 
         var entidadBanco = modelBuilder.Entity<Banco>();
         entidadBanco.ToTable("bancos");

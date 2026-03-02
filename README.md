@@ -175,3 +175,17 @@ curl -X PUT http://localhost:5000/api/perfil/firma \
 ```
 
 Las firmas se guardan en: `D:\BalancerX_Secure\Firmas\` y al subir PDF se aplica automáticamente la firma (imagen si existe; de lo contrario texto).
+
+
+## Catálogos operativos para frontend (nuevo)
+
+Para que el formulario de transferencias funcione con combos predefinidos (punto de venta, vendedor, banco y cuenta contable por banco), ejecuta este script en bases existentes:
+
+- `database/alter_v3_catalogos_operativos.sql`
+
+Endpoints de catálogos consumidos por el frontend:
+
+- `GET /api/catalogos/puntos-venta`
+- `GET /api/catalogos/vendedores`
+- `GET /api/catalogos/bancos`
+- `GET /api/catalogos/bancos/{bancoId}/cuentas-contables`

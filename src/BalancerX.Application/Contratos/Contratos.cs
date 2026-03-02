@@ -17,6 +17,10 @@ public interface ITransferenciaRepositorio
     Task<List<TransferenciaArchivo>> ObtenerArchivosPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken);
     Task<bool> EliminarArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken);
     Task<bool> EliminarAsync(long transferenciaId, CancellationToken cancellationToken);
+    Task<bool> ExistePuntoVentaAsync(int puntoVentaId, CancellationToken cancellationToken);
+    Task<bool> ExisteVendedorAsync(int vendedorId, CancellationToken cancellationToken);
+    Task<bool> ExisteBancoAsync(int bancoId, CancellationToken cancellationToken);
+    Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken);
 }
 
 public interface IUsuarioRepositorio

@@ -22,6 +22,8 @@ public class TransferenciaServicio
 
     public async Task<TransferenciaResponse> CrearAsync(CrearTransferenciaRequest crearTransferenciaRequest, int usuarioId, CancellationToken cancellationToken)
     {
+        await ValidarReferenciasAsync(crearTransferenciaRequest.PuntoVentaId, crearTransferenciaRequest.VendedorId, crearTransferenciaRequest.BancoId, crearTransferenciaRequest.CuentaContableId, cancellationToken);
+
         var transferencia = new Transferencia
         {
             Monto = crearTransferenciaRequest.Monto,
@@ -55,6 +57,7 @@ public class TransferenciaServicio
     {
         if (actualizarTransferenciaRequest.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
         if (string.IsNullOrWhiteSpace(actualizarTransferenciaRequest.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
+        await ValidarReferenciasAsync(actualizarTransferenciaRequest.PuntoVentaId, actualizarTransferenciaRequest.VendedorId, actualizarTransferenciaRequest.BancoId, actualizarTransferenciaRequest.CuentaContableId, cancellationToken);
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
 
@@ -81,6 +84,9 @@ public class TransferenciaServicio
 
     public async Task<SubirPdfResponse> SubirPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int usuarioId, CancellationToken cancellationToken)
     {
+        if (actualizarTransferenciaRequest.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
+        if (string.IsNullOrWhiteSpace(actualizarTransferenciaRequest.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
+
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
         var firma = string.IsNullOrWhiteSpace(usuario.FirmaElectronica) ? usuario.UsuarioNombre : usuario.FirmaElectronica;
@@ -157,5 +163,20 @@ public class TransferenciaServicio
             Razon = reimpresionRequest.Razon
         }, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Reimprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = reimpresionRequest.Razon, EjecutadoPorUsuarioId = usuarioIdEjecutor }, cancellationToken);
+    }
+
+    private async Task ValidarReferenciasAsync(int puntoVentaId, int vendedorId, int bancoId, int cuentaContableId, CancellationToken cancellationToken)
+    {
+        if (!await transferenciaRepositorio.ExistePuntoVentaAsync(puntoVentaId, cancellationToken))
+            throw new InvalidOperationException("Punto de venta inválido. Seleccione un punto de venta del catálogo.");
+
+        if (!await transferenciaRepositorio.ExisteVendedorAsync(vendedorId, cancellationToken))
+            throw new InvalidOperationException("Vendedor inválido. Seleccione un vendedor del catálogo.");
+
+        if (!await transferenciaRepositorio.ExisteBancoAsync(bancoId, cancellationToken))
+            throw new InvalidOperationException("Banco inválido. Seleccione un banco del catálogo.");
+
+        if (!await transferenciaRepositorio.ExisteCuentaContableEnBancoAsync(cuentaContableId, bancoId, cancellationToken))
+            throw new InvalidOperationException("Cuenta contable inválida para el banco seleccionado.");
     }
 }
