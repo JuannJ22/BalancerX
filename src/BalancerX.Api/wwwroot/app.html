@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BalancerX · Panel</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><h1>BalancerX</h1><p>Panel operacional</p></div>
+      <nav class="menu">
+        <button class="nav-btn active" data-target="transferPanel">Transferencias</button>
+        <button class="nav-btn role-admin" data-target="usersPanel">Usuarios</button>
+        <button class="nav-btn" data-target="profilePanel">Mi perfil</button>
+      </nav>
+      <div class="session-card">
+        <p id="sessionState">Sesión activa</p>
+        <p class="small" id="sessionUser">-</p>
+        <button id="logoutBtn" class="ghost">Cerrar sesión</button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="page-header">
+        <h2 id="sectionTitle">Transferencias</h2>
+        <p id="sectionHint">Opera únicamente con permisos de tu rol.</p>
+      </header>
+
+      <section id="transferPanel" class="panel visible">
+        <div class="panel-grid">
+          <article class="card">
+            <h3>Nueva transferencia</h3>
+            <form id="createTransferForm" class="form-grid two-cols">
+              <label>Monto <input type="number" step="0.01" min="0.01" name="monto" required /></label>
+              <label>Punto de venta ID <input type="number" min="1" name="puntoVentaId" required /></label>
+              <label>Vendedor ID <input type="number" min="1" name="vendedorId" required /></label>
+              <label>Banco ID <input type="number" min="1" name="bancoId" required /></label>
+              <label>Cuenta contable ID <input type="number" min="1" name="cuentaContableId" required /></label>
+              <label>Observación <input name="observacion" maxlength="300" placeholder="Opcional" /></label>
+              <button type="submit">Crear</button>
+            </form>
+          </article>
+
+          <article class="card role-admin">
+            <h3>Actualizar (ADMIN)</h3>
+            <form id="updateTransferForm" class="form-grid two-cols">
+              <label>ID <input type="number" min="1" name="id" required /></label>
+              <label>Monto <input type="number" step="0.01" min="0.01" name="monto" required /></label>
+              <label>Punto venta ID <input type="number" min="1" name="puntoVentaId" required /></label>
+              <label>Vendedor ID <input type="number" min="1" name="vendedorId" required /></label>
+              <label>Banco ID <input type="number" min="1" name="bancoId" required /></label>
+              <label>Cuenta contable ID <input type="number" min="1" name="cuentaContableId" required /></label>
+              <label>Estado
+                <select name="estado" required>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="IMPRESA">IMPRESA</option>
+                </select>
+              </label>
+              <label>Observación <input name="observacion" maxlength="300" /></label>
+              <button type="submit">Guardar cambios</button>
+            </form>
+          </article>
+
+          <article class="card wide">
+            <div class="card-header"><h3>Listado y acciones</h3><button id="listTransfersBtn" class="ghost">Refrescar</button></div>
+            <div class="toolbar">
+              <form id="uploadPdfForm" class="inline-form">
+                <input name="transferenciaId" type="number" min="1" placeholder="ID transferencia" required />
+                <input name="archivo" type="file" accept="application/pdf" required />
+                <button type="submit">Subir PDF</button>
+              </form>
+              <form id="viewerForm" class="inline-form">
+                <input name="transferenciaId" type="number" min="1" placeholder="ID para visor" required />
+                <button type="submit" class="ghost">Ver PDF</button>
+              </form>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>Monto</th><th>Estado</th><th>Banco</th><th>Cuenta</th><th>Creado</th><th>Acciones</th></tr></thead>
+                <tbody id="transferTableBody"></tbody>
+              </table>
+            </div>
+            <iframe id="pdfViewer" title="Visor PDF"></iframe>
+          </article>
+        </div>
+      </section>
+
+      <section id="usersPanel" class="panel role-admin">
+        <div class="panel-grid">
+          <article class="card"><div class="card-header"><h3>Usuarios</h3><button id="listUsersBtn" class="ghost">Listar</button></div>
+            <div class="table-wrap"><table><thead><tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Activo</th><th>Firma</th><th>Acciones</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
+          </article>
+          <article class="card">
+            <h3>Crear usuario</h3>
+            <form id="createUserForm" class="form-grid two-cols">
+              <label>Usuario <input name="usuario" required /></label>
+              <label>Contraseña <input name="password" type="password" required /></label>
+              <label>Rol <select name="rol" required><option value="ADMIN">ADMIN</option><option value="TESORERIA">TESORERIA</option><option value="AUXILIAR">AUXILIAR</option></select></label>
+              <label>PIN admin (opcional) <input name="pinAdmin" /></label>
+              <label>Firma electrónica (texto) <input name="firmaElectronica" required /></label>
+              <button type="submit">Crear usuario</button>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <section id="profilePanel" class="panel">
+        <div class="panel-grid">
+          <article class="card">
+            <h3>Cambiar contraseña</h3>
+            <form id="passwordForm" class="form-grid compact">
+              <label>Contraseña actual <input name="passwordActual" type="password" required /></label>
+              <label>Nueva contraseña <input name="passwordNueva" type="password" required /></label>
+              <button type="submit">Actualizar</button>
+            </form>
+          </article>
+          <article class="card">
+            <h3>Actualizar firma</h3>
+            <form id="signatureForm" class="form-grid compact">
+              <label>Archivo firma <input name="firma" type="file" accept="image/png,image/jpeg,image/webp" required /></label>
+              <button type="submit">Subir firma</button>
+            </form>
+          </article>
+        </div>
+      </section>
+
+      <section class="panel output-panel visible"><h3>Resultado</h3><pre id="output">Listo.</pre></section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
