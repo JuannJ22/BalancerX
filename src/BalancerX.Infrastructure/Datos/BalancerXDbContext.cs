@@ -10,6 +10,10 @@ public class BalancerXDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Rol> Roles => Set<Rol>();
     public DbSet<UsuarioRol> UsuariosRoles => Set<UsuarioRol>();
+    public DbSet<PuntoVenta> PuntosVenta => Set<PuntoVenta>();
+    public DbSet<Vendedor> Vendedores => Set<Vendedor>();
+    public DbSet<Banco> Bancos => Set<Banco>();
+    public DbSet<CuentaContable> CuentasContables => Set<CuentaContable>();
     public DbSet<Transferencia> Transferencias => Set<Transferencia>();
     public DbSet<TransferenciaArchivo> TransferenciasArchivos => Set<TransferenciaArchivo>();
     public DbSet<EventoImpresion> EventosImpresion => Set<EventoImpresion>();
@@ -26,6 +30,7 @@ public class BalancerXDbContext : DbContext
         entidadUsuario.Property(x => x.PasswordHash).HasColumnName("password_hash");
         entidadUsuario.Property(x => x.PinAdminHash).HasColumnName("admin_pin_hash");
         entidadUsuario.Property(x => x.Activo).HasColumnName("activo");
+        entidadUsuario.Property(x => x.FirmaElectronica).HasColumnName("firma_electronica");
 
         var entidadRol = modelBuilder.Entity<Rol>();
         entidadRol.ToTable("roles");
@@ -39,12 +44,38 @@ public class BalancerXDbContext : DbContext
         entidadUsuarioRol.HasOne(x => x.Usuario).WithMany(x => x.Roles).HasForeignKey(x => x.UsuarioId);
         entidadUsuarioRol.HasOne(x => x.Rol).WithMany().HasForeignKey(x => x.RolId);
 
+
+
+        var entidadPuntoVenta = modelBuilder.Entity<PuntoVenta>();
+        entidadPuntoVenta.ToTable("puntos_venta");
+        entidadPuntoVenta.Property(x => x.Id).HasColumnName("id");
+        entidadPuntoVenta.Property(x => x.Nombre).HasColumnName("nombre");
+
+        var entidadVendedor = modelBuilder.Entity<Vendedor>();
+        entidadVendedor.ToTable("vendedores");
+        entidadVendedor.Property(x => x.Id).HasColumnName("id");
+        entidadVendedor.Property(x => x.Nombre).HasColumnName("nombre");
+
+        var entidadBanco = modelBuilder.Entity<Banco>();
+        entidadBanco.ToTable("bancos");
+        entidadBanco.Property(x => x.Id).HasColumnName("id");
+        entidadBanco.Property(x => x.Nombre).HasColumnName("nombre");
+
+        var entidadCuentaContable = modelBuilder.Entity<CuentaContable>();
+        entidadCuentaContable.ToTable("cuentas_contables");
+        entidadCuentaContable.Property(x => x.Id).HasColumnName("id");
+        entidadCuentaContable.Property(x => x.BancoId).HasColumnName("banco_id");
+        entidadCuentaContable.Property(x => x.NumeroCuenta).HasColumnName("numero_cuenta");
+        entidadCuentaContable.Property(x => x.Descripcion).HasColumnName("descripcion");
+
         var entidadTransferencia = modelBuilder.Entity<Transferencia>();
         entidadTransferencia.ToTable("transferencias");
         entidadTransferencia.Property(x => x.Id).HasColumnName("id");
         entidadTransferencia.Property(x => x.Monto).HasColumnName("monto");
         entidadTransferencia.Property(x => x.PuntoVentaId).HasColumnName("punto_venta_id");
         entidadTransferencia.Property(x => x.VendedorId).HasColumnName("vendedor_id");
+        entidadTransferencia.Property(x => x.BancoId).HasColumnName("banco_id");
+        entidadTransferencia.Property(x => x.CuentaContableId).HasColumnName("cuenta_contable_id");
         entidadTransferencia.Property(x => x.Observacion).HasColumnName("observacion");
         entidadTransferencia.Property(x => x.Estado).HasColumnName("estado");
         entidadTransferencia.Property(x => x.CreadoEnUtc).HasColumnName("created_at");

@@ -7,6 +7,7 @@ public class Usuario
     public string PasswordHash { get; set; } = string.Empty;
     public string PinAdminHash { get; set; } = string.Empty;
     public bool Activo { get; set; } = true;
+    public string FirmaElectronica { get; set; } = string.Empty;
     public List<UsuarioRol> Roles { get; set; } = new();
 }
 
@@ -26,6 +27,8 @@ public class UsuarioRol
 
 public class PuntoVenta { public int Id { get; set; } public string Nombre { get; set; } = string.Empty; }
 public class Vendedor { public int Id { get; set; } public string Nombre { get; set; } = string.Empty; }
+public class Banco { public int Id { get; set; } public string Nombre { get; set; } = string.Empty; }
+public class CuentaContable { public int Id { get; set; } public int BancoId { get; set; } public string NumeroCuenta { get; set; } = string.Empty; public string Descripcion { get; set; } = string.Empty; }
 
 public class Transferencia
 {
@@ -33,6 +36,8 @@ public class Transferencia
     public decimal Monto { get; set; }
     public int PuntoVentaId { get; set; }
     public int VendedorId { get; set; }
+    public int BancoId { get; set; }
+    public int CuentaContableId { get; set; }
     public string? Observacion { get; set; }
     public string Estado { get; set; } = "CREADA";
     public DateTime CreadoEnUtc { get; set; } = DateTime.UtcNow;

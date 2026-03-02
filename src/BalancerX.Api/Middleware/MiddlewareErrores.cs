@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BalancerX.Api.Middleware;
 
@@ -16,15 +17,19 @@ public class MiddlewareErrores
         }
         catch (UnauthorizedAccessException ex)
         {
-            await EscribirProblema(contexto, StatusCodes.Status401Unauthorized, "No autorizado", ex.Message);
+            await EscribirProblema(contexto, StatusCodes.Status401Unauthorized, "No autorizado", string.IsNullOrWhiteSpace(ex.Message) ? "Su sesión no es válida o no tiene permisos para esta operación." : ex.Message);
         }
         catch (InvalidOperationException ex)
         {
             await EscribirProblema(contexto, StatusCodes.Status400BadRequest, "Operación inválida", ex.Message);
         }
-        catch (Exception ex)
+        catch (DbUpdateException)
         {
-            await EscribirProblema(contexto, StatusCodes.Status500InternalServerError, "Error inesperado", ex.Message);
+            await EscribirProblema(contexto, StatusCodes.Status400BadRequest, "No se pudo guardar la información", "Verifique que los datos seleccionados existan y estén relacionados correctamente.");
+        }
+        catch (Exception)
+        {
+            await EscribirProblema(contexto, StatusCodes.Status500InternalServerError, "Error inesperado", "Ocurrió un error interno. Intente nuevamente o contacte al administrador.");
         }
     }
 
