@@ -11,7 +11,8 @@ CREATE TABLE bx.users (
     username NVARCHAR(100) NOT NULL UNIQUE,
     password_hash NVARCHAR(255) NOT NULL,
     admin_pin_hash NVARCHAR(255) NULL,
-    activo BIT NOT NULL DEFAULT 1
+    activo BIT NOT NULL DEFAULT 1,
+    firma_electronica NVARCHAR(255) NULL
 );
 
 CREATE TABLE bx.user_roles (
@@ -32,11 +33,26 @@ CREATE TABLE bx.vendedores (
     nombre NVARCHAR(150) NOT NULL
 );
 
+CREATE TABLE bx.bancos (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    nombre NVARCHAR(150) NOT NULL UNIQUE
+);
+
+CREATE TABLE bx.cuentas_contables (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    banco_id INT NOT NULL,
+    numero_cuenta NVARCHAR(80) NOT NULL,
+    descripcion NVARCHAR(200) NOT NULL,
+    FOREIGN KEY (banco_id) REFERENCES bx.bancos(id)
+);
+
 CREATE TABLE bx.transferencias (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     monto DECIMAL(18,2) NOT NULL,
     punto_venta_id INT NOT NULL,
     vendedor_id INT NOT NULL,
+    banco_id INT NOT NULL,
+    cuenta_contable_id INT NOT NULL,
     observacion NVARCHAR(500) NULL,
     estado NVARCHAR(30) NOT NULL DEFAULT 'CREADA',
     printed_at DATETIME2 NULL,
@@ -44,6 +60,8 @@ CREATE TABLE bx.transferencias (
     created_by INT NOT NULL,
     FOREIGN KEY (punto_venta_id) REFERENCES bx.puntos_venta(id),
     FOREIGN KEY (vendedor_id) REFERENCES bx.vendedores(id),
+    FOREIGN KEY (banco_id) REFERENCES bx.bancos(id),
+    FOREIGN KEY (cuenta_contable_id) REFERENCES bx.cuentas_contables(id),
     FOREIGN KEY (created_by) REFERENCES bx.users(id)
 );
 

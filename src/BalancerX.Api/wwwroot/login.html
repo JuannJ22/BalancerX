@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BalancerX · Inicio de sesión</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="auth-body">
+  <main class="auth-shell">
+    <section class="auth-card">
+      <h1>BalancerX</h1>
+      <p>Ingresa para abrir el sistema con tus módulos autorizados.</p>
+      <form id="loginForm" class="form-grid compact">
+        <label>Usuario
+          <input name="usuario" required autocomplete="username" placeholder="admin" />
+        </label>
+        <label>Contraseña
+          <input name="password" type="password" required autocomplete="current-password" placeholder="••••••••" />
+        </label>
+        <button type="submit">Entrar</button>
+      </form>
+      <pre id="authOutput">Esperando autenticación...</pre>
+    </section>
+  </main>
+  <script src="/login.js"></script>
+</body>
+</html>
