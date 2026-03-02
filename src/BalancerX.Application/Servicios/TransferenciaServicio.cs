@@ -53,21 +53,21 @@ public class TransferenciaServicio
             .Select(registro => new TransferenciaResponse(registro.Id, registro.Monto, registro.PuntoVentaId, registro.VendedorId, registro.BancoId, registro.CuentaContableId, registro.Observacion, registro.Estado, registro.CreadoEnUtc, registro.ImpresaEnUtc)).ToList();
 
 
-    public async Task<TransferenciaResponse> ActualizarAsync(long transferenciaId, ActualizarTransferenciaRequest actualizarTransferenciaRequest, int usuarioId, CancellationToken cancellationToken)
+    public async Task<TransferenciaResponse> ActualizarAsync(long transferenciaId, ActualizarTransferenciaRequest request, int usuarioId, CancellationToken cancellationToken)
     {
-        if (actualizarTransferenciaRequest.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
-        if (string.IsNullOrWhiteSpace(actualizarTransferenciaRequest.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
-        await ValidarReferenciasAsync(actualizarTransferenciaRequest.PuntoVentaId, actualizarTransferenciaRequest.VendedorId, actualizarTransferenciaRequest.BancoId, actualizarTransferenciaRequest.CuentaContableId, cancellationToken);
+        if (request.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
+        if (string.IsNullOrWhiteSpace(request.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
+        await ValidarReferenciasAsync(request.PuntoVentaId, request.VendedorId, request.BancoId, request.CuentaContableId, cancellationToken);
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
 
-        transferencia.Monto = actualizarTransferenciaRequest.Monto;
-        transferencia.PuntoVentaId = actualizarTransferenciaRequest.PuntoVentaId;
-        transferencia.VendedorId = actualizarTransferenciaRequest.VendedorId;
-        transferencia.BancoId = actualizarTransferenciaRequest.BancoId;
-        transferencia.CuentaContableId = actualizarTransferenciaRequest.CuentaContableId;
-        transferencia.Observacion = actualizarTransferenciaRequest.Observacion;
-        transferencia.Estado = actualizarTransferenciaRequest.Estado;
+        transferencia.Monto = request.Monto;
+        transferencia.PuntoVentaId = request.PuntoVentaId;
+        transferencia.VendedorId = request.VendedorId;
+        transferencia.BancoId = request.BancoId;
+        transferencia.CuentaContableId = request.CuentaContableId;
+        transferencia.Observacion = request.Observacion;
+        transferencia.Estado = request.Estado;
 
         var actualizada = await transferenciaRepositorio.ActualizarAsync(transferencia, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria
