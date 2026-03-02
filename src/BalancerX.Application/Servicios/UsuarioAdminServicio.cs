@@ -28,9 +28,9 @@ public class UsuarioAdminServicio
         {
             UsuarioNombre = request.Usuario,
             PasswordHash = request.Password,
-            PinAdminHash = request.PinAdmin,
+            PinAdminHash = request.PinAdmin ?? string.Empty,
             Activo = true,
-            FirmaElectronica = request.FirmaElectronica
+            FirmaElectronica = request.FirmaElectronica ?? string.Empty
         };
 
         var creado = await usuarioRepositorio.CrearUsuarioAsync(usuario, request.Rol, cancellationToken);

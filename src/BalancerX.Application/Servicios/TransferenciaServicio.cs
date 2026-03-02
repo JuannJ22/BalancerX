@@ -86,6 +86,7 @@ public class TransferenciaServicio
     {
         if (actualizarTransferenciaRequest.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
         if (string.IsNullOrWhiteSpace(actualizarTransferenciaRequest.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
+        await ValidarReferenciasAsync(actualizarTransferenciaRequest.PuntoVentaId, actualizarTransferenciaRequest.VendedorId, actualizarTransferenciaRequest.BancoId, actualizarTransferenciaRequest.CuentaContableId, cancellationToken);
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
