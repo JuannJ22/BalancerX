@@ -34,6 +34,14 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
         return await consulta.OrderByDescending(x => x.CreadoEnUtc).ToListAsync(cancellationToken);
     }
 
+
+    public async Task<Transferencia> ActualizarAsync(Transferencia transferencia, CancellationToken cancellationToken)
+    {
+        contexto.Transferencias.Update(transferencia);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return transferencia;
+    }
+
     public async Task<bool> MarcarImpresaPrimeraVezAsync(long transferenciaId, DateTime fechaUtc, CancellationToken cancellationToken)
     {
         await using var transaccion = await contexto.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, cancellationToken);
@@ -63,4 +71,45 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
 
     public Task<TransferenciaArchivo?> ObtenerArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
         => contexto.TransferenciasArchivos.OrderByDescending(x => x.SubidoEnUtc).FirstOrDefaultAsync(x => x.TransferenciaId == transferenciaId, cancellationToken);
+
+    public Task<List<TransferenciaArchivo>> ObtenerArchivosPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
+        => contexto.TransferenciasArchivos.Where(x => x.TransferenciaId == transferenciaId).ToListAsync(cancellationToken);
+
+    public async Task<bool> EliminarArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
+    {
+        var archivo = await ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken);
+        if (archivo is null) return false;
+        contexto.TransferenciasArchivos.Remove(archivo);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public async Task<bool> EliminarAsync(long transferenciaId, CancellationToken cancellationToken)
+    {
+        var transferencia = await contexto.Transferencias.FirstOrDefaultAsync(x => x.Id == transferenciaId, cancellationToken);
+        if (transferencia is null) return false;
+
+        var eventosImpresion = contexto.EventosImpresion.Where(x => x.TransferenciaId == transferenciaId);
+        var auditoria = contexto.EventosAuditoria.Where(x => x.Entidad == nameof(Transferencia) && x.EntidadId == transferenciaId.ToString());
+        var archivos = contexto.TransferenciasArchivos.Where(x => x.TransferenciaId == transferenciaId);
+
+        contexto.EventosImpresion.RemoveRange(eventosImpresion);
+        contexto.EventosAuditoria.RemoveRange(auditoria);
+        contexto.TransferenciasArchivos.RemoveRange(archivos);
+        contexto.Transferencias.Remove(transferencia);
+        await contexto.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
+    public Task<bool> ExistePuntoVentaAsync(int puntoVentaId, CancellationToken cancellationToken)
+        => contexto.PuntosVenta.AnyAsync(x => x.Id == puntoVentaId, cancellationToken);
+
+    public Task<bool> ExisteVendedorAsync(int vendedorId, CancellationToken cancellationToken)
+        => contexto.Vendedores.AnyAsync(x => x.Id == vendedorId, cancellationToken);
+
+    public Task<bool> ExisteBancoAsync(int bancoId, CancellationToken cancellationToken)
+        => contexto.Bancos.AnyAsync(x => x.Id == bancoId, cancellationToken);
+
+    public Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
+        => contexto.CuentasContables.AnyAsync(x => x.Id == cuentaContableId && x.BancoId == bancoId, cancellationToken);
 }
