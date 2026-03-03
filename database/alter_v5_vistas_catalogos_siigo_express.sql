@@ -36,7 +36,7 @@ WITH bancos_origen AS
             150
         )
     FROM SiigoCat.dbo.TABLA_MAESTRO_CONTABLE
-    WHERE UPPER(COALESCE(NombreMae, '')) LIKE '%BANCO%'
+    WHERE LTRIM(RTRIM(COALESCE(CuentasMae, ''))) IN ('11100501', '11100502', '11100503', '11100504', '11100505', '11100506', '11100507', '11100508', '11200501', '11200502')
       AND LTRIM(RTRIM(COALESCE(NombreMae, ''))) <> ''
 )
 SELECT
@@ -70,7 +70,7 @@ WITH cuentas_origen AS
         NumeroCuenta = LEFT(LTRIM(RTRIM(COALESCE(CuentasMae, ''))), 80),
         Descripcion = LEFT(UPPER(LTRIM(RTRIM(COALESCE(NombreMae, '')))), 200)
     FROM SiigoCat.dbo.TABLA_MAESTRO_CONTABLE
-    WHERE UPPER(COALESCE(NombreMae, '')) LIKE '%BANCO%'
+    WHERE LTRIM(RTRIM(COALESCE(CuentasMae, ''))) IN ('11100501', '11100502', '11100503', '11100504', '11100505', '11100506', '11100507', '11100508', '11200501', '11200502')
       AND LTRIM(RTRIM(COALESCE(NombreMae, ''))) <> ''
       AND LTRIM(RTRIM(COALESCE(CuentasMae, ''))) <> ''
 )

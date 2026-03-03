@@ -3,7 +3,7 @@
   Sincroniza catálogos operativos de BalancerX desde SiigoCat.
 
   Reglas solicitadas:
-  - Bancos: tomar registros de TABLA_MAESTRO_CONTABLE donde NombreMae contenga "BANCO".
+  - Bancos: tomar registros de TABLA_MAESTRO_CONTABLE por cuentas específicas.
   - Vendedores: tomar TABLA_DESCRIPCION_VENDEDORES con VenVen <= 99.
 
   Notas:
@@ -59,7 +59,7 @@ BEGIN
                 NombreMae = UPPER(LTRIM(RTRIM(COALESCE(NombreMae, '''')))),
                 CuentasMae = LTRIM(RTRIM(COALESCE(CuentasMae, '''')))
             FROM ' + QUOTENAME(@BaseOrigen) + N'.dbo.TABLA_MAESTRO_CONTABLE
-            WHERE UPPER(COALESCE(NombreMae, '''')) LIKE ''%BANCO%''
+            WHERE LTRIM(RTRIM(COALESCE(CuentasMae, ''''))) IN (''11100501'', ''11100502'', ''11100503'', ''11100504'', ''11100505'', ''11100506'', ''11100507'', ''11100508'', ''11200501'', ''11200502'')
               AND LTRIM(RTRIM(COALESCE(NombreMae, ''''))) <> ''''
         )
         INSERT INTO #BancosFuente (Nombre)
