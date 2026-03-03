@@ -57,9 +57,15 @@ BEGIN
         (
             SELECT
                 NombreMae = UPPER(LTRIM(RTRIM(COALESCE(NombreMae, '''')))),
-                CuentasMae = LTRIM(RTRIM(COALESCE(CuentasMae, '''')))
+                CuentasMae = CASE
+                    WHEN RIGHT(LTRIM(RTRIM(COALESCE(CuentasMae, ''''))), 2) = ''00'' THEN LTRIM(RTRIM(COALESCE(CuentasMae, '''')))
+                    ELSE CONCAT(LTRIM(RTRIM(COALESCE(CuentasMae, ''''))), ''00'')
+                END
             FROM ' + QUOTENAME(@BaseOrigen) + N'.dbo.TABLA_MAESTRO_CONTABLE
-            WHERE LTRIM(RTRIM(COALESCE(CuentasMae, ''''))) IN (''11100501'', ''11100502'', ''11100503'', ''11100504'', ''11100505'', ''11100506'', ''11100507'', ''11100508'', ''11200501'', ''11200502'')
+            WHERE (CASE
+                    WHEN RIGHT(LTRIM(RTRIM(COALESCE(CuentasMae, ''''))), 2) = ''00'' THEN LTRIM(RTRIM(COALESCE(CuentasMae, '''')))
+                    ELSE CONCAT(LTRIM(RTRIM(COALESCE(CuentasMae, ''''))), ''00'')
+                END) IN (''1110050100'', ''1110050200'', ''1110050300'', ''1110050400'', ''1110050500'', ''1110050600'', ''1110050700'', ''1110050800'', ''1120050100'', ''1120050200'')
               AND LTRIM(RTRIM(COALESCE(NombreMae, ''''))) <> ''''
         )
         INSERT INTO #BancosFuente (Nombre)
