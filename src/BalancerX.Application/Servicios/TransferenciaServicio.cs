@@ -11,17 +11,20 @@ public class TransferenciaServicio
     private readonly IArchivoSeguroServicio archivoSeguroServicio;
     private readonly IUsuarioRepositorio usuarioRepositorio;
     private readonly IPrintService servicioImpresion;
+    private readonly ICatalogosSyncServicio catalogosSyncServicio;
 
-    public TransferenciaServicio(ITransferenciaRepositorio transferenciaRepositorio, IArchivoSeguroServicio archivoSeguroServicio, IUsuarioRepositorio usuarioRepositorio, IPrintService servicioImpresion)
+    public TransferenciaServicio(ITransferenciaRepositorio transferenciaRepositorio, IArchivoSeguroServicio archivoSeguroServicio, IUsuarioRepositorio usuarioRepositorio, IPrintService servicioImpresion, ICatalogosSyncServicio catalogosSyncServicio)
     {
         this.transferenciaRepositorio = transferenciaRepositorio;
         this.archivoSeguroServicio = archivoSeguroServicio;
         this.usuarioRepositorio = usuarioRepositorio;
         this.servicioImpresion = servicioImpresion;
+        this.catalogosSyncServicio = catalogosSyncServicio;
     }
 
     public async Task<TransferenciaResponse> CrearAsync(CrearTransferenciaRequest crearTransferenciaRequest, int usuarioId, CancellationToken cancellationToken)
     {
+        await catalogosSyncServicio.SincronizarAsync(cancellationToken);
         await ValidarReferenciasAsync(crearTransferenciaRequest.PuntoVentaId, crearTransferenciaRequest.VendedorId, crearTransferenciaRequest.BancoId, crearTransferenciaRequest.CuentaContableId, cancellationToken);
 
         var transferencia = new Transferencia
@@ -57,6 +60,7 @@ public class TransferenciaServicio
     {
         if (request.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
         if (string.IsNullOrWhiteSpace(request.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
+        await catalogosSyncServicio.SincronizarAsync(cancellationToken);
         await ValidarReferenciasAsync(request.PuntoVentaId, request.VendedorId, request.BancoId, request.CuentaContableId, cancellationToken);
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");

@@ -28,6 +28,7 @@ public static class ServiciosInfraestructura
     {
         servicios.AddDbContext<BalancerXDbContext>(opciones => opciones.UseSqlServer(configuracion.GetConnectionString("SqlServer")));
         servicios.AddScoped<ITransferenciaRepositorio, TransferenciaRepositorio>();
+        servicios.AddScoped<ICatalogosSyncServicio, CatalogosSyncServicio>();
         servicios.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
         servicios.AddScoped<IJwtTokenServicio, JwtTokenServicio>();
         servicios.AddScoped<IArchivoSeguroServicio, ArchivoSeguroServicio>();
