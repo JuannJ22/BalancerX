@@ -23,6 +23,7 @@ public interface ITransferenciaRepositorio
     Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken);
 }
 
+
 public interface IUsuarioRepositorio
 {
     Task<Usuario?> ObtenerPorUsuarioNombreAsync(string usuarioNombre, CancellationToken cancellationToken);

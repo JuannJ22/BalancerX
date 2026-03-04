@@ -151,6 +151,17 @@ curl -X DELETE http://localhost:5000/api/transferencias/1 \
 ## Script SQL incremental recomendado
 Si ya tienes la BD creada, ejecuta: `database/alter_v2_admin_bancos_firma.sql`
 
+## Reinicio de catálogos (modo solo-vistas)
+Si vas a limpiar por completo y dejar bancos/cuentas/vendedores solo en vistas, ejecuta en este orden:
+
+1. `database/alter_v6_catalogos_solo_vistas.sql`
+2. `database/alter_v5_vistas_catalogos_siigo_express.sql`
+
+Luego verifica catálogos:
+- `SELECT TOP (100) * FROM bx.vw_bancos_siigo ORDER BY Nombre;`
+- `SELECT TOP (100) * FROM bx.vw_cuentas_contables_siigo ORDER BY BancoId, NumeroCuenta;`
+- `SELECT TOP (100) * FROM bx.vw_vendedores_siigo ORDER BY Id;`
+
 
 ### Ver PDF en visor (inline)
 ```bash

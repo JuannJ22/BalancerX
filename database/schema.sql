@@ -28,24 +28,6 @@ CREATE TABLE bx.puntos_venta (
     nombre NVARCHAR(150) NOT NULL
 );
 
-CREATE TABLE bx.vendedores (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    nombre NVARCHAR(150) NOT NULL
-);
-
-CREATE TABLE bx.bancos (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    nombre NVARCHAR(150) NOT NULL UNIQUE
-);
-
-CREATE TABLE bx.cuentas_contables (
-    id INT IDENTITY(1,1) PRIMARY KEY,
-    banco_id INT NOT NULL,
-    numero_cuenta NVARCHAR(80) NOT NULL,
-    descripcion NVARCHAR(200) NOT NULL,
-    FOREIGN KEY (banco_id) REFERENCES bx.bancos(id)
-);
-
 CREATE TABLE bx.transferencias (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
     monto DECIMAL(18,2) NOT NULL,
@@ -59,9 +41,6 @@ CREATE TABLE bx.transferencias (
     created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     created_by INT NOT NULL,
     FOREIGN KEY (punto_venta_id) REFERENCES bx.puntos_venta(id),
-    FOREIGN KEY (vendedor_id) REFERENCES bx.vendedores(id),
-    FOREIGN KEY (banco_id) REFERENCES bx.bancos(id),
-    FOREIGN KEY (cuenta_contable_id) REFERENCES bx.cuentas_contables(id),
     FOREIGN KEY (created_by) REFERENCES bx.users(id)
 );
 
@@ -104,3 +83,10 @@ CREATE TABLE bx.audit_events (
 GO
 
 INSERT INTO bx.roles (nombre) VALUES ('ADMIN'), ('TESORERIA'), ('AUXILIAR');
+GO
+
+SET IDENTITY_INSERT bx.puntos_venta ON;
+INSERT INTO bx.puntos_venta (id, nombre)
+VALUES (1, 'Principal'), (2, 'Sucursal'), (3, 'Calarcá'), (4, 'Tienda Pintuco'), (5, 'Cartera'), (10, 'No identificada');
+SET IDENTITY_INSERT bx.puntos_venta OFF;
+GO
