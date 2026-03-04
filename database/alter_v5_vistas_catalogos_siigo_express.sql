@@ -1,20 +1,16 @@
-/*
-  BALANCERX - ALTER V5 (SQL Express, sin SQL Agent)
-  Catálogos en tiempo real desde SiigoCat usando VISTAS.
-
-  Objetivo:
-  - Evitar ejecuciones manuales de sincronización.
-  - Exponer bancos, cuentas y vendedores siempre actualizados desde tablas origen.
-
-  IMPORTANTE:
-  - Estas vistas son de solo lectura para catálogos.
-  - Si la app va a consumir "directo" desde Siigo, debe consultar estas vistas
-    en lugar de tablas físicas bx.bancos/bx.vendedores/bx.cuentas_contables.
-*/
-SET NOCOUNT ON;
+USE [BalancerX]
 GO
 
-CREATE OR ALTER VIEW bx.vw_bancos_siigo
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+IF OBJECT_ID(N'[bx].[vw_bancos_siigo]', N'V') IS NOT NULL
+    DROP VIEW [bx].[vw_bancos_siigo];
+GO
+
+CREATE VIEW [bx].[vw_bancos_siigo]
 AS
 WITH bancos_origen AS
 (
@@ -39,7 +35,7 @@ WITH bancos_origen AS
     WHERE (CASE
             WHEN RIGHT(LTRIM(RTRIM(COALESCE(CuentasMae, ''))), 2) = '00' THEN LTRIM(RTRIM(COALESCE(CuentasMae, '')))
             ELSE CONCAT(LTRIM(RTRIM(COALESCE(CuentasMae, ''))), '00')
-          END) IN ('1110050100', '1110050200', '1110050300', '1110050400', '1110050500', '1110050600', '1110050700', '1110050800', '1120050100', '1120050200')
+          END) IN ('1110050500', '1110050600', '1110050700', '1110050800', '1120050100', '1120050200')
       AND LTRIM(RTRIM(COALESCE(NombreMae, ''))) <> ''
 )
 SELECT
@@ -49,7 +45,11 @@ FROM bancos_origen
 WHERE NombreBanco NOT IN ('BANCO', 'BANCOS');
 GO
 
-CREATE OR ALTER VIEW bx.vw_cuentas_contables_siigo
+IF OBJECT_ID(N'[bx].[vw_cuentas_contables_siigo]', N'V') IS NOT NULL
+    DROP VIEW [bx].[vw_cuentas_contables_siigo];
+GO
+
+CREATE VIEW [bx].[vw_cuentas_contables_siigo]
 AS
 WITH cuentas_origen AS
 (
@@ -79,7 +79,7 @@ WITH cuentas_origen AS
     WHERE (CASE
             WHEN RIGHT(LTRIM(RTRIM(COALESCE(CuentasMae, ''))), 2) = '00' THEN LTRIM(RTRIM(COALESCE(CuentasMae, '')))
             ELSE CONCAT(LTRIM(RTRIM(COALESCE(CuentasMae, ''))), '00')
-          END) IN ('1110050100', '1110050200', '1110050300', '1110050400', '1110050500', '1110050600', '1110050700', '1110050800', '1120050100', '1120050200')
+          END) IN ('1110050500', '1110050600', '1110050700', '1110050800', '1120050100', '1120050200')
       AND LTRIM(RTRIM(COALESCE(NombreMae, ''))) <> ''
       AND LTRIM(RTRIM(COALESCE(CuentasMae, ''))) <> ''
 )
@@ -92,7 +92,11 @@ FROM cuentas_origen
 WHERE NombreBanco NOT IN ('BANCO', 'BANCOS');
 GO
 
-CREATE OR ALTER VIEW bx.vw_vendedores_siigo
+IF OBJECT_ID(N'[bx].[vw_vendedores_siigo]', N'V') IS NOT NULL
+    DROP VIEW [bx].[vw_vendedores_siigo];
+GO
+
+CREATE VIEW [bx].[vw_vendedores_siigo]
 AS
 SELECT
     Id = TRY_CONVERT(INT, VenVen),
@@ -101,11 +105,3 @@ FROM SiigoCat.dbo.TABLA_DESCRIPCION_VENDEDORES
 WHERE TRY_CONVERT(INT, VenVen) BETWEEN 1 AND 99
   AND LTRIM(RTRIM(COALESCE(NombreVen, ''))) <> '';
 GO
-
-/*
-  Consultas de prueba rápidas:
-
-  SELECT TOP (100) * FROM bx.vw_bancos_siigo ORDER BY Nombre;
-  SELECT TOP (100) * FROM bx.vw_cuentas_contables_siigo ORDER BY BancoId, NumeroCuenta;
-  SELECT TOP (100) * FROM bx.vw_vendedores_siigo ORDER BY Id;
-*/

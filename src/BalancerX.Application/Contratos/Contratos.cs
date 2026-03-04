@@ -24,11 +24,6 @@ public interface ITransferenciaRepositorio
 }
 
 
-public interface ICatalogosSyncServicio
-{
-    Task SincronizarAsync(CancellationToken cancellationToken);
-}
-
 public interface IUsuarioRepositorio
 {
     Task<Usuario?> ObtenerPorUsuarioNombreAsync(string usuarioNombre, CancellationToken cancellationToken);
