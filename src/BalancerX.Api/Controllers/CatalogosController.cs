@@ -74,61 +74,62 @@ public class CatalogosController : ControllerBase
         try
         {
             await contexto.Database.ExecuteSqlRawAsync("EXEC bx.sp_sincronizar_catalogos_desde_siigo @BaseOrigen = N'SiigoCat'", cancellationToken);
+            await SincronizarDesdeVistasAsync(cancellationToken);
         }
         catch (SqlException ex) when (ex.Number == 2812)
         {
             // Fallback para ambientes donde el SP no existe: sincroniza desde vistas bx.vw_*.
-            const string sqlFallback = @"
-                INSERT INTO bx.bancos (nombre)
-                SELECT vb.Nombre
-                FROM bx.vw_bancos_siigo vb
-                LEFT JOIN bx.bancos b ON b.nombre = vb.Nombre
-                WHERE b.id IS NULL;
-
-                UPDATE b
-                SET b.nombre = vb.Nombre
-                FROM bx.bancos b
-                INNER JOIN bx.vw_bancos_siigo vb ON vb.Nombre = b.nombre;
-
-                INSERT INTO bx.cuentas_contables (banco_id, numero_cuenta, descripcion)
-                SELECT b.id, vc.NumeroCuenta, vc.Descripcion
-                FROM bx.vw_cuentas_contables_siigo vc
-                INNER JOIN bx.vw_bancos_siigo vb ON vb.Id = vc.BancoId
-                INNER JOIN bx.bancos b ON b.nombre = vb.Nombre
-                LEFT JOIN bx.cuentas_contables cc
-                    ON cc.banco_id = b.id
-                   AND cc.numero_cuenta = vc.NumeroCuenta
-                WHERE cc.id IS NULL;
-
-                UPDATE cc
-                SET cc.descripcion = vc.Descripcion
-                FROM bx.cuentas_contables cc
-                INNER JOIN bx.bancos b ON b.id = cc.banco_id
-                INNER JOIN bx.vw_bancos_siigo vb ON vb.Nombre = b.nombre
-                INNER JOIN bx.vw_cuentas_contables_siigo vc
-                    ON vc.BancoId = vb.Id
-                   AND vc.NumeroCuenta = cc.numero_cuenta
-                WHERE ISNULL(cc.descripcion, '') <> ISNULL(vc.Descripcion, '');
-
-                SET IDENTITY_INSERT bx.vendedores ON;
-
-                INSERT INTO bx.vendedores (id, nombre)
-                SELECT vv.Id, vv.Nombre
-                FROM bx.vw_vendedores_siigo vv
-                LEFT JOIN bx.vendedores v ON v.id = vv.Id
-                WHERE v.id IS NULL;
-
-                SET IDENTITY_INSERT bx.vendedores OFF;
-
-                UPDATE v
-                SET v.nombre = vv.Nombre
-                FROM bx.vendedores v
-                INNER JOIN bx.vw_vendedores_siigo vv ON vv.Id = v.id
-                WHERE ISNULL(v.nombre, '') <> ISNULL(vv.Nombre, '');
-            ";
-
-            await contexto.Database.ExecuteSqlRawAsync(sqlFallback, cancellationToken);
+            await SincronizarDesdeVistasAsync(cancellationToken);
         }
+    }
+
+    private async Task SincronizarDesdeVistasAsync(CancellationToken cancellationToken)
+    {
+        const string sqlFallback = @"
+            INSERT INTO bx.bancos (nombre)
+            SELECT vb.Nombre
+            FROM bx.vw_bancos_siigo vb
+            LEFT JOIN bx.bancos b ON b.nombre = vb.Nombre
+            WHERE b.id IS NULL;
+
+            INSERT INTO bx.cuentas_contables (banco_id, numero_cuenta, descripcion)
+            SELECT b.id, vc.NumeroCuenta, vc.Descripcion
+            FROM bx.vw_cuentas_contables_siigo vc
+            INNER JOIN bx.vw_bancos_siigo vb ON vb.Id = vc.BancoId
+            INNER JOIN bx.bancos b ON b.nombre = vb.Nombre
+            LEFT JOIN bx.cuentas_contables cc
+                ON cc.banco_id = b.id
+               AND cc.numero_cuenta = vc.NumeroCuenta
+            WHERE cc.id IS NULL;
+
+            UPDATE cc
+            SET cc.descripcion = vc.Descripcion
+            FROM bx.cuentas_contables cc
+            INNER JOIN bx.bancos b ON b.id = cc.banco_id
+            INNER JOIN bx.vw_bancos_siigo vb ON vb.Nombre = b.nombre
+            INNER JOIN bx.vw_cuentas_contables_siigo vc
+                ON vc.BancoId = vb.Id
+               AND vc.NumeroCuenta = cc.numero_cuenta
+            WHERE ISNULL(cc.descripcion, '') <> ISNULL(vc.Descripcion, '');
+
+            SET IDENTITY_INSERT bx.vendedores ON;
+
+            INSERT INTO bx.vendedores (id, nombre)
+            SELECT vv.Id, vv.Nombre
+            FROM bx.vw_vendedores_siigo vv
+            LEFT JOIN bx.vendedores v ON v.id = vv.Id
+            WHERE v.id IS NULL;
+
+            SET IDENTITY_INSERT bx.vendedores OFF;
+
+            UPDATE v
+            SET v.nombre = vv.Nombre
+            FROM bx.vendedores v
+            INNER JOIN bx.vw_vendedores_siigo vv ON vv.Id = v.id
+            WHERE ISNULL(v.nombre, '') <> ISNULL(vv.Nombre, '');
+        ";
+
+        await contexto.Database.ExecuteSqlRawAsync(sqlFallback, cancellationToken);
     }
 
     public class ItemCatalogoResponse
