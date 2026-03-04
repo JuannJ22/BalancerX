@@ -151,6 +151,18 @@ curl -X DELETE http://localhost:5000/api/transferencias/1 \
 ## Script SQL incremental recomendado
 Si ya tienes la BD creada, ejecuta: `database/alter_v2_admin_bancos_firma.sql`
 
+## Reinicio de catálogos (recomendado si hubo desalineación)
+Si vas a limpiar datos y volver a alinear catálogos/FK, ejecuta en este orden:
+
+1. `database/alter_v2_admin_bancos_firma.sql`
+2. `database/alter_v4_sync_catalogos_siigo.sql`
+3. `database/alter_v5_vistas_catalogos_siigo_express.sql`
+
+Luego verifica catálogos:
+- `SELECT TOP (100) * FROM bx.bancos ORDER BY nombre;`
+- `SELECT TOP (100) * FROM bx.cuentas_contables ORDER BY banco_id, numero_cuenta;`
+- `SELECT TOP (100) * FROM bx.vendedores ORDER BY id;`
+
 
 ### Ver PDF en visor (inline)
 ```bash
