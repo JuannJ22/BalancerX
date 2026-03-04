@@ -74,13 +74,13 @@ public class CatalogosController : ControllerBase
         try
         {
             await contexto.Database.ExecuteSqlRawAsync("EXEC bx.sp_sincronizar_catalogos_desde_siigo @BaseOrigen = N'SiigoCat'", cancellationToken);
-            await SincronizarDesdeVistasAsync(cancellationToken);
         }
-        catch (SqlException ex) when (ex.Number == 2812)
+        catch (SqlException)
         {
-            // Fallback para ambientes donde el SP no existe: sincroniza desde vistas bx.vw_*.
-            await SincronizarDesdeVistasAsync(cancellationToken);
+            // Si falla el SP (no existe, permisos, dependencia, etc.) continuamos con sincronización por vistas.
         }
+
+        await SincronizarDesdeVistasAsync(cancellationToken);
     }
 
     private async Task SincronizarDesdeVistasAsync(CancellationToken cancellationToken)
