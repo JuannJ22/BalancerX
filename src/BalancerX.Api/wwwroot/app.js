@@ -55,6 +55,26 @@ const parseApiError = async (response) => {
   return { friendly: `${title}. ${detail}`.trim(), technical: payload, status: response.status };
 };
 
+
+let pdfViewerObjectUrl = '';
+
+const mostrarPdfEnVisor = async (transferenciaId) => {
+  const response = await fetch(`/api/transferencias/${transferenciaId}/archivo/visor`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+
+  if (!response.ok) {
+    const parsed = await parseApiError(response);
+    showResult('error', parsed.friendly, parsed.technical);
+    throw new Error(parsed.friendly);
+  }
+
+  const blob = await response.blob();
+  if (pdfViewerObjectUrl) URL.revokeObjectURL(pdfViewerObjectUrl);
+  pdfViewerObjectUrl = URL.createObjectURL(blob);
+  document.getElementById('pdfViewer').src = pdfViewerObjectUrl;
+};
+
 const api = async (url, opts = {}) => {
   const headers = opts.headers ? { ...opts.headers } : {};
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -112,6 +132,12 @@ const bindDatalist = (listId, items) => {
 const resolveIdFromText = (text) => {
   const matched = /^\s*(\d+)\s*-/.exec(String(text || ''));
   return matched ? Number(matched[1]) : 0;
+};
+
+
+const resolveCatalogName = (items, id) => {
+  const item = items.find((x) => Number(x.id) === Number(id));
+  return item ? `${item.id} - ${item.nombre}` : (id ?? '-');
 };
 
 const fillBankSelect = (selectId, bancos) => {
@@ -217,20 +243,30 @@ document.getElementById('updateTransferForm')?.addEventListener('submit', async 
 
 document.getElementById('uploadPdfForm').addEventListener('submit', async (event) => {
   event.preventDefault();
-  const formData = new FormData(event.currentTarget);
+  const form = event.currentTarget;
+  const submitBtn = form.querySelector('button[type="submit"]');
+  const formData = new FormData(form);
   const id = formData.get('transferenciaId');
+
+  if (submitBtn) submitBtn.disabled = true;
   try {
     const res = await api(`/api/transferencias/${id}/archivo`, { method: 'POST', body: formData });
-    document.getElementById('pdfViewer').src = `/api/transferencias/${id}/archivo/visor`;
-    showResult('ok', 'PDF cargado correctamente.', res);
+    await mostrarPdfEnVisor(id);
+    showResult('ok', `PDF cargado correctamente para la transferencia ${id}.`, res);
+    await listTransfers();
   } catch { }
+  finally {
+    if (submitBtn) submitBtn.disabled = false;
+  }
 });
 
-document.getElementById('viewerForm').addEventListener('submit', (event) => {
+document.getElementById('viewerForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   const id = new FormData(event.currentTarget).get('transferenciaId');
-  document.getElementById('pdfViewer').src = `/api/transferencias/${id}/archivo/visor`;
-  showResult('ok', `Visor actualizado para transferencia ${id}.`, { transferenciaId: id });
+  try {
+    await mostrarPdfEnVisor(id);
+    showResult('ok', `Visor actualizado para transferencia ${id}.`, { transferenciaId: id });
+  } catch { }
 });
 
 document.getElementById('passwordForm').addEventListener('submit', async (event) => {
@@ -257,7 +293,7 @@ document.getElementById('listTransfersBtn').addEventListener('click', async () =
 const renderTransferRow = (item) => {
   const tr = document.createElement('tr');
   const created = item.creadoEnUtc ? new Date(item.creadoEnUtc).toLocaleString() : '-';
-  tr.innerHTML = `<td>${item.id ?? '-'}</td><td>${Number(item.monto ?? 0).toFixed(2)}</td><td>${item.estado ?? '-'}</td><td>${item.bancoId ?? '-'}</td><td>${item.cuentaContableId ?? '-'}</td><td>${created}</td><td class="actions"></td>`;
+  tr.innerHTML = `<td>${item.id ?? '-'}</td><td>${Number(item.monto ?? 0).toFixed(2)}</td><td>${item.estado ?? '-'}</td><td>${resolveCatalogName(catalogs.puntosVenta, item.puntoVentaId)}</td><td>${resolveCatalogName(catalogs.vendedores, item.vendedorId)}</td><td>${created}</td><td class="actions"></td>`;
 
   const actions = tr.querySelector('.actions');
 
@@ -271,7 +307,7 @@ const renderTransferRow = (item) => {
   const viewBtn = document.createElement('button');
   viewBtn.className = 'ghost';
   viewBtn.textContent = 'Ver PDF';
-  viewBtn.onclick = () => document.getElementById('pdfViewer').src = `/api/transferencias/${item.id}/archivo/visor`;
+  viewBtn.onclick = async () => { try { await mostrarPdfEnVisor(item.id); } catch { } };
   actions.append(viewBtn);
 
   if (isAdmin) {
