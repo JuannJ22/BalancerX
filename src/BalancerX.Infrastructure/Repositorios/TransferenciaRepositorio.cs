@@ -105,10 +105,10 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
         => contexto.PuntosVenta.AnyAsync(x => x.Id == puntoVentaId, cancellationToken);
 
     public Task<bool> ExisteVendedorAsync(int vendedorId, CancellationToken cancellationToken)
-        => ExisteEnVistaAsync("SELECT TOP(1) 1 FROM bx.vw_vendedores_siigo WHERE Id = {0}", vendedorId, cancellationToken);
+        => ExisteEnVistaAsync("SELECT TOP(1) 1 AS Valor FROM bx.vw_vendedores_siigo WHERE Id = {0}", vendedorId, cancellationToken);
 
     public Task<bool> ExisteBancoAsync(int bancoId, CancellationToken cancellationToken)
-        => ExisteEnVistaAsync("SELECT TOP(1) 1 FROM bx.vw_bancos_siigo WHERE Id = {0}", bancoId, cancellationToken);
+        => ExisteEnVistaAsync("SELECT TOP(1) 1 AS Valor FROM bx.vw_bancos_siigo WHERE Id = {0}", bancoId, cancellationToken);
 
     public Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
         => ExisteCuentaEnVistaAsync(cuentaContableId, bancoId, cancellationToken);
@@ -118,7 +118,7 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
 
     private async Task<bool> ExisteCuentaEnVistaAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
         => await contexto.Database.SqlQueryRaw<int>(
-            "SELECT TOP(1) 1 FROM bx.vw_cuentas_contables_siigo WHERE Id = {0} AND BancoId = {1}",
+            "SELECT TOP(1) 1 AS Valor FROM bx.vw_cuentas_contables_siigo WHERE Id = {0} AND BancoId = {1}",
             cuentaContableId,
             bancoId)
             .AnyAsync(cancellationToken);
