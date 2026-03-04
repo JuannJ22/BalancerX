@@ -24,6 +24,7 @@ public class CatalogosController : ControllerBase
 
         var bancos = await contexto.Bancos
             .OrderBy(x => x.Nombre)
+            .Select(x => new BancoCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(bancos);
@@ -37,6 +38,7 @@ public class CatalogosController : ControllerBase
         var cuentas = await contexto.CuentasContables
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
+            .Select(x => new CuentaContableCatalogoResponse { Id = x.Id, BancoId = x.BancoId, NumeroCuenta = x.NumeroCuenta, Descripcion = x.Descripcion })
             .ToListAsync(cancellationToken);
 
         return Ok(cuentas);
@@ -60,6 +62,7 @@ public class CatalogosController : ControllerBase
 
         var vendedores = await contexto.Vendedores
             .OrderBy(x => x.Nombre)
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(vendedores);
@@ -77,7 +80,23 @@ public class CatalogosController : ControllerBase
         }
     }
 
-    public record ItemCatalogoResponse(int Id, string Nombre);
-    public record BancoCatalogoResponse(int Id, string Nombre);
-    public record CuentaContableCatalogoResponse(int Id, int BancoId, string NumeroCuenta, string Descripcion);
+    public class ItemCatalogoResponse
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public class BancoCatalogoResponse
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public class CuentaContableCatalogoResponse
+    {
+        public int Id { get; set; }
+        public int BancoId { get; set; }
+        public string NumeroCuenta { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+    }
 }
