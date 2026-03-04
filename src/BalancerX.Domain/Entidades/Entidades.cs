@@ -5,9 +5,9 @@ public class Usuario
     public int Id { get; set; }
     public string UsuarioNombre { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
-    public string PinAdminHash { get; set; } = string.Empty;
+    public string? PinAdminHash { get; set; }
     public bool Activo { get; set; } = true;
-    public string FirmaElectronica { get; set; } = string.Empty;
+    public string? FirmaElectronica { get; set; }
     public List<UsuarioRol> Roles { get; set; } = new();
 }
 

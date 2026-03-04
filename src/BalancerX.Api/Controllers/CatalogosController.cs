@@ -20,9 +20,9 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos")]
     public async Task<IActionResult> ListarBancos(CancellationToken cancellationToken)
     {
-        var bancos = await contexto.Bancos
+        var bancos = await contexto.Database
+            .SqlQueryRaw<BancoCatalogoResponse>("SELECT Id, Nombre FROM bx.vw_bancos_siigo")
             .OrderBy(x => x.Nombre)
-            .Select(x => new BancoCatalogoResponse(x.Id, x.Nombre))
             .ToListAsync(cancellationToken);
 
         return Ok(bancos);
@@ -31,10 +31,10 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos/{bancoId:int}/cuentas-contables")]
     public async Task<IActionResult> ListarCuentasPorBanco([FromRoute] int bancoId, CancellationToken cancellationToken)
     {
-        var cuentas = await contexto.CuentasContables
+        var cuentas = await contexto.Database
+            .SqlQueryRaw<CuentaContableCatalogoResponse>("SELECT Id, BancoId, NumeroCuenta, Descripcion FROM bx.vw_cuentas_contables_siigo")
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
-            .Select(x => new CuentaContableCatalogoResponse(x.Id, x.BancoId, x.NumeroCuenta, x.Descripcion))
             .ToListAsync(cancellationToken);
 
         return Ok(cuentas);
@@ -45,7 +45,7 @@ public class CatalogosController : ControllerBase
     {
         var puntos = await contexto.PuntosVenta
             .OrderBy(x => x.Nombre)
-            .Select(x => new ItemCatalogoResponse(x.Id, x.Nombre))
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(puntos);
@@ -54,15 +54,31 @@ public class CatalogosController : ControllerBase
     [HttpGet("vendedores")]
     public async Task<IActionResult> ListarVendedores(CancellationToken cancellationToken)
     {
-        var vendedores = await contexto.Vendedores
+        var vendedores = await contexto.Database
+            .SqlQueryRaw<ItemCatalogoResponse>("SELECT Id, Nombre FROM bx.vw_vendedores_siigo")
             .OrderBy(x => x.Nombre)
-            .Select(x => new ItemCatalogoResponse(x.Id, x.Nombre))
             .ToListAsync(cancellationToken);
 
         return Ok(vendedores);
     }
 
-    public record ItemCatalogoResponse(int Id, string Nombre);
-    public record BancoCatalogoResponse(int Id, string Nombre);
-    public record CuentaContableCatalogoResponse(int Id, int BancoId, string NumeroCuenta, string Descripcion);
+    public class ItemCatalogoResponse
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public class BancoCatalogoResponse
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+    }
+
+    public class CuentaContableCatalogoResponse
+    {
+        public int Id { get; set; }
+        public int BancoId { get; set; }
+        public string NumeroCuenta { get; set; } = string.Empty;
+        public string Descripcion { get; set; } = string.Empty;
+    }
 }
