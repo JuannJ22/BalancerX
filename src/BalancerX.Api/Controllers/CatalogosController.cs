@@ -24,7 +24,6 @@ public class CatalogosController : ControllerBase
 
         var bancos = await contexto.Bancos
             .OrderBy(x => x.Nombre)
-            .Select(x => new BancoCatalogoResponse(x.Id, x.Nombre))
             .ToListAsync(cancellationToken);
 
         return Ok(bancos);
@@ -38,7 +37,6 @@ public class CatalogosController : ControllerBase
         var cuentas = await contexto.CuentasContables
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
-            .Select(x => new CuentaContableCatalogoResponse(x.Id, x.BancoId, x.NumeroCuenta, x.Descripcion))
             .ToListAsync(cancellationToken);
 
         return Ok(cuentas);
@@ -49,7 +47,7 @@ public class CatalogosController : ControllerBase
     {
         var puntos = await contexto.PuntosVenta
             .OrderBy(x => x.Nombre)
-            .Select(x => new ItemCatalogoResponse(x.Id, x.Nombre))
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(puntos);
@@ -62,7 +60,6 @@ public class CatalogosController : ControllerBase
 
         var vendedores = await contexto.Vendedores
             .OrderBy(x => x.Nombre)
-            .Select(x => new ItemCatalogoResponse(x.Id, x.Nombre))
             .ToListAsync(cancellationToken);
 
         return Ok(vendedores);
