@@ -129,9 +129,20 @@ const bindDatalist = (listId, items) => {
   });
 };
 
-const resolveIdFromText = (text) => {
-  const matched = /^\s*(\d+)\s*-/.exec(String(text || ''));
-  return matched ? Number(matched[1]) : 0;
+const normalizeText = (value) => String(value || '').trim().toLowerCase();
+
+const resolveIdFromText = (text, items = []) => {
+  const raw = String(text || '').trim();
+  if (!raw) return 0;
+
+  const matched = /^(\d+)\s*-/.exec(raw);
+  if (matched) return Number(matched[1]);
+
+  if (/^\d+$/.test(raw)) return Number(raw);
+
+  const normalized = normalizeText(raw);
+  const byName = items.find((x) => normalizeText(x.nombre) === normalized);
+  return byName ? Number(byName.id) : 0;
 };
 
 
@@ -206,8 +217,8 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
   const f = new FormData(event.currentTarget);
   const payload = {
     monto: asNumber(f.get('monto')),
-    puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto')),
-    vendedorId: resolveIdFromText(f.get('vendedorTexto')),
+    puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto'), catalogs.puntosVenta),
+    vendedorId: resolveIdFromText(f.get('vendedorTexto'), catalogs.vendedores),
     bancoId: asNumber(f.get('bancoId')),
     cuentaContableId: asNumber(f.get('cuentaContableId')),
     observacion: String(f.get('observacion') || '')
@@ -226,8 +237,8 @@ document.getElementById('updateTransferForm')?.addEventListener('submit', async 
   const id = asNumber(f.get('id'));
   const payload = {
     monto: asNumber(f.get('monto')),
-    puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto')),
-    vendedorId: resolveIdFromText(f.get('vendedorTexto')),
+    puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto'), catalogs.puntosVenta),
+    vendedorId: resolveIdFromText(f.get('vendedorTexto'), catalogs.vendedores),
     bancoId: asNumber(f.get('bancoId')),
     cuentaContableId: asNumber(f.get('cuentaContableId')),
     estado: String(f.get('estado') || ''),
