@@ -88,6 +88,10 @@ public class TransferenciaServicio
         if (contenidoStream is null || !contenidoStream.CanRead) throw new InvalidOperationException("El contenido del archivo es inválido.");
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        var archivoExistente = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken);
+        if (archivoExistente is not null)
+            throw new InvalidOperationException("La transferencia ya tiene un PDF cargado. Elimine el archivo actual antes de subir uno nuevo.");
+
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
         var firma = string.IsNullOrWhiteSpace(usuario.FirmaElectronica) ? usuario.UsuarioNombre : usuario.FirmaElectronica;
         var archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, firma, cancellationToken);

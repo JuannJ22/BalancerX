@@ -1,4 +1,5 @@
 using BalancerX.Infrastructure.Datos;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -74,9 +75,9 @@ public class CatalogosController : ControllerBase
         {
             await contexto.Database.ExecuteSqlRawAsync("EXEC bx.sp_sincronizar_catalogos_desde_siigo @BaseOrigen = N'SiigoCat'", cancellationToken);
         }
-        catch (Exception)
+        catch (SqlException ex) when (ex.Number == 2812)
         {
-            // Fallback silencioso para ambientes donde el procedimiento no exista todavía.
+            // Fallback solo cuando no existe el procedimiento en el ambiente.
         }
     }
 
