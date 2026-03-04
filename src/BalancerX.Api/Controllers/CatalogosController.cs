@@ -20,6 +20,8 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos")]
     public async Task<IActionResult> ListarBancos(CancellationToken cancellationToken)
     {
+        await SincronizarCatalogosSiigoAsync(cancellationToken);
+
         var bancos = await contexto.Bancos
             .OrderBy(x => x.Nombre)
             .Select(x => new BancoCatalogoResponse(x.Id, x.Nombre))
@@ -31,6 +33,8 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos/{bancoId:int}/cuentas-contables")]
     public async Task<IActionResult> ListarCuentasPorBanco([FromRoute] int bancoId, CancellationToken cancellationToken)
     {
+        await SincronizarCatalogosSiigoAsync(cancellationToken);
+
         var cuentas = await contexto.CuentasContables
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
@@ -54,12 +58,26 @@ public class CatalogosController : ControllerBase
     [HttpGet("vendedores")]
     public async Task<IActionResult> ListarVendedores(CancellationToken cancellationToken)
     {
+        await SincronizarCatalogosSiigoAsync(cancellationToken);
+
         var vendedores = await contexto.Vendedores
             .OrderBy(x => x.Nombre)
             .Select(x => new ItemCatalogoResponse(x.Id, x.Nombre))
             .ToListAsync(cancellationToken);
 
         return Ok(vendedores);
+    }
+
+    private async Task SincronizarCatalogosSiigoAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await contexto.Database.ExecuteSqlRawAsync("EXEC bx.sp_sincronizar_catalogos_desde_siigo @BaseOrigen = N'SiigoCat'", cancellationToken);
+        }
+        catch (Exception)
+        {
+            // Fallback silencioso para ambientes donde el procedimiento no exista todavía.
+        }
     }
 
     public record ItemCatalogoResponse(int Id, string Nombre);

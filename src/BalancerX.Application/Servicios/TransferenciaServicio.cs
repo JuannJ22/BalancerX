@@ -84,9 +84,8 @@ public class TransferenciaServicio
 
     public async Task<SubirPdfResponse> SubirPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int usuarioId, CancellationToken cancellationToken)
     {
-        if (actualizarTransferenciaRequest.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
-        if (string.IsNullOrWhiteSpace(actualizarTransferenciaRequest.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
-        await ValidarReferenciasAsync(actualizarTransferenciaRequest.PuntoVentaId, actualizarTransferenciaRequest.VendedorId, actualizarTransferenciaRequest.BancoId, actualizarTransferenciaRequest.CuentaContableId, cancellationToken);
+        if (string.IsNullOrWhiteSpace(nombreOriginal)) throw new InvalidOperationException("El nombre del archivo es obligatorio.");
+        if (contenidoStream is null || !contenidoStream.CanRead) throw new InvalidOperationException("El contenido del archivo es inválido.");
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
