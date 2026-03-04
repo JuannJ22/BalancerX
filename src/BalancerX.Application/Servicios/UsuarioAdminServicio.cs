@@ -16,7 +16,7 @@ public class UsuarioAdminServicio
     public async Task<List<UsuarioAdminResponse>> ListarAsync(CancellationToken cancellationToken)
     {
         var usuarios = await usuarioRepositorio.ListarUsuariosAsync(cancellationToken);
-        return usuarios.Select(x => new UsuarioAdminResponse(x.Id, x.UsuarioNombre, x.Roles.FirstOrDefault()?.Rol?.Nombre ?? string.Empty, x.Activo, x.FirmaElectronica)).ToList();
+        return usuarios.Select(x => new UsuarioAdminResponse(x.Id, x.UsuarioNombre, x.Roles.FirstOrDefault()?.Rol?.Nombre ?? string.Empty, x.Activo, x.FirmaElectronica ?? string.Empty)).ToList();
     }
 
     public async Task<UsuarioAdminResponse> CrearAsync(CrearUsuarioRequest request, CancellationToken cancellationToken)
@@ -34,7 +34,7 @@ public class UsuarioAdminServicio
         };
 
         var creado = await usuarioRepositorio.CrearUsuarioAsync(usuario, request.Rol, cancellationToken);
-        return new UsuarioAdminResponse(creado.Id, creado.UsuarioNombre, creado.Roles.FirstOrDefault()?.Rol?.Nombre ?? request.Rol, creado.Activo, creado.FirmaElectronica);
+        return new UsuarioAdminResponse(creado.Id, creado.UsuarioNombre, creado.Roles.FirstOrDefault()?.Rol?.Nombre ?? request.Rol, creado.Activo, creado.FirmaElectronica ?? string.Empty);
     }
 
     public Task<bool> EliminarAsync(int usuarioId, CancellationToken cancellationToken)
