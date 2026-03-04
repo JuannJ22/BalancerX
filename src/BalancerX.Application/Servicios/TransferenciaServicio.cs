@@ -94,7 +94,17 @@ public class TransferenciaServicio
 
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
         var firma = string.IsNullOrWhiteSpace(usuario.FirmaElectronica) ? usuario.UsuarioNombre : usuario.FirmaElectronica;
-        var archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, firma, cancellationToken);
+
+        TransferenciaArchivo archivo;
+        try
+        {
+            archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, firma, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"No se pudo procesar el PDF. Verifique que el archivo sea válido y no esté protegido. Detalle: {ex.Message}");
+        }
+
         var guardado = await transferenciaRepositorio.GuardarArchivoAsync(archivo, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.SubirArchivo, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "PDF subido", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
         return new SubirPdfResponse(guardado.Id, guardado.TransferenciaId, guardado.NombreOriginal, guardado.TamanoBytes, guardado.SubidoEnUtc);

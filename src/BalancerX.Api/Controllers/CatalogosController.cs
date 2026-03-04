@@ -21,11 +21,9 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos")]
     public async Task<IActionResult> ListarBancos(CancellationToken cancellationToken)
     {
-        await SincronizarCatalogosSiigoAsync(cancellationToken);
-
-        var bancos = await contexto.Bancos
+        var bancos = await contexto.Database
+            .SqlQueryRaw<BancoCatalogoResponse>("SELECT Id, Nombre FROM bx.vw_bancos_siigo")
             .OrderBy(x => x.Nombre)
-            .Select(x => new BancoCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(bancos);
@@ -34,12 +32,10 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos/{bancoId:int}/cuentas-contables")]
     public async Task<IActionResult> ListarCuentasPorBanco([FromRoute] int bancoId, CancellationToken cancellationToken)
     {
-        await SincronizarCatalogosSiigoAsync(cancellationToken);
-
-        var cuentas = await contexto.CuentasContables
+        var cuentas = await contexto.Database
+            .SqlQueryRaw<CuentaContableCatalogoResponse>("SELECT Id, BancoId, NumeroCuenta, Descripcion FROM bx.vw_cuentas_contables_siigo")
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
-            .Select(x => new CuentaContableCatalogoResponse { Id = x.Id, BancoId = x.BancoId, NumeroCuenta = x.NumeroCuenta, Descripcion = x.Descripcion })
             .ToListAsync(cancellationToken);
 
         return Ok(cuentas);
@@ -59,77 +55,12 @@ public class CatalogosController : ControllerBase
     [HttpGet("vendedores")]
     public async Task<IActionResult> ListarVendedores(CancellationToken cancellationToken)
     {
-        await SincronizarCatalogosSiigoAsync(cancellationToken);
-
-        var vendedores = await contexto.Vendedores
+        var vendedores = await contexto.Database
+            .SqlQueryRaw<ItemCatalogoResponse>("SELECT Id, Nombre FROM bx.vw_vendedores_siigo")
             .OrderBy(x => x.Nombre)
-            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(vendedores);
-    }
-
-    private async Task SincronizarCatalogosSiigoAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            await contexto.Database.ExecuteSqlRawAsync("EXEC bx.sp_sincronizar_catalogos_desde_siigo @BaseOrigen = N'SiigoCat'", cancellationToken);
-        }
-        catch (SqlException)
-        {
-            // Si falla el SP (no existe, permisos, dependencia, etc.) continuamos con sincronización por vistas.
-        }
-
-        await SincronizarDesdeVistasAsync(cancellationToken);
-    }
-
-    private async Task SincronizarDesdeVistasAsync(CancellationToken cancellationToken)
-    {
-        const string sqlFallback = @"
-            INSERT INTO bx.bancos (nombre)
-            SELECT vb.Nombre
-            FROM bx.vw_bancos_siigo vb
-            LEFT JOIN bx.bancos b ON b.nombre = vb.Nombre
-            WHERE b.id IS NULL;
-
-            INSERT INTO bx.cuentas_contables (banco_id, numero_cuenta, descripcion)
-            SELECT b.id, vc.NumeroCuenta, vc.Descripcion
-            FROM bx.vw_cuentas_contables_siigo vc
-            INNER JOIN bx.vw_bancos_siigo vb ON vb.Id = vc.BancoId
-            INNER JOIN bx.bancos b ON b.nombre = vb.Nombre
-            LEFT JOIN bx.cuentas_contables cc
-                ON cc.banco_id = b.id
-               AND cc.numero_cuenta = vc.NumeroCuenta
-            WHERE cc.id IS NULL;
-
-            UPDATE cc
-            SET cc.descripcion = vc.Descripcion
-            FROM bx.cuentas_contables cc
-            INNER JOIN bx.bancos b ON b.id = cc.banco_id
-            INNER JOIN bx.vw_bancos_siigo vb ON vb.Nombre = b.nombre
-            INNER JOIN bx.vw_cuentas_contables_siigo vc
-                ON vc.BancoId = vb.Id
-               AND vc.NumeroCuenta = cc.numero_cuenta
-            WHERE ISNULL(cc.descripcion, '') <> ISNULL(vc.Descripcion, '');
-
-            SET IDENTITY_INSERT bx.vendedores ON;
-
-            INSERT INTO bx.vendedores (id, nombre)
-            SELECT vv.Id, vv.Nombre
-            FROM bx.vw_vendedores_siigo vv
-            LEFT JOIN bx.vendedores v ON v.id = vv.Id
-            WHERE v.id IS NULL;
-
-            SET IDENTITY_INSERT bx.vendedores OFF;
-
-            UPDATE v
-            SET v.nombre = vv.Nombre
-            FROM bx.vendedores v
-            INNER JOIN bx.vw_vendedores_siigo vv ON vv.Id = v.id
-            WHERE ISNULL(v.nombre, '') <> ISNULL(vv.Nombre, '');
-        ";
-
-        await contexto.Database.ExecuteSqlRawAsync(sqlFallback, cancellationToken);
     }
 
     public class ItemCatalogoResponse

@@ -2,6 +2,7 @@ using BalancerX.Application.Contratos;
 using BalancerX.Application.DTOs;
 using BalancerX.Domain.Entidades;
 using BalancerX.Infrastructure.Datos;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace BalancerX.Infrastructure.Repositorios;
@@ -105,11 +106,43 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
         => contexto.PuntosVenta.AnyAsync(x => x.Id == puntoVentaId, cancellationToken);
 
     public Task<bool> ExisteVendedorAsync(int vendedorId, CancellationToken cancellationToken)
-        => contexto.Vendedores.AnyAsync(x => x.Id == vendedorId, cancellationToken);
+        => ExisteEnVistaAsync("SELECT TOP(1) 1 FROM bx.vw_vendedores_siigo WHERE Id = @id", vendedorId, cancellationToken);
 
     public Task<bool> ExisteBancoAsync(int bancoId, CancellationToken cancellationToken)
-        => contexto.Bancos.AnyAsync(x => x.Id == bancoId, cancellationToken);
+        => ExisteEnVistaAsync("SELECT TOP(1) 1 FROM bx.vw_bancos_siigo WHERE Id = @id", bancoId, cancellationToken);
 
     public Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
-        => contexto.CuentasContables.AnyAsync(x => x.Id == cuentaContableId && x.BancoId == bancoId, cancellationToken);
+        => ExisteCuentaEnVistaAsync(cuentaContableId, bancoId, cancellationToken);
+
+    private async Task<bool> ExisteEnVistaAsync(string sql, int id, CancellationToken cancellationToken)
+    {
+        await using var conexion = contexto.Database.GetDbConnection();
+        if (conexion.State != System.Data.ConnectionState.Open)
+            await conexion.OpenAsync(cancellationToken);
+
+        await using var comando = conexion.CreateCommand();
+        comando.CommandText = sql;
+
+        var parametro = new SqlParameter("@id", id);
+        comando.Parameters.Add(parametro);
+
+        var escalar = await comando.ExecuteScalarAsync(cancellationToken);
+        return escalar is not null;
+    }
+
+    private async Task<bool> ExisteCuentaEnVistaAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
+    {
+        await using var conexion = contexto.Database.GetDbConnection();
+        if (conexion.State != System.Data.ConnectionState.Open)
+            await conexion.OpenAsync(cancellationToken);
+
+        await using var comando = conexion.CreateCommand();
+        comando.CommandText = "SELECT TOP(1) 1 FROM bx.vw_cuentas_contables_siigo WHERE Id = @cuentaId AND BancoId = @bancoId";
+        comando.Parameters.Add(new SqlParameter("@cuentaId", cuentaContableId));
+        comando.Parameters.Add(new SqlParameter("@bancoId", bancoId));
+
+        var escalar = await comando.ExecuteScalarAsync(cancellationToken);
+        return escalar is not null;
+    }
+
 }
