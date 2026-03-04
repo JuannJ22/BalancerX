@@ -21,6 +21,6 @@ public class UsuarioPerfilServicio
     {
         var rutaFirma = await firmaElectronicaServicio.GuardarFirmaAsync(usuarioId, nombreArchivo, contenido, cancellationToken);
         var usuario = await usuarioRepositorio.ActualizarFirmaElectronicaAsync(usuarioId, rutaFirma, cancellationToken);
-        return new ActualizarFirmaResponse(usuario.Id, usuario.FirmaElectronica);
+        return new ActualizarFirmaResponse(usuario.Id, usuario.FirmaElectronica ?? string.Empty);
     }
 }

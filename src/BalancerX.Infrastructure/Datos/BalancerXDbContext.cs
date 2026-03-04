@@ -71,7 +71,7 @@ public class BalancerXDbContext : DbContext
         var entidadTransferencia = modelBuilder.Entity<Transferencia>();
         entidadTransferencia.ToTable("transferencias");
         entidadTransferencia.Property(x => x.Id).HasColumnName("id");
-        entidadTransferencia.Property(x => x.Monto).HasColumnName("monto");
+        entidadTransferencia.Property(x => x.Monto).HasColumnName("monto").HasPrecision(18, 2);
         entidadTransferencia.Property(x => x.PuntoVentaId).HasColumnName("punto_venta_id");
         entidadTransferencia.Property(x => x.VendedorId).HasColumnName("vendedor_id");
         entidadTransferencia.Property(x => x.BancoId).HasColumnName("banco_id");

@@ -89,7 +89,13 @@ public class JwtTokenServicio : IJwtTokenServicio
 
 public class ArchivoSeguroServicio : IArchivoSeguroServicio
 {
-    private readonly string rutaRaiz = @"D:\BalancerX_Secure\Transferencias";
+    private readonly string rutaRaiz;
+
+    public ArchivoSeguroServicio(IConfiguration configuracion)
+    {
+        rutaRaiz = configuracion["Storage:TransferenciasPath"]
+            ?? Path.Combine(AppContext.BaseDirectory, "storage", "transferencias");
+    }
 
     public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string firmaElectronica, CancellationToken cancellationToken)
     {
@@ -126,6 +132,9 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
     public Task<(Stream Contenido, string NombreOriginal)> ObtenerPdfAsync(TransferenciaArchivo transferenciaArchivo, CancellationToken cancellationToken)
     {
+        if (!File.Exists(transferenciaArchivo.RutaInterna))
+            throw new InvalidOperationException("El PDF asociado no existe físicamente en el almacenamiento seguro.");
+
         Stream contenido = File.OpenRead(transferenciaArchivo.RutaInterna);
         return Task.FromResult((contenido, transferenciaArchivo.NombreOriginal));
     }
@@ -185,7 +194,13 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
 public class FirmaElectronicaServicio : IFirmaElectronicaServicio
 {
-    private readonly string rutaRaizFirmas = @"D:\BalancerX_Secure\Firmas";
+    private readonly string rutaRaizFirmas;
+
+    public FirmaElectronicaServicio(IConfiguration configuracion)
+    {
+        rutaRaizFirmas = configuracion["Storage:FirmasPath"]
+            ?? Path.Combine(AppContext.BaseDirectory, "storage", "firmas");
+    }
 
     public async Task<string> GuardarFirmaAsync(int usuarioId, string nombreArchivo, Stream contenido, CancellationToken cancellationToken)
     {
