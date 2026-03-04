@@ -114,6 +114,12 @@ const resolveIdFromText = (text) => {
   return matched ? Number(matched[1]) : 0;
 };
 
+
+const resolveCatalogName = (items, id) => {
+  const item = items.find((x) => Number(x.id) === Number(id));
+  return item ? `${item.id} - ${item.nombre}` : (id ?? '-');
+};
+
 const fillBankSelect = (selectId, bancos) => {
   const select = document.getElementById(selectId);
   select.innerHTML = '<option value="">Seleccione banco...</option>';
@@ -257,7 +263,7 @@ document.getElementById('listTransfersBtn').addEventListener('click', async () =
 const renderTransferRow = (item) => {
   const tr = document.createElement('tr');
   const created = item.creadoEnUtc ? new Date(item.creadoEnUtc).toLocaleString() : '-';
-  tr.innerHTML = `<td>${item.id ?? '-'}</td><td>${Number(item.monto ?? 0).toFixed(2)}</td><td>${item.estado ?? '-'}</td><td>${item.bancoId ?? '-'}</td><td>${item.cuentaContableId ?? '-'}</td><td>${created}</td><td class="actions"></td>`;
+  tr.innerHTML = `<td>${item.id ?? '-'}</td><td>${Number(item.monto ?? 0).toFixed(2)}</td><td>${item.estado ?? '-'}</td><td>${resolveCatalogName(catalogs.puntosVenta, item.puntoVentaId)}</td><td>${resolveCatalogName(catalogs.vendedores, item.vendedorId)}</td><td>${created}</td><td class="actions"></td>`;
 
   const actions = tr.querySelector('.actions');
 
