@@ -52,17 +52,20 @@ public class BalancerXDbContext : DbContext
         entidadPuntoVenta.Property(x => x.Nombre).HasColumnName("nombre");
 
         var entidadVendedor = modelBuilder.Entity<Vendedor>();
-        entidadVendedor.ToTable("vendedores");
+        entidadVendedor.ToView("vw_vendedores_siigo");
+        entidadVendedor.HasKey(x => x.Id);
         entidadVendedor.Property(x => x.Id).HasColumnName("id");
         entidadVendedor.Property(x => x.Nombre).HasColumnName("nombre");
 
         var entidadBanco = modelBuilder.Entity<Banco>();
-        entidadBanco.ToTable("bancos");
+        entidadBanco.ToView("vw_bancos_siigo");
+        entidadBanco.HasKey(x => x.Id);
         entidadBanco.Property(x => x.Id).HasColumnName("id");
         entidadBanco.Property(x => x.Nombre).HasColumnName("nombre");
 
         var entidadCuentaContable = modelBuilder.Entity<CuentaContable>();
-        entidadCuentaContable.ToTable("cuentas_contables");
+        entidadCuentaContable.ToView("vw_cuentas_contables_siigo");
+        entidadCuentaContable.HasKey(x => x.Id);
         entidadCuentaContable.Property(x => x.Id).HasColumnName("id");
         entidadCuentaContable.Property(x => x.BancoId).HasColumnName("banco_id");
         entidadCuentaContable.Property(x => x.NumeroCuenta).HasColumnName("numero_cuenta");
