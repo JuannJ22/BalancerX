@@ -66,10 +66,10 @@ public class BalancerXDbContext : DbContext
         var entidadCuentaContable = modelBuilder.Entity<CuentaContable>();
         entidadCuentaContable.ToView("vw_cuentas_contables_siigo");
         entidadCuentaContable.HasKey(x => x.Id);
-        entidadCuentaContable.Property(x => x.Id).HasColumnName("id");
-        entidadCuentaContable.Property(x => x.BancoId).HasColumnName("banco_id");
-        entidadCuentaContable.Property(x => x.NumeroCuenta).HasColumnName("numero_cuenta");
-        entidadCuentaContable.Property(x => x.Descripcion).HasColumnName("descripcion");
+        entidadCuentaContable.Property(x => x.Id).HasColumnName("Id");
+        entidadCuentaContable.Property(x => x.BancoId).HasColumnName("BancoId");
+        entidadCuentaContable.Property(x => x.NumeroCuenta).HasColumnName("NumeroCuenta");
+        entidadCuentaContable.Property(x => x.Descripcion).HasColumnName("Descripcion");
 
         var entidadTransferencia = modelBuilder.Entity<Transferencia>();
         entidadTransferencia.ToTable("transferencias");
