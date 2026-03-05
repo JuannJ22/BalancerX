@@ -186,22 +186,25 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             var page = pdf.GetPage(i);
             var pageSize = page.GetPageSize();
             var canvas = new PdfCanvas(page.NewContentStreamAfter(), page.GetResources(), pdf);
-            var gs = new PdfExtGState().SetFillOpacity(0.18f);
+            var gs = new PdfExtGState().SetFillOpacity(0.12f);
             canvas.SaveState();
             canvas.SetExtGState(gs);
 
             using var layoutCanvas = new Canvas(canvas, pageSize);
+            var posicionX = pageSize.GetWidth() * 0.58f;
+            var posicionY = pageSize.GetHeight() * 0.10f;
+
             if (esImagenFirma)
             {
                 var imageData = iText.IO.Image.ImageDataFactory.Create(firma);
-                var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.55f, pageSize.GetHeight() * 0.35f);
-                imagen.SetFixedPosition(i, (pageSize.GetWidth() - imagen.GetImageScaledWidth()) / 2, (pageSize.GetHeight() - imagen.GetImageScaledHeight()) / 2);
+                var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.22f, pageSize.GetHeight() * 0.09f);
+                imagen.SetFixedPosition(i, posicionX, posicionY);
                 layoutCanvas.Add(imagen);
             }
             else
             {
-                layoutCanvas.SetFont(font).SetFontSize(48).SetFontColor(ColorConstants.GRAY);
-                layoutCanvas.ShowTextAligned(new Paragraph(firma), pageSize.GetWidth() / 2, pageSize.GetHeight() / 2, i, TextAlignment.CENTER, VerticalAlignment.MIDDLE, (float)(Math.PI / 6));
+                layoutCanvas.SetFont(font).SetFontSize(18).SetFontColor(ColorConstants.GRAY);
+                layoutCanvas.ShowTextAligned(new Paragraph(firma), posicionX + 5, posicionY + 15, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
             }
 
             canvas.RestoreState();
