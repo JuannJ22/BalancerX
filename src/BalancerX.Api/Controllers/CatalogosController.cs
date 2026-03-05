@@ -25,10 +25,7 @@ public class CatalogosController : ControllerBase
     {
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
-        var bancosOrigen = await contexto.Bancos
-            .FromSqlRaw(SqlCatalogos.BancosConFallback)
-            .ToListAsync(cancellationToken);
-
+        var bancosOrigen = await CargarBancosAsync(cancellationToken);
         var bancos = bancosOrigen
             .Select(x => new BancoCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .OrderBy(x => x.Nombre)
@@ -42,10 +39,7 @@ public class CatalogosController : ControllerBase
     {
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
-        var cuentasOrigen = await contexto.CuentasContables
-            .FromSqlRaw(SqlCatalogos.CuentasConFallback)
-            .ToListAsync(cancellationToken);
-
+        var cuentasOrigen = await CargarCuentasAsync(cancellationToken);
         var cuentas = cuentasOrigen
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
@@ -79,16 +73,86 @@ public class CatalogosController : ControllerBase
     {
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
-        var vendedoresOrigen = await contexto.Vendedores
-            .FromSqlRaw(SqlCatalogos.VendedoresConFallback)
-            .ToListAsync(cancellationToken);
-
+        var vendedoresOrigen = await CargarVendedoresAsync(cancellationToken);
         var vendedores = vendedoresOrigen
             .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .OrderBy(x => x.Nombre)
             .ToList();
 
         return Ok(vendedores);
+    }
+
+    private async Task<List<Vendedor>> CargarVendedoresAsync(CancellationToken cancellationToken)
+    {
+        var desdeSp = await IntentarConsultaAsync(
+            contexto.Vendedores,
+            SqlCatalogos.VendedoresDesdeSp,
+            cancellationToken);
+        if (desdeSp.Count > 0) return desdeSp;
+
+        var desdeVista = await IntentarConsultaAsync(
+            contexto.Vendedores,
+            SqlCatalogos.VendedoresDesdeVista,
+            cancellationToken);
+        if (desdeVista.Count > 0) return desdeVista;
+
+        return await IntentarConsultaAsync(
+            contexto.Vendedores,
+            SqlCatalogos.VendedoresDesdeTabla,
+            cancellationToken);
+    }
+
+    private async Task<List<Banco>> CargarBancosAsync(CancellationToken cancellationToken)
+    {
+        var desdeSp = await IntentarConsultaAsync(
+            contexto.Bancos,
+            SqlCatalogos.BancosDesdeSp,
+            cancellationToken);
+        if (desdeSp.Count > 0) return desdeSp;
+
+        var desdeVista = await IntentarConsultaAsync(
+            contexto.Bancos,
+            SqlCatalogos.BancosDesdeVista,
+            cancellationToken);
+        if (desdeVista.Count > 0) return desdeVista;
+
+        return await IntentarConsultaAsync(
+            contexto.Bancos,
+            SqlCatalogos.BancosDesdeTabla,
+            cancellationToken);
+    }
+
+    private async Task<List<CuentaContable>> CargarCuentasAsync(CancellationToken cancellationToken)
+    {
+        var desdeSp = await IntentarConsultaAsync(
+            contexto.CuentasContables,
+            SqlCatalogos.CuentasDesdeSp,
+            cancellationToken);
+        if (desdeSp.Count > 0) return desdeSp;
+
+        var desdeVista = await IntentarConsultaAsync(
+            contexto.CuentasContables,
+            SqlCatalogos.CuentasDesdeVista,
+            cancellationToken);
+        if (desdeVista.Count > 0) return desdeVista;
+
+        return await IntentarConsultaAsync(
+            contexto.CuentasContables,
+            SqlCatalogos.CuentasDesdeTabla,
+            cancellationToken);
+    }
+
+    private static async Task<List<T>> IntentarConsultaAsync<T>(DbSet<T> set, string sql, CancellationToken cancellationToken)
+        where T : class
+    {
+        try
+        {
+            return await set.FromSqlRaw(sql).ToListAsync(cancellationToken);
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     public class ItemCatalogoResponse
@@ -113,177 +177,64 @@ public class CatalogosController : ControllerBase
 
     private static class SqlCatalogos
     {
-        public const string VendedoresConFallback = @"
-BEGIN TRY
-    IF OBJECT_ID(N'bx.sp_catalogo_vendedores', N'P') IS NOT NULL
-    BEGIN
-        CREATE TABLE #tmp_vendedores ([id] INT NOT NULL, [nombre] NVARCHAR(150) NOT NULL);
-        INSERT INTO #tmp_vendedores ([id], [nombre]) EXEC [bx].[sp_catalogo_vendedores];
+        public const string VendedoresDesdeSp = @"
+IF OBJECT_ID(N'bx.sp_catalogo_vendedores', N'P') IS NOT NULL
+    EXEC [bx].[sp_catalogo_vendedores];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;";
 
-        IF EXISTS (SELECT 1 FROM #tmp_vendedores)
-            SELECT [id], [nombre] FROM #tmp_vendedores;
-        ELSE IF OBJECT_ID(N'bx.vendedores', N'U') IS NOT NULL
-            SELECT [id], [nombre] FROM [bx].[vendedores];
-        ELSE
-            SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-    END
-    ELSE IF OBJECT_ID(N'bx.vw_vendedores_siigo', N'V') IS NOT NULL
-    BEGIN
-        CREATE TABLE #tmp_vendedores_view ([id] INT NOT NULL, [nombre] NVARCHAR(150) NOT NULL);
+        public const string VendedoresDesdeVista = @"
+IF OBJECT_ID(N'bx.vw_vendedores_siigo', N'V') IS NOT NULL
+    SELECT [Id] AS [id], [Nombre] AS [nombre]
+    FROM [bx].[vw_vendedores_siigo];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;";
 
-        DECLARE @imp_vendedores BIT = 0;
-        BEGIN TRY
-            EXECUTE AS OWNER;
-            SET @imp_vendedores = 1;
+        public const string VendedoresDesdeTabla = @"
+IF OBJECT_ID(N'bx.vendedores', N'U') IS NOT NULL
+    SELECT [id], [nombre]
+    FROM [bx].[vendedores];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;";
 
-            INSERT INTO #tmp_vendedores_view ([id], [nombre])
-            SELECT [Id] AS [id], [Nombre] AS [nombre]
-            FROM [bx].[vw_vendedores_siigo];
+        public const string BancosDesdeSp = @"
+IF OBJECT_ID(N'bx.sp_catalogo_bancos', N'P') IS NOT NULL
+    EXEC [bx].[sp_catalogo_bancos];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;";
 
-            REVERT;
-            SET @imp_vendedores = 0;
-        END TRY
-        BEGIN CATCH
-            IF @imp_vendedores = 1 REVERT;
-            THROW;
-        END CATCH
+        public const string BancosDesdeVista = @"
+IF OBJECT_ID(N'bx.vw_bancos_siigo', N'V') IS NOT NULL
+    SELECT [Id] AS [id], [Nombre] AS [nombre]
+    FROM [bx].[vw_bancos_siigo];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;";
 
-        IF EXISTS (SELECT 1 FROM #tmp_vendedores_view)
-            SELECT [id], [nombre] FROM #tmp_vendedores_view;
-        ELSE IF OBJECT_ID(N'bx.vendedores', N'U') IS NOT NULL
-            SELECT [id], [nombre] FROM [bx].[vendedores];
-        ELSE
-            SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-    END
-    ELSE IF OBJECT_ID(N'bx.vendedores', N'U') IS NOT NULL
-        SELECT [id], [nombre] FROM [bx].[vendedores];
-    ELSE
-        SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-END TRY
-BEGIN CATCH
-    IF OBJECT_ID(N'bx.vendedores', N'U') IS NOT NULL
-        SELECT [id], [nombre] FROM [bx].[vendedores];
-    ELSE
-        SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-END CATCH";
+        public const string BancosDesdeTabla = @"
+IF OBJECT_ID(N'bx.bancos', N'U') IS NOT NULL
+    SELECT [id], [nombre]
+    FROM [bx].[bancos];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;";
 
+        public const string CuentasDesdeSp = @"
+IF OBJECT_ID(N'bx.sp_catalogo_cuentas_contables', N'P') IS NOT NULL
+    EXEC [bx].[sp_catalogo_cuentas_contables];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;";
 
+        public const string CuentasDesdeVista = @"
+IF OBJECT_ID(N'bx.vw_cuentas_contables_siigo', N'V') IS NOT NULL
+    SELECT [Id] AS [id], [BancoId] AS [banco_id], [NumeroCuenta] AS [numero_cuenta], [Descripcion] AS [descripcion]
+    FROM [bx].[vw_cuentas_contables_siigo];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;";
 
-        public const string CuentasConFallback = @"
-BEGIN TRY
-    IF OBJECT_ID(N'bx.sp_catalogo_cuentas_contables', N'P') IS NOT NULL
-    BEGIN
-        CREATE TABLE #tmp_cuentas (
-            [id] INT NOT NULL,
-            [banco_id] INT NOT NULL,
-            [numero_cuenta] NVARCHAR(80) NOT NULL,
-            [descripcion] NVARCHAR(200) NOT NULL
-        );
-        INSERT INTO #tmp_cuentas ([id], [banco_id], [numero_cuenta], [descripcion]) EXEC [bx].[sp_catalogo_cuentas_contables];
-
-        IF EXISTS (SELECT 1 FROM #tmp_cuentas)
-            SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM #tmp_cuentas;
-        ELSE IF OBJECT_ID(N'bx.cuentas_contables', N'U') IS NOT NULL
-            SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM [bx].[cuentas_contables];
-        ELSE
-            SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;
-    END
-    ELSE IF OBJECT_ID(N'bx.vw_cuentas_contables_siigo', N'V') IS NOT NULL
-    BEGIN
-        CREATE TABLE #tmp_cuentas_view (
-            [id] INT NOT NULL,
-            [banco_id] INT NOT NULL,
-            [numero_cuenta] NVARCHAR(80) NOT NULL,
-            [descripcion] NVARCHAR(200) NOT NULL
-        );
-
-        DECLARE @imp_cuentas BIT = 0;
-        BEGIN TRY
-            EXECUTE AS OWNER;
-            SET @imp_cuentas = 1;
-
-            INSERT INTO #tmp_cuentas_view ([id], [banco_id], [numero_cuenta], [descripcion])
-            SELECT [Id] AS [id], [BancoId] AS [banco_id], [NumeroCuenta] AS [numero_cuenta], [Descripcion] AS [descripcion]
-            FROM [bx].[vw_cuentas_contables_siigo];
-
-            REVERT;
-            SET @imp_cuentas = 0;
-        END TRY
-        BEGIN CATCH
-            IF @imp_cuentas = 1 REVERT;
-            THROW;
-        END CATCH
-
-        IF EXISTS (SELECT 1 FROM #tmp_cuentas_view)
-            SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM #tmp_cuentas_view;
-        ELSE IF OBJECT_ID(N'bx.cuentas_contables', N'U') IS NOT NULL
-            SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM [bx].[cuentas_contables];
-        ELSE
-            SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;
-    END
-    ELSE IF OBJECT_ID(N'bx.cuentas_contables', N'U') IS NOT NULL
-        SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM [bx].[cuentas_contables];
-    ELSE
-        SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;
-END TRY
-BEGIN CATCH
-    IF OBJECT_ID(N'bx.cuentas_contables', N'U') IS NOT NULL
-        SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM [bx].[cuentas_contables];
-    ELSE
-        SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;
-END CATCH";
-        public const string BancosConFallback = @"
-BEGIN TRY
-    IF OBJECT_ID(N'bx.sp_catalogo_bancos', N'P') IS NOT NULL
-    BEGIN
-        CREATE TABLE #tmp_bancos ([id] INT NOT NULL, [nombre] NVARCHAR(150) NOT NULL);
-        INSERT INTO #tmp_bancos ([id], [nombre]) EXEC [bx].[sp_catalogo_bancos];
-
-        IF EXISTS (SELECT 1 FROM #tmp_bancos)
-            SELECT [id], [nombre] FROM #tmp_bancos;
-        ELSE IF OBJECT_ID(N'bx.bancos', N'U') IS NOT NULL
-            SELECT [id], [nombre] FROM [bx].[bancos];
-        ELSE
-            SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-    END
-    ELSE IF OBJECT_ID(N'bx.vw_bancos_siigo', N'V') IS NOT NULL
-    BEGIN
-        CREATE TABLE #tmp_bancos_view ([id] INT NOT NULL, [nombre] NVARCHAR(150) NOT NULL);
-
-        DECLARE @imp_bancos BIT = 0;
-        BEGIN TRY
-            EXECUTE AS OWNER;
-            SET @imp_bancos = 1;
-
-            INSERT INTO #tmp_bancos_view ([id], [nombre])
-            SELECT [Id] AS [id], [Nombre] AS [nombre]
-            FROM [bx].[vw_bancos_siigo];
-
-            REVERT;
-            SET @imp_bancos = 0;
-        END TRY
-        BEGIN CATCH
-            IF @imp_bancos = 1 REVERT;
-            THROW;
-        END CATCH
-
-        IF EXISTS (SELECT 1 FROM #tmp_bancos_view)
-            SELECT [id], [nombre] FROM #tmp_bancos_view;
-        ELSE IF OBJECT_ID(N'bx.bancos', N'U') IS NOT NULL
-            SELECT [id], [nombre] FROM [bx].[bancos];
-        ELSE
-            SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-    END
-    ELSE IF OBJECT_ID(N'bx.bancos', N'U') IS NOT NULL
-        SELECT [id], [nombre] FROM [bx].[bancos];
-    ELSE
-        SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-END TRY
-BEGIN CATCH
-    IF OBJECT_ID(N'bx.bancos', N'U') IS NOT NULL
-        SELECT [id], [nombre] FROM [bx].[bancos];
-    ELSE
-        SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS NVARCHAR(150)) AS [nombre] WHERE 1 = 0;
-END CATCH";
+        public const string CuentasDesdeTabla = @"
+IF OBJECT_ID(N'bx.cuentas_contables', N'U') IS NOT NULL
+    SELECT [id], [banco_id], [numero_cuenta], [descripcion]
+    FROM [bx].[cuentas_contables];
+ELSE
+    SELECT CAST(NULL AS INT) AS [id], CAST(NULL AS INT) AS [banco_id], CAST(NULL AS NVARCHAR(80)) AS [numero_cuenta], CAST(NULL AS NVARCHAR(200)) AS [descripcion] WHERE 1 = 0;";
     }
 }
