@@ -119,6 +119,11 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
   - `Server=tcp:192.168.5.10,14330;Database=BalancerX;User ID=sa;Password=***;TrustServerCertificate=True;Encrypt=False`
 
 
+### 4) Error CS0246 con `ICatalogosSyncServicio`
+- Si tu copia local mezcla archivos de commits distintos, puede aparecer este error al compilar.
+- Esta base ya incluye un servicio de compatibilidad `CatalogosSyncServicio` (no-op) para evitar ese fallo.
+- Si persiste, elimina carpetas `bin/` y `obj/` de toda la solución y vuelve a ejecutar `dotnet clean && dotnet restore && dotnet build`.
+
 ### Actualizar transferencia (solo ADMIN)
 ```bash
 curl -X PUT http://localhost:5000/api/transferencias/1 \
