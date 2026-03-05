@@ -58,6 +58,11 @@
             </form>
           </article>
 
+          <article class="card viewer-card">
+            <h3>Visualización PDF</h3>
+            <iframe id="pdfViewer" title="Visor PDF"></iframe>
+          </article>
+
           <article class="card wide">
             <div class="card-header"><h3>Listado y acciones</h3><button id="listTransfersBtn" class="ghost">Refrescar</button></div>
             <div class="toolbar">
@@ -72,14 +77,11 @@
               </form>
             </div>
 
-            <div class="list-viewer-layout">
-              <div class="table-wrap">
-                <table>
-                  <thead><tr><th>ID</th><th>Monto</th><th>Estado</th><th>Punto de venta</th><th>Vendedor</th><th>Creado</th><th>Acciones</th></tr></thead>
-                  <tbody id="transferTableBody"></tbody>
-                </table>
-              </div>
-              <iframe id="pdfViewer" title="Visor PDF"></iframe>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>ID</th><th>Monto</th><th>Estado</th><th>Punto de venta</th><th>Vendedor</th><th>Creado</th><th>Acciones</th></tr></thead>
+                <tbody id="transferTableBody"></tbody>
+              </table>
             </div>
           </article>
         </div>
