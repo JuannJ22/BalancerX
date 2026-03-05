@@ -26,8 +26,8 @@ public class CatalogosController : ControllerBase
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
         var bancos = await contexto.Bancos
-            .Select(x => new BancoCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .OrderBy(x => x.Nombre)
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(bancos);
@@ -39,6 +39,8 @@ public class CatalogosController : ControllerBase
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
         var cuentas = await contexto.CuentasContables
+            .Where(x => x.BancoId == bancoId)
+            .OrderBy(x => x.NumeroCuenta)
             .Select(x => new CuentaContableCatalogoResponse
             {
                 Id = x.Id,
@@ -46,8 +48,6 @@ public class CatalogosController : ControllerBase
                 NumeroCuenta = x.NumeroCuenta,
                 Descripcion = x.Descripcion
             })
-            .Where(x => x.BancoId == bancoId)
-            .OrderBy(x => x.NumeroCuenta)
             .ToListAsync(cancellationToken);
 
         return Ok(cuentas);
@@ -59,7 +59,7 @@ public class CatalogosController : ControllerBase
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
         var puntos = await contexto.PuntosVenta
-            .OrderBy(x => x.Nombre)
+            .OrderBy(x => x.Id)
             .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
@@ -72,20 +72,14 @@ public class CatalogosController : ControllerBase
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
         var vendedores = await contexto.Vendedores
-            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .OrderBy(x => x.Nombre)
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
         return Ok(vendedores);
     }
 
     public class ItemCatalogoResponse
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-    }
-
-    public class BancoCatalogoResponse
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
