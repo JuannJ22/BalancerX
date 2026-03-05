@@ -181,10 +181,25 @@ const fillCuentaSelect = async (selectId, bancoId) => {
   });
 };
 
+const loadCatalogSafe = async (url, label) => {
+  try {
+    const data = await api(url);
+    return { ok: true, data: Array.isArray(data) ? data : [], label };
+  } catch (error) {
+    return { ok: false, data: [], label, error: error?.message || 'Error cargando catálogo' };
+  }
+};
+
 const loadCatalogs = async () => {
-  catalogs.puntosVenta = await api('/api/catalogos/puntos-venta');
-  catalogs.vendedores = await api('/api/catalogos/vendedores');
-  catalogs.bancos = await api('/api/catalogos/bancos');
+  const [puntosRes, vendedoresRes, bancosRes] = await Promise.all([
+    loadCatalogSafe('/api/catalogos/puntos-venta', 'puntos de venta'),
+    loadCatalogSafe('/api/catalogos/vendedores', 'vendedores'),
+    loadCatalogSafe('/api/catalogos/bancos', 'bancos')
+  ]);
+
+  catalogs.puntosVenta = puntosRes.data;
+  catalogs.vendedores = vendedoresRes.data;
+  catalogs.bancos = bancosRes.data;
 
   bindDatalist('puntosVentaList', catalogs.puntosVenta);
   bindDatalist('vendedoresList', catalogs.vendedores);
@@ -192,7 +207,20 @@ const loadCatalogs = async () => {
   fillBankSelect('crearBancoId', catalogs.bancos);
   fillBankSelect('adminBancoId', catalogs.bancos);
 
-  showResult('ok', 'Catálogos cargados correctamente.', { bancos: catalogs.bancos.length, puntosVenta: catalogs.puntosVenta.length, vendedores: catalogs.vendedores.length });
+  const failed = [puntosRes, vendedoresRes, bancosRes].filter((x) => !x.ok);
+  const details = {
+    bancos: catalogs.bancos.length,
+    puntosVenta: catalogs.puntosVenta.length,
+    vendedores: catalogs.vendedores.length,
+    errores: failed.map((x) => ({ catalogo: x.label, error: x.error }))
+  };
+
+  if (failed.length > 0 || catalogs.bancos.length === 0 || catalogs.vendedores.length === 0) {
+    showResult('error', 'Catálogos cargados parcialmente. Revise permisos/SQL de catálogos.', details);
+    return;
+  }
+
+  showResult('ok', 'Catálogos cargados correctamente.', details);
 };
 
 const listTransfers = async () => {
