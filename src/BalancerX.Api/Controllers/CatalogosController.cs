@@ -40,6 +40,7 @@ public class CatalogosController : ControllerBase
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
         var cuentas = await ConsultarCuentasPorBancoResilienteAsync(bancoId, cancellationToken);
+
         return Ok(cuentas);
     }
 
