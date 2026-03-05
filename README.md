@@ -167,6 +167,12 @@ Luego verifica catálogos:
 - `SELECT TOP (100) * FROM bx.vw_cuentas_contables_siigo ORDER BY BancoId, NumeroCuenta;`
 - `SELECT TOP (100) * FROM bx.vw_vendedores_siigo ORDER BY Id;`
 
+Si el usuario de la app no tiene permisos a `SiigoCat` (error 916), ejecuta además:
+
+3. `database/alter_v7_catalogos_procs_execute_as_owner.sql`
+
+Ese script crea procedimientos `bx.sp_catalogo_*` con `EXECUTE AS OWNER` para exponer catálogos sin otorgar acceso directo del login de aplicación a `SiigoCat`.
+
 
 ### Ver PDF en visor (inline)
 ```bash
