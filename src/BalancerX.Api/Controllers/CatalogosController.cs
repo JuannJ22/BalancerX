@@ -36,7 +36,12 @@ public class CatalogosController : ControllerBase
             return await ConsultarItemsConFallbackAsync(SqlCatalogos.Bancos, cancellationToken);
         }) ?? [];
 
-        return Ok(bancos.OrderBy(x => x.Nombre).ToList());
+        var bancos = await contexto.Bancos
+            .OrderBy(x => x.Nombre)
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
+            .ToListAsync(cancellationToken);
+
+        return Ok(bancos);
     }
 
     [HttpGet("bancos/{bancoId:int}/cuentas-contables")]
@@ -49,7 +54,19 @@ public class CatalogosController : ControllerBase
             return await ConsultarCuentasConFallbackAsync(SqlCatalogos.Cuentas, cancellationToken);
         }) ?? [];
 
-        return Ok(cuentas.Where(x => x.BancoId == bancoId).OrderBy(x => x.NumeroCuenta).ToList());
+        var cuentas = await contexto.CuentasContables
+            .Where(x => x.BancoId == bancoId)
+            .OrderBy(x => x.NumeroCuenta)
+            .Select(x => new CuentaContableCatalogoResponse
+            {
+                Id = x.Id,
+                BancoId = x.BancoId,
+                NumeroCuenta = x.NumeroCuenta,
+                Descripcion = x.Descripcion
+            })
+            .ToListAsync(cancellationToken);
+
+        return Ok(cuentas);
     }
 
     [HttpGet("puntos-venta")]
@@ -75,8 +92,10 @@ public class CatalogosController : ControllerBase
             return await ConsultarItemsConFallbackAsync(SqlCatalogos.Vendedores, cancellationToken);
         }) ?? [];
 
-        return Ok(vendedores.OrderBy(x => x.Nombre).ToList());
-    }
+        var vendedores = await contexto.Vendedores
+            .OrderBy(x => x.Nombre)
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
+            .ToListAsync(cancellationToken);
 
     private async Task<List<ItemCatalogoResponse>> ConsultarItemsConFallbackAsync(string[] sqlCandidates, CancellationToken cancellationToken)
     {
@@ -98,90 +117,6 @@ public class CatalogosController : ControllerBase
         }
 
         return [];
-    }
-
-    private async Task<List<ItemCatalogoResponse>> EjecutarItemsAsync(string sql, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await using var connection = contexto.Database.GetDbConnection();
-            if (connection.State != System.Data.ConnectionState.Open)
-            {
-                await connection.OpenAsync(cancellationToken);
-            }
-
-            await using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandType = System.Data.CommandType.Text;
-            command.CommandTimeout = 30;
-
-            var result = new List<ItemCatalogoResponse>();
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                result.Add(new ItemCatalogoResponse
-                {
-                    Id = reader.GetInt32(reader.GetOrdinal("id")),
-                    Nombre = reader.GetString(reader.GetOrdinal("nombre"))
-                });
-            }
-
-            return result;
-        }
-        catch
-        {
-            return [];
-        }
-    }
-
-    private async Task<List<CuentaContableCatalogoResponse>> EjecutarCuentasAsync(string sql, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await using var connection = contexto.Database.GetDbConnection();
-            if (connection.State != System.Data.ConnectionState.Open)
-            {
-                await connection.OpenAsync(cancellationToken);
-            }
-
-            await using var command = connection.CreateCommand();
-            command.CommandText = sql;
-            command.CommandType = System.Data.CommandType.Text;
-            command.CommandTimeout = 30;
-
-            var result = new List<CuentaContableCatalogoResponse>();
-            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-            while (await reader.ReadAsync(cancellationToken))
-            {
-                result.Add(new CuentaContableCatalogoResponse
-                {
-                    Id = reader.GetInt32(reader.GetOrdinal("id")),
-                    BancoId = reader.GetInt32(reader.GetOrdinal("banco_id")),
-                    NumeroCuenta = reader.GetString(reader.GetOrdinal("numero_cuenta")),
-                    Descripcion = reader.GetString(reader.GetOrdinal("descripcion"))
-                });
-            }
-
-            return result;
-        }
-        catch
-        {
-            return [];
-        }
-    }
-
-
-
-    private static class CacheKeys
-    {
-        public const string Vendedores = "catalogos:vendedores";
-        public const string Bancos = "catalogos:bancos";
-        public const string Cuentas = "catalogos:cuentas";
-    }
-    public class ItemCatalogoResponse
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
     }
 
     public class CuentaContableCatalogoResponse
