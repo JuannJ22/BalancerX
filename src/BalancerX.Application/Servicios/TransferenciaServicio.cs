@@ -109,9 +109,18 @@ public class TransferenciaServicio
             throw new InvalidOperationException($"No se pudo procesar el PDF. Verifique que el archivo sea válido y no esté protegido. Detalle: {ex.Message}");
         }
 
-        var guardado = await transferenciaRepositorio.GuardarArchivoAsync(archivo, cancellationToken);
-        await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.SubirArchivo, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "PDF subido", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
-        return new SubirPdfResponse(guardado.Id, guardado.TransferenciaId, guardado.NombreOriginal, guardado.TamanoBytes, guardado.SubidoEnUtc);
+        try
+        {
+            var guardado = await transferenciaRepositorio.GuardarArchivoAsync(archivo, cancellationToken);
+            await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, "SUBIDO", cancellationToken);
+            await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.SubirArchivo, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "PDF subido", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
+            return new SubirPdfResponse(guardado.Id, guardado.TransferenciaId, guardado.NombreOriginal, guardado.TamanoBytes, guardado.SubidoEnUtc);
+        }
+        catch
+        {
+            await archivoSeguroServicio.EliminarPdfAsync(archivo.RutaInterna, cancellationToken);
+            throw;
+        }
     }
 
 
@@ -122,6 +131,7 @@ public class TransferenciaServicio
 
         await archivoSeguroServicio.EliminarPdfAsync(archivo.RutaInterna, cancellationToken);
         var eliminado = await transferenciaRepositorio.EliminarArchivoPorTransferenciaAsync(transferenciaId, cancellationToken);
+        await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, "CREADA", cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Anular, Entidad = nameof(TransferenciaArchivo), EntidadId = transferenciaId.ToString(), Detalle = "PDF eliminado por ADMIN", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
         return new EliminarPdfResponse(transferenciaId, eliminado);
     }

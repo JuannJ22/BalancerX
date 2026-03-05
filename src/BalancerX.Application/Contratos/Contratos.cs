@@ -13,6 +13,7 @@ public interface ITransferenciaRepositorio
     Task GuardarEventoImpresionAsync(EventoImpresion eventoImpresion, CancellationToken cancellationToken);
     Task GuardarEventoAuditoriaAsync(EventoAuditoria eventoAuditoria, CancellationToken cancellationToken);
     Task<TransferenciaArchivo> GuardarArchivoAsync(TransferenciaArchivo transferenciaArchivo, CancellationToken cancellationToken);
+    Task ActualizarEstadoAsync(long transferenciaId, string estado, CancellationToken cancellationToken);
     Task<TransferenciaArchivo?> ObtenerArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken);
     Task<List<TransferenciaArchivo>> ObtenerArchivosPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken);
     Task<bool> EliminarArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken);

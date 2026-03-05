@@ -69,6 +69,15 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
         return transferenciaArchivo;
     }
 
+    public async Task ActualizarEstadoAsync(long transferenciaId, string estado, CancellationToken cancellationToken)
+    {
+        var transferencia = await contexto.Transferencias.FirstOrDefaultAsync(x => x.Id == transferenciaId, cancellationToken)
+            ?? throw new InvalidOperationException("Transferencia no encontrada.");
+
+        transferencia.Estado = estado;
+        await contexto.SaveChangesAsync(cancellationToken);
+    }
+
     public Task<TransferenciaArchivo?> ObtenerArchivoPorTransferenciaAsync(long transferenciaId, CancellationToken cancellationToken)
         => contexto.TransferenciasArchivos.OrderByDescending(x => x.SubidoEnUtc).FirstOrDefaultAsync(x => x.TransferenciaId == transferenciaId, cancellationToken);
 
