@@ -114,7 +114,18 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
                 await contenidoStream.CopyToAsync(archivoSalida, cancellationToken);
             }
 
-            AplicarMarcaAgua(rutaInterna, firmaElectronica);
+            var tamanoOriginal = new FileInfo(rutaInterna).Length;
+            if (tamanoOriginal == 0)
+                throw new InvalidOperationException("El archivo PDF está vacío o no se pudo leer su contenido.");
+
+            try
+            {
+                AplicarMarcaAgua(rutaInterna, firmaElectronica);
+            }
+            catch
+            {
+                EliminarSilencioso(rutaInterna + ".tmp");
+            }
         }
         catch
         {
