@@ -1,5 +1,4 @@
 using BalancerX.Infrastructure.Datos;
-using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
