@@ -1,4 +1,5 @@
 using BalancerX.Application.Contratos;
+using BalancerX.Domain.Entidades;
 using BalancerX.Infrastructure.Datos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
