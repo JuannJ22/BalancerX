@@ -67,7 +67,7 @@ public class CatalogosController : ControllerBase
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
 
         var puntos = await contexto.PuntosVenta
-            .OrderBy(x => x.Nombre)
+            .OrderBy(x => x.Id)
             .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .ToListAsync(cancellationToken);
 
@@ -115,7 +115,9 @@ public class CatalogosController : ControllerBase
     {
         public const string VendedoresConFallback = @"
 BEGIN TRY
-    IF OBJECT_ID(N'bx.vw_vendedores_siigo', N'V') IS NOT NULL
+    IF OBJECT_ID(N'bx.sp_catalogo_vendedores', N'P') IS NOT NULL
+        EXEC [bx].[sp_catalogo_vendedores];
+    ELSE IF OBJECT_ID(N'bx.vw_vendedores_siigo', N'V') IS NOT NULL
         SELECT [Id] AS [id], [Nombre] AS [nombre]
         FROM [bx].[vw_vendedores_siigo];
     ELSE IF OBJECT_ID(N'bx.vendedores', N'U') IS NOT NULL
@@ -138,7 +140,9 @@ END CATCH";
 
         public const string CuentasConFallback = @"
 BEGIN TRY
-    IF OBJECT_ID(N'bx.vw_cuentas_contables_siigo', N'V') IS NOT NULL
+    IF OBJECT_ID(N'bx.sp_catalogo_cuentas_contables', N'P') IS NOT NULL
+        EXEC [bx].[sp_catalogo_cuentas_contables];
+    ELSE IF OBJECT_ID(N'bx.vw_cuentas_contables_siigo', N'V') IS NOT NULL
         SELECT
             [Id] AS [id],
             [BancoId] AS [banco_id],
@@ -170,7 +174,9 @@ BEGIN CATCH
 END CATCH";
         public const string BancosConFallback = @"
 BEGIN TRY
-    IF OBJECT_ID(N'bx.vw_bancos_siigo', N'V') IS NOT NULL
+    IF OBJECT_ID(N'bx.sp_catalogo_bancos', N'P') IS NOT NULL
+        EXEC [bx].[sp_catalogo_bancos];
+    ELSE IF OBJECT_ID(N'bx.vw_bancos_siigo', N'V') IS NOT NULL
         SELECT [Id] AS [id], [Nombre] AS [nombre]
         FROM [bx].[vw_bancos_siigo];
     ELSE IF OBJECT_ID(N'bx.bancos', N'U') IS NOT NULL
