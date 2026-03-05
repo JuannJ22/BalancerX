@@ -130,9 +130,23 @@ BEGIN TRY
     ELSE IF OBJECT_ID(N'bx.vw_vendedores_siigo', N'V') IS NOT NULL
     BEGIN
         CREATE TABLE #tmp_vendedores_view ([id] INT NOT NULL, [nombre] NVARCHAR(150) NOT NULL);
-        INSERT INTO #tmp_vendedores_view ([id], [nombre])
-        SELECT [Id] AS [id], [Nombre] AS [nombre]
-        FROM [bx].[vw_vendedores_siigo];
+
+        DECLARE @imp_vendedores BIT = 0;
+        BEGIN TRY
+            EXECUTE AS OWNER;
+            SET @imp_vendedores = 1;
+
+            INSERT INTO #tmp_vendedores_view ([id], [nombre])
+            SELECT [Id] AS [id], [Nombre] AS [nombre]
+            FROM [bx].[vw_vendedores_siigo];
+
+            REVERT;
+            SET @imp_vendedores = 0;
+        END TRY
+        BEGIN CATCH
+            IF @imp_vendedores = 1 REVERT;
+            THROW;
+        END CATCH
 
         IF EXISTS (SELECT 1 FROM #tmp_vendedores_view)
             SELECT [id], [nombre] FROM #tmp_vendedores_view;
@@ -182,9 +196,23 @@ BEGIN TRY
             [numero_cuenta] NVARCHAR(80) NOT NULL,
             [descripcion] NVARCHAR(200) NOT NULL
         );
-        INSERT INTO #tmp_cuentas_view ([id], [banco_id], [numero_cuenta], [descripcion])
-        SELECT [Id] AS [id], [BancoId] AS [banco_id], [NumeroCuenta] AS [numero_cuenta], [Descripcion] AS [descripcion]
-        FROM [bx].[vw_cuentas_contables_siigo];
+
+        DECLARE @imp_cuentas BIT = 0;
+        BEGIN TRY
+            EXECUTE AS OWNER;
+            SET @imp_cuentas = 1;
+
+            INSERT INTO #tmp_cuentas_view ([id], [banco_id], [numero_cuenta], [descripcion])
+            SELECT [Id] AS [id], [BancoId] AS [banco_id], [NumeroCuenta] AS [numero_cuenta], [Descripcion] AS [descripcion]
+            FROM [bx].[vw_cuentas_contables_siigo];
+
+            REVERT;
+            SET @imp_cuentas = 0;
+        END TRY
+        BEGIN CATCH
+            IF @imp_cuentas = 1 REVERT;
+            THROW;
+        END CATCH
 
         IF EXISTS (SELECT 1 FROM #tmp_cuentas_view)
             SELECT [id], [banco_id], [numero_cuenta], [descripcion] FROM #tmp_cuentas_view;
@@ -221,9 +249,23 @@ BEGIN TRY
     ELSE IF OBJECT_ID(N'bx.vw_bancos_siigo', N'V') IS NOT NULL
     BEGIN
         CREATE TABLE #tmp_bancos_view ([id] INT NOT NULL, [nombre] NVARCHAR(150) NOT NULL);
-        INSERT INTO #tmp_bancos_view ([id], [nombre])
-        SELECT [Id] AS [id], [Nombre] AS [nombre]
-        FROM [bx].[vw_bancos_siigo];
+
+        DECLARE @imp_bancos BIT = 0;
+        BEGIN TRY
+            EXECUTE AS OWNER;
+            SET @imp_bancos = 1;
+
+            INSERT INTO #tmp_bancos_view ([id], [nombre])
+            SELECT [Id] AS [id], [Nombre] AS [nombre]
+            FROM [bx].[vw_bancos_siigo];
+
+            REVERT;
+            SET @imp_bancos = 0;
+        END TRY
+        BEGIN CATCH
+            IF @imp_bancos = 1 REVERT;
+            THROW;
+        END CATCH
 
         IF EXISTS (SELECT 1 FROM #tmp_bancos_view)
             SELECT [id], [nombre] FROM #tmp_bancos_view;
