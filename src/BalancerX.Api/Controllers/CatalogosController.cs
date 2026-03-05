@@ -1,3 +1,4 @@
+using BalancerX.Application.Contratos;
 using BalancerX.Infrastructure.Datos;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,17 +12,21 @@ namespace BalancerX.Api.Controllers;
 public class CatalogosController : ControllerBase
 {
     private readonly BalancerXDbContext contexto;
+    private readonly ICatalogosSyncServicio catalogosSyncServicio;
 
-    public CatalogosController(BalancerXDbContext contexto)
+    public CatalogosController(BalancerXDbContext contexto, ICatalogosSyncServicio catalogosSyncServicio)
     {
         this.contexto = contexto;
+        this.catalogosSyncServicio = catalogosSyncServicio;
     }
 
     [HttpGet("bancos")]
     public async Task<IActionResult> ListarBancos(CancellationToken cancellationToken)
     {
-        var bancos = await contexto.Database
-            .SqlQueryRaw<BancoCatalogoResponse>("SELECT Id, Nombre FROM bx.vw_bancos_siigo")
+        await catalogosSyncServicio.SincronizarAsync(cancellationToken);
+
+        var bancos = await contexto.Bancos
+            .Select(x => new BancoCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .OrderBy(x => x.Nombre)
             .ToListAsync(cancellationToken);
 
@@ -31,8 +36,16 @@ public class CatalogosController : ControllerBase
     [HttpGet("bancos/{bancoId:int}/cuentas-contables")]
     public async Task<IActionResult> ListarCuentasPorBanco([FromRoute] int bancoId, CancellationToken cancellationToken)
     {
-        var cuentas = await contexto.Database
-            .SqlQueryRaw<CuentaContableCatalogoResponse>("SELECT Id, BancoId, NumeroCuenta, Descripcion FROM bx.vw_cuentas_contables_siigo")
+        await catalogosSyncServicio.SincronizarAsync(cancellationToken);
+
+        var cuentas = await contexto.CuentasContables
+            .Select(x => new CuentaContableCatalogoResponse
+            {
+                Id = x.Id,
+                BancoId = x.BancoId,
+                NumeroCuenta = x.NumeroCuenta,
+                Descripcion = x.Descripcion
+            })
             .Where(x => x.BancoId == bancoId)
             .OrderBy(x => x.NumeroCuenta)
             .ToListAsync(cancellationToken);
@@ -43,6 +56,8 @@ public class CatalogosController : ControllerBase
     [HttpGet("puntos-venta")]
     public async Task<IActionResult> ListarPuntosVenta(CancellationToken cancellationToken)
     {
+        await catalogosSyncServicio.SincronizarAsync(cancellationToken);
+
         var puntos = await contexto.PuntosVenta
             .OrderBy(x => x.Nombre)
             .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
@@ -54,8 +69,10 @@ public class CatalogosController : ControllerBase
     [HttpGet("vendedores")]
     public async Task<IActionResult> ListarVendedores(CancellationToken cancellationToken)
     {
-        var vendedores = await contexto.Database
-            .SqlQueryRaw<ItemCatalogoResponse>("SELECT Id, Nombre FROM bx.vw_vendedores_siigo")
+        await catalogosSyncServicio.SincronizarAsync(cancellationToken);
+
+        var vendedores = await contexto.Vendedores
+            .Select(x => new ItemCatalogoResponse { Id = x.Id, Nombre = x.Nombre })
             .OrderBy(x => x.Nombre)
             .ToListAsync(cancellationToken);
 
