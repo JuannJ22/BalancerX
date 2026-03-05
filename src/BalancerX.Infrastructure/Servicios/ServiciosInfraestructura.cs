@@ -107,12 +107,21 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         var nombreInterno = $"transferencia_{transferenciaId}_{Guid.NewGuid():N}.pdf";
         var rutaInterna = Path.Combine(carpeta, nombreInterno);
 
-        await using (var archivoSalida = File.Create(rutaInterna))
+        try
         {
-            await contenidoStream.CopyToAsync(archivoSalida, cancellationToken);
-        }
+            await using (var archivoSalida = File.Create(rutaInterna))
+            {
+                await contenidoStream.CopyToAsync(archivoSalida, cancellationToken);
+            }
 
-        AplicarMarcaAgua(rutaInterna, firmaElectronica);
+            AplicarMarcaAgua(rutaInterna, firmaElectronica);
+        }
+        catch
+        {
+            EliminarSilencioso(rutaInterna);
+            EliminarSilencioso(rutaInterna + ".tmp");
+            throw;
+        }
 
         await using var lectura = File.OpenRead(rutaInterna);
         var shaBytes = await SHA256.HashDataAsync(lectura, cancellationToken);
@@ -189,6 +198,19 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
         File.Delete(rutaArchivo);
         File.Move(temporal, rutaArchivo);
+    }
+
+    private static void EliminarSilencioso(string ruta)
+    {
+        if (!File.Exists(ruta)) return;
+        try
+        {
+            File.Delete(ruta);
+        }
+        catch
+        {
+            // Ignorado: limpieza de mejor esfuerzo en rutas temporales.
+        }
     }
 }
 
