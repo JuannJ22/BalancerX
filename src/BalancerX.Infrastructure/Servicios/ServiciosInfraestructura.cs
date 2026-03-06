@@ -188,9 +188,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             var page = pdf.GetPage(i);
             var pageSize = page.GetPageSize();
             var canvas = new PdfCanvas(page.NewContentStreamAfter(), page.GetResources(), pdf);
-            var gs = new PdfExtGState().SetFillOpacity(0.12f);
             canvas.SaveState();
-            canvas.SetExtGState(gs);
 
             using var layoutCanvas = new Canvas(canvas, pageSize);
             var posicionX = pageSize.GetWidth() * 0.58f;
@@ -198,6 +196,8 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
             if (esImagenFirma)
             {
+                var gsImagen = new PdfExtGState().SetFillOpacity(0.95f);
+                canvas.SetExtGState(gsImagen);
                 var imageData = iText.IO.Image.ImageDataFactory.Create(firma);
                 var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.22f, pageSize.GetHeight() * 0.09f);
                 imagen.SetFixedPosition(i, posicionX, posicionY);
@@ -205,6 +205,8 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             }
             else
             {
+                var gsTexto = new PdfExtGState().SetFillOpacity(0.12f);
+                canvas.SetExtGState(gsTexto);
                 layoutCanvas.SetFont(font).SetFontSize(18).SetFontColor(ColorConstants.GRAY);
                 layoutCanvas.ShowTextAligned(new Paragraph(firma), posicionX + 5, posicionY + 15, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
             }
