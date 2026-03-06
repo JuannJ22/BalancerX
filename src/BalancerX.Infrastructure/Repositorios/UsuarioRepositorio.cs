@@ -135,7 +135,7 @@ WHERE [ur].[{columnaUsuarioId}] = @usuarioId";
     public async Task<List<Usuario>> ListarUsuariosAsync(CancellationToken cancellationToken)
         => await contexto.Usuarios.Include(x => x.Roles).ThenInclude(x => x.Rol).OrderBy(x => x.UsuarioNombre).ToListAsync(cancellationToken);
 
-    public async Task<Usuario> CrearUsuarioAsync(Usuario usuario, string rolNombre, CancellationToken cancellationToken)
+    public async Task<Usuario> CrearUsuarioAsync(Usuario usuario, int rolId, CancellationToken cancellationToken)
     {
         var password = string.IsNullOrWhiteSpace(usuario.PasswordHash) ? "Temporal123*" : usuario.PasswordHash;
         var pin = usuario.PinAdminHash;
@@ -146,7 +146,7 @@ WHERE [ur].[{columnaUsuarioId}] = @usuarioId";
             usuario.PinAdminHash = pin.StartsWith("{PLAIN}", StringComparison.Ordinal) ? pin : $"{{PLAIN}}{pin}";
         }
 
-        var rol = await contexto.Roles.FirstOrDefaultAsync(x => x.Nombre == rolNombre, cancellationToken)
+        var rol = await contexto.Roles.FirstOrDefaultAsync(x => x.Id == rolId, cancellationToken)
             ?? throw new InvalidOperationException("Rol no encontrado.");
 
         contexto.Usuarios.Add(usuario);
@@ -162,6 +162,34 @@ WHERE [ur].[{columnaUsuarioId}] = @usuarioId";
 
         return usuario;
     }
+
+    public async Task<Usuario> ActualizarRolUsuarioAsync(int usuarioId, int rolId, CancellationToken cancellationToken)
+    {
+        var usuario = await contexto.Usuarios.Include(x => x.Roles).ThenInclude(x => x.Rol).FirstOrDefaultAsync(x => x.Id == usuarioId, cancellationToken)
+            ?? throw new InvalidOperationException("Usuario no encontrado.");
+
+        var rol = await contexto.Roles.FirstOrDefaultAsync(x => x.Id == rolId, cancellationToken)
+            ?? throw new InvalidOperationException("Rol no encontrado.");
+
+        var rolesActuales = contexto.UsuariosRoles.Where(x => x.UsuarioId == usuarioId);
+        contexto.UsuariosRoles.RemoveRange(rolesActuales);
+        contexto.UsuariosRoles.Add(new UsuarioRol { UsuarioId = usuarioId, RolId = rolId });
+
+        if (rol.Nombre.Equals("AUXILIAR", StringComparison.OrdinalIgnoreCase) && (!usuario.PuntoVentaAsignadoId.HasValue || usuario.PuntoVentaAsignadoId.Value <= 0))
+            throw new InvalidOperationException("Para usuarios AUXILIAR debe asignar un punto de venta.");
+
+        await contexto.SaveChangesAsync(cancellationToken);
+
+        usuario.Roles = new List<UsuarioRol>
+        {
+            new() { UsuarioId = usuario.Id, RolId = rol.Id, Rol = rol, Usuario = usuario }
+        };
+
+        return usuario;
+    }
+
+    public Task<Rol?> ObtenerRolPorIdAsync(int rolId, CancellationToken cancellationToken)
+        => contexto.Roles.FirstOrDefaultAsync(x => x.Id == rolId, cancellationToken);
 
     public async Task<bool> EliminarUsuarioAsync(int usuarioId, CancellationToken cancellationToken)
     {

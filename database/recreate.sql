@@ -124,10 +124,8 @@ VALUES
 GO
 
 INSERT INTO bx.user_roles (usuario_id, rol_id)
-SELECT u.id, r.id
-FROM bx.users u
-INNER JOIN bx.roles r
-    ON (u.username = 'admin' AND r.nombre = 'ADMIN')
-    OR (u.username = 'tesoreria' AND r.nombre = 'TESORERIA')
-    OR (u.username = 'auxiliar' AND r.nombre = 'AUXILIAR');
+VALUES
+    (1, 1), -- admin -> ADMIN
+    (2, 2), -- tesoreria -> TESORERIA
+    (3, 3); -- auxiliar -> AUXILIAR
 GO

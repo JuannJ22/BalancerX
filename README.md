@@ -43,7 +43,7 @@ dotnet run --project src/BalancerX.Api
 5. Imprimir una sola vez en `POST /api/transferencias/{id}/print` (`ADMIN`, `TESORERIA` y `AUXILIAR`).
 6. Reimprimir solo ADMIN en `POST /api/transferencias/{id}/reprint` con PIN y razón.
 7. Actualizar transferencia (solo ADMIN) en `PUT /api/transferencias/{id}`.
-8. Administrar usuarios (solo ADMIN) en `/api/usuarios` (listar/crear/eliminar).
+8. Administrar usuarios (solo ADMIN) en `/api/usuarios` (listar/crear/cambiar rol/eliminar).
 9. Eliminar PDF o transferencia (solo ADMIN) en `DELETE /api/transferencias/{id}/archivo` y `DELETE /api/transferencias/{id}`.
 
 ## Regla operativa de AUXILIAR
@@ -141,7 +141,15 @@ curl -X PUT http://localhost:5000/api/transferencias/1 \
 curl -X POST http://localhost:5000/api/usuarios \
   -H "Authorization: Bearer <TOKEN_ADMIN>" \
   -H "Content-Type: application/json" \
-  -d '{"usuario":"operador1","password":"Operador123*","rol":"AUXILIAR","pinAdmin":null,"firmaElectronica":"OPERADOR 1","puntoVentaId":2}'
+  -d '{"usuario":"operador1","password":"Operador123*","rolId":3,"pinAdmin":null,"firmaElectronica":"OPERADOR 1","puntoVentaId":2}'
+```
+
+### Cambiar rol de un usuario (solo ADMIN)
+```bash
+curl -X PUT http://localhost:5000/api/usuarios/3/rol \
+  -H "Authorization: Bearer <TOKEN_ADMIN>" \
+  -H "Content-Type: application/json" \
+  -d '{"rolId":2}'
 ```
 
 ### Eliminar PDF de una transferencia (solo ADMIN)
