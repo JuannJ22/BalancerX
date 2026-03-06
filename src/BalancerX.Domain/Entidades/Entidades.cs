@@ -8,6 +8,7 @@ public class Usuario
     public string? PinAdminHash { get; set; }
     public bool Activo { get; set; } = true;
     public string? FirmaElectronica { get; set; }
+    public int? PuntoVentaAsignadoId { get; set; }
     public List<UsuarioRol> Roles { get; set; } = new();
 }
 

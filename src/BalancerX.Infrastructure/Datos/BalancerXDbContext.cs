@@ -31,6 +31,7 @@ public class BalancerXDbContext : DbContext
         entidadUsuario.Property(x => x.PinAdminHash).HasColumnName("admin_pin_hash");
         entidadUsuario.Property(x => x.Activo).HasColumnName("activo");
         entidadUsuario.Property(x => x.FirmaElectronica).HasColumnName("firma_electronica");
+        entidadUsuario.Property(x => x.PuntoVentaAsignadoId).HasColumnName("punto_venta_id");
 
         var entidadRol = modelBuilder.Entity<Rol>();
         entidadRol.ToTable("roles");

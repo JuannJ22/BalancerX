@@ -7,21 +7,23 @@ SET NOCOUNT ON;
 
 IF NOT EXISTS (SELECT 1 FROM bx.users WHERE username = 'admin')
 BEGIN
-    INSERT INTO bx.users (username, password_hash, admin_pin_hash, activo, firma_electronica)
-    VALUES ('admin', '{PLAIN}Admin123*', '{PLAIN}1234', 1, 'FIRMA ADMIN');
+    INSERT INTO bx.users (username, password_hash, admin_pin_hash, activo, firma_electronica, punto_venta_id)
+    VALUES ('admin', '{PLAIN}Admin123*', '{PLAIN}1234', 1, 'FIRMA ADMIN', NULL);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM bx.users WHERE username = 'tesoreria')
 BEGIN
-    INSERT INTO bx.users (username, password_hash, admin_pin_hash, activo, firma_electronica)
-    VALUES ('tesoreria', '{PLAIN}Tesoreria123*', NULL, 1, 'FIRMA TESORERIA');
+    INSERT INTO bx.users (username, password_hash, admin_pin_hash, activo, firma_electronica, punto_venta_id)
+    VALUES ('tesoreria', '{PLAIN}Tesoreria123*', NULL, 1, 'FIRMA TESORERIA', NULL);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM bx.users WHERE username = 'auxiliar')
 BEGIN
-    INSERT INTO bx.users (username, password_hash, admin_pin_hash, activo, firma_electronica)
-    VALUES ('auxiliar', '{PLAIN}Auxiliar123*', NULL, 1, 'FIRMA AUXILIAR');
+    INSERT INTO bx.users (username, password_hash, admin_pin_hash, activo, firma_electronica, punto_venta_id)
+    VALUES ('auxiliar', '{PLAIN}Auxiliar123*', NULL, 1, 'FIRMA AUXILIAR', 1);
 END;
+
+UPDATE bx.users SET punto_venta_id = 1 WHERE username = 'auxiliar' AND punto_venta_id IS NULL;
 
 DECLARE @usuarioAdminId INT = (SELECT id FROM bx.users WHERE username = 'admin');
 DECLARE @usuarioTesoreriaId INT = (SELECT id FROM bx.users WHERE username = 'tesoreria');

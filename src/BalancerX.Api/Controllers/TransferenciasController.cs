@@ -17,7 +17,7 @@ public class TransferenciasController : ControllerBase
     public TransferenciasController(TransferenciaServicio transferenciaServicio) => this.transferenciaServicio = transferenciaServicio;
 
     [HttpPost]
-    [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
+    [Authorize(Roles = "ADMIN,TESORERIA")]
     public async Task<IActionResult> Crear([FromBody] CrearTransferenciaRequest crearTransferenciaRequest, CancellationToken cancellationToken)
     {
         if (crearTransferenciaRequest.Monto <= 0) return BadRequest(new ProblemDetails { Title = "El monto debe ser mayor a 0", Status = 400 });
@@ -29,7 +29,7 @@ public class TransferenciasController : ControllerBase
     [HttpGet]
     [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> Listar([FromQuery] FiltroTransferenciaRequest filtroTransferenciaRequest, CancellationToken cancellationToken)
-        => Ok(await transferenciaServicio.ListarAsync(filtroTransferenciaRequest, cancellationToken));
+        => Ok(await transferenciaServicio.ListarPorUsuarioAsync(ObtenerUsuarioId(), filtroTransferenciaRequest, cancellationToken));
 
 
     [HttpPut("{id:long}")]
@@ -78,7 +78,7 @@ public class TransferenciasController : ControllerBase
     [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> ObtenerPdf([FromRoute] long id, CancellationToken cancellationToken)
     {
-        var resultado = await transferenciaServicio.DescargarPdfAsync(id, cancellationToken);
+        var resultado = await transferenciaServicio.DescargarPdfAsync(id, ObtenerUsuarioId(), cancellationToken);
         return File(resultado.Contenido, "application/pdf", resultado.NombreOriginal);
     }
 
@@ -87,12 +87,12 @@ public class TransferenciasController : ControllerBase
     [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> VerPdf([FromRoute] long id, CancellationToken cancellationToken)
     {
-        var resultado = await transferenciaServicio.DescargarPdfAsync(id, cancellationToken);
+        var resultado = await transferenciaServicio.DescargarPdfAsync(id, ObtenerUsuarioId(), cancellationToken);
         return File(resultado.Contenido, "application/pdf");
     }
 
     [HttpPost("{id:long}/print")]
-    [Authorize(Roles = "ADMIN,TESORERIA")]
+    [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> Imprimir([FromRoute] long id, CancellationToken cancellationToken)
     {
         await transferenciaServicio.ImprimirAsync(id, ObtenerUsuarioId(), cancellationToken);
