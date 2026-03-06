@@ -98,7 +98,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             ?? Path.Combine(AppContext.BaseDirectory, "storage", "transferencias");
     }
 
-    public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, CancellationToken cancellationToken)
+    public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, CancellationToken cancellationToken)
     {
         var ahora = DateTime.UtcNow;
         var carpeta = Path.Combine(rutaRaiz, ahora.Year.ToString(), ahora.Month.ToString("00"));
@@ -120,7 +120,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
             try
             {
-                AplicarMarcaAgua(rutaInterna, firmaElectronica);
+                AplicarMarcaAgua(rutaInterna, firmaElectronica, puntoVentaNombre, vendedorNombre);
             }
             catch
             {
@@ -170,18 +170,21 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         return Task.CompletedTask;
     }
 
-    private static void AplicarMarcaAgua(string rutaArchivo, string? firmaElectronica)
+    private static void AplicarMarcaAgua(string rutaArchivo, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre)
     {
-        if (string.IsNullOrWhiteSpace(firmaElectronica)) return;
+        var firma = firmaElectronica?.Trim();
+        var tieneFirma = !string.IsNullOrWhiteSpace(firma);
+        var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre);
+        if (!tieneFirma && !tieneEtiquetas) return;
 
-        var firma = firmaElectronica;
         var temporal = rutaArchivo + ".tmp";
 
         using var reader = new PdfReader(rutaArchivo);
         using var writer = new PdfWriter(temporal);
         using var pdf = new PdfDocument(reader, writer);
         var font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
-        var esImagenFirma = File.Exists(firma);
+        var fontInfo = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+        var esImagenFirma = tieneFirma && File.Exists(firma);
 
         for (var i = 1; i <= pdf.GetNumberOfPages(); i++)
         {
@@ -194,21 +197,44 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             var posicionX = pageSize.GetWidth() * 0.58f;
             var posicionY = pageSize.GetHeight() * 0.10f;
 
-            if (esImagenFirma)
+            if (tieneFirma)
             {
-                var gsImagen = new PdfExtGState().SetFillOpacity(0.95f);
-                canvas.SetExtGState(gsImagen);
-                var imageData = iText.IO.Image.ImageDataFactory.Create(firma);
-                var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.22f, pageSize.GetHeight() * 0.09f);
-                imagen.SetFixedPosition(i, posicionX, posicionY);
-                layoutCanvas.Add(imagen);
+                if (esImagenFirma)
+                {
+                    var gsImagen = new PdfExtGState().SetFillOpacity(0.95f);
+                    canvas.SetExtGState(gsImagen);
+                    var imageData = iText.IO.Image.ImageDataFactory.Create(firma!);
+                    var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.22f, pageSize.GetHeight() * 0.09f);
+                    imagen.SetFixedPosition(i, posicionX, posicionY);
+                    layoutCanvas.Add(imagen);
+                }
+                else
+                {
+                    var gsTexto = new PdfExtGState().SetFillOpacity(0.12f);
+                    canvas.SetExtGState(gsTexto);
+                    layoutCanvas.SetFont(font).SetFontSize(18).SetFontColor(ColorConstants.GRAY);
+                    layoutCanvas.ShowTextAligned(new Paragraph(firma!), posicionX + 5, posicionY + 15, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
+                }
             }
-            else
+
+            if (tieneEtiquetas)
             {
-                var gsTexto = new PdfExtGState().SetFillOpacity(0.12f);
-                canvas.SetExtGState(gsTexto);
-                layoutCanvas.SetFont(font).SetFontSize(18).SetFontColor(ColorConstants.GRAY);
-                layoutCanvas.ShowTextAligned(new Paragraph(firma), posicionX + 5, posicionY + 15, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
+                var gsInfo = new PdfExtGState().SetFillOpacity(0.90f);
+                canvas.SetExtGState(gsInfo);
+                layoutCanvas.SetFont(fontInfo).SetFontSize(9).SetFontColor(ColorConstants.DARK_GRAY);
+
+                var infoY = pageSize.GetHeight() - 28;
+                var infoX = pageSize.GetWidth() - 24;
+                if (!string.IsNullOrWhiteSpace(puntoVentaNombre))
+                {
+                    layoutCanvas.ShowTextAligned(new Paragraph($"Punto de venta: {puntoVentaNombre}"), infoX, infoY, i, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+                    infoY -= 12;
+                }
+
+                if (!string.IsNullOrWhiteSpace(vendedorNombre))
+                {
+                    layoutCanvas.ShowTextAligned(new Paragraph($"Vendedor: {vendedorNombre}"), infoX, infoY, i, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+                }
             }
 
             canvas.RestoreState();

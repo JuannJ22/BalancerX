@@ -98,11 +98,13 @@ public class TransferenciaServicio
 
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
         var firma = usuario.FirmaElectronica;
+        var puntoVentaNombre = await transferenciaRepositorio.ObtenerNombrePuntoVentaAsync(transferencia.PuntoVentaId, cancellationToken);
+        var vendedorNombre = await transferenciaRepositorio.ObtenerNombreVendedorAsync(transferencia.VendedorId, cancellationToken);
 
         TransferenciaArchivo archivo;
         try
         {
-            archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, firma, cancellationToken);
+            archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, firma, puntoVentaNombre, vendedorNombre, cancellationToken);
         }
         catch (Exception ex)
         {

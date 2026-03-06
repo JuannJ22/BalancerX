@@ -122,4 +122,10 @@ public class TransferenciaRepositorio : ITransferenciaRepositorio
     public Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken)
         => contexto.CuentasContables.AnyAsync(x => x.Id == cuentaContableId && x.BancoId == bancoId, cancellationToken);
 
+    public Task<string?> ObtenerNombrePuntoVentaAsync(int puntoVentaId, CancellationToken cancellationToken)
+        => contexto.PuntosVenta.Where(x => x.Id == puntoVentaId).Select(x => x.Nombre).FirstOrDefaultAsync(cancellationToken);
+
+    public Task<string?> ObtenerNombreVendedorAsync(int vendedorId, CancellationToken cancellationToken)
+        => contexto.Vendedores.Where(x => x.Id == vendedorId).Select(x => x.Nombre).FirstOrDefaultAsync(cancellationToken);
+
 }
