@@ -122,9 +122,10 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             {
                 AplicarMarcaAgua(rutaInterna, firmaElectronica, puntoVentaNombre, vendedorNombre);
             }
-            catch
+            catch (Exception ex)
             {
                 EliminarSilencioso(rutaInterna + ".tmp");
+                throw new InvalidOperationException($"No fue posible aplicar firma y etiquetas al PDF. {ex.Message}", ex);
             }
         }
         catch
