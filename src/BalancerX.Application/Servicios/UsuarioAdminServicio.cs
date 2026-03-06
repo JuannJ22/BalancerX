@@ -16,7 +16,7 @@ public class UsuarioAdminServicio
     public async Task<List<UsuarioAdminResponse>> ListarAsync(CancellationToken cancellationToken)
     {
         var usuarios = await usuarioRepositorio.ListarUsuariosAsync(cancellationToken);
-        return usuarios.Select(x => new UsuarioAdminResponse(x.Id, x.UsuarioNombre, x.Roles.FirstOrDefault()?.Rol?.Nombre ?? string.Empty, x.Activo, x.FirmaElectronica ?? string.Empty)).ToList();
+        return usuarios.Select(x => new UsuarioAdminResponse(x.Id, x.UsuarioNombre, x.Roles.FirstOrDefault()?.Rol?.Nombre ?? string.Empty, x.Activo, x.FirmaElectronica ?? string.Empty, x.PuntoVentaAsignadoId)).ToList();
     }
 
     public async Task<UsuarioAdminResponse> CrearAsync(CrearUsuarioRequest request, CancellationToken cancellationToken)
@@ -24,17 +24,22 @@ public class UsuarioAdminServicio
         if (string.IsNullOrWhiteSpace(request.Usuario) || string.IsNullOrWhiteSpace(request.Password) || string.IsNullOrWhiteSpace(request.Rol))
             throw new InvalidOperationException("Usuario, password y rol son obligatorios.");
 
+        var rolNormalizado = request.Rol.Trim().ToUpperInvariant();
+        if (rolNormalizado == "AUXILIAR" && (!request.PuntoVentaId.HasValue || request.PuntoVentaId.Value <= 0))
+            throw new InvalidOperationException("Para usuarios AUXILIAR debe asignar un punto de venta.");
+
         var usuario = new Usuario
         {
             UsuarioNombre = request.Usuario,
             PasswordHash = request.Password,
             PinAdminHash = request.PinAdmin ?? string.Empty,
             Activo = true,
-            FirmaElectronica = request.FirmaElectronica ?? string.Empty
+            FirmaElectronica = request.FirmaElectronica ?? string.Empty,
+            PuntoVentaAsignadoId = request.PuntoVentaId
         };
 
         var creado = await usuarioRepositorio.CrearUsuarioAsync(usuario, request.Rol, cancellationToken);
-        return new UsuarioAdminResponse(creado.Id, creado.UsuarioNombre, creado.Roles.FirstOrDefault()?.Rol?.Nombre ?? request.Rol, creado.Activo, creado.FirmaElectronica ?? string.Empty);
+        return new UsuarioAdminResponse(creado.Id, creado.UsuarioNombre, creado.Roles.FirstOrDefault()?.Rol?.Nombre ?? request.Rol, creado.Activo, creado.FirmaElectronica ?? string.Empty, creado.PuntoVentaAsignadoId);
     }
 
     public Task<bool> EliminarAsync(int usuarioId, CancellationToken cancellationToken)

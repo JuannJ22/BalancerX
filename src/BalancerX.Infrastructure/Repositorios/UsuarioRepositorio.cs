@@ -47,6 +47,7 @@ public class UsuarioRepositorio : IUsuarioRepositorio
         var columnaPin = ObtenerColumnaExistente(columnasUsers, "admin_pin_hash", "AdminPinHash", "pin_admin_hash");
         var columnaActivo = ObtenerColumnaExistente(columnasUsers, "activo", "Activo", "is_active", "IsActive");
         var columnaFirma = ObtenerColumnaExistente(columnasUsers, "firma_electronica", "FirmaElectronica", "firma", "signature");
+        var columnaPuntoVenta = ObtenerColumnaExistente(columnasUsers, "punto_venta_id", "PuntoVentaId", "puntoVentaId");
 
         if (new[] { columnaId, columnaUsername, columnaPassword }.Any(string.IsNullOrWhiteSpace))
         {
@@ -63,7 +64,8 @@ SELECT TOP(1)
     [u].[{columnaPassword}] AS [password_hash],
     {BuildNullableColumnExpression("u", columnaPin)} AS [admin_pin_hash],
     {BuildBooleanExpression("u", columnaActivo)} AS [activo],
-    {BuildNullableColumnExpression("u", columnaFirma)} AS [firma_electronica]
+    {BuildNullableColumnExpression("u", columnaFirma)} AS [firma_electronica],
+    {BuildNullableIntExpression("u", columnaPuntoVenta)} AS [punto_venta_id]
 FROM [bx].[users] AS [u]
 WHERE [u].[{columnaFiltroReal}] = @valor
   AND {BuildBooleanExpression("u", columnaActivo)} = 1";
@@ -83,6 +85,7 @@ WHERE [u].[{columnaFiltroReal}] = @valor
             PinAdminHash = readerUsuario.IsDBNull(readerUsuario.GetOrdinal("admin_pin_hash")) ? string.Empty : readerUsuario.GetString(readerUsuario.GetOrdinal("admin_pin_hash")),
             Activo = readerUsuario.GetBoolean(readerUsuario.GetOrdinal("activo")),
             FirmaElectronica = readerUsuario.IsDBNull(readerUsuario.GetOrdinal("firma_electronica")) ? string.Empty : readerUsuario.GetString(readerUsuario.GetOrdinal("firma_electronica")),
+            PuntoVentaAsignadoId = readerUsuario.IsDBNull(readerUsuario.GetOrdinal("punto_venta_id")) ? null : readerUsuario.GetInt32(readerUsuario.GetOrdinal("punto_venta_id")),
             Roles = new List<UsuarioRol>()
         };
 
@@ -229,6 +232,9 @@ WHERE s.name = @schema AND t.name = @tabla";
 
     private static string BuildBooleanExpression(string alias, string? columna)
         => string.IsNullOrWhiteSpace(columna) ? "CAST(1 AS bit)" : $"CAST([{alias}].[{columna}] AS bit)";
+
+    private static string BuildNullableIntExpression(string alias, string? columna)
+        => string.IsNullOrWhiteSpace(columna) ? "CAST(NULL AS int)" : $"[{alias}].[{columna}]";
 
     private static void AgregarParametro(DbCommand comando, string nombre, object valor)
     {

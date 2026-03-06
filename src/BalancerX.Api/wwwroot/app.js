@@ -35,11 +35,13 @@ const role = String(roleClaim).toUpperCase();
 const userName = claims.unique_name || claims.name || claims.sub || 'usuario';
 const isAdmin = role === 'ADMIN';
 const isTesoreria = role === 'TESORERIA';
-const canPrint = isAdmin || isTesoreria;
+const isAuxiliar = role === 'AUXILIAR';
+const canPrint = isAdmin || isTesoreria || isAuxiliar;
 
 sessionUser.textContent = `${userName} · ${role || 'ROL'}`;
 
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
+document.querySelectorAll('.role-create-transfer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 
 const showResult = (kind, title, technical) => {
   resultMessage.className = `result ${kind}`;
@@ -241,6 +243,11 @@ document.getElementById('adminBancoId').addEventListener('change', async (event)
 });
 
 document.getElementById('createTransferForm').addEventListener('submit', async (event) => {
+  if (isAuxiliar) {
+    showResult('error', 'El rol AUXILIAR no puede crear transferencias.', { rol: role });
+    return;
+  }
+
   event.preventDefault();
   const f = new FormData(event.currentTarget);
   const payload = {
@@ -393,7 +400,7 @@ const listUsers = async () => {
   tbody.innerHTML = '';
   users.forEach((u) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.id ?? '-'}</td><td>${u.usuario ?? '-'}</td><td>${u.rol ?? '-'}</td><td>${u.activo ? 'Sí' : 'No'}</td><td>${u.firmaElectronica ?? '-'}</td><td class='actions'></td>`;
+    tr.innerHTML = `<td>${u.id ?? '-'}</td><td>${u.usuario ?? '-'}</td><td>${u.rol ?? '-'}</td><td>${u.puntoVentaId ?? '-'}</td><td>${u.activo ? 'Sí' : 'No'}</td><td>${u.firmaElectronica ?? '-'}</td><td class='actions'></td>`;
     const delBtn = document.createElement('button');
     delBtn.className = 'danger';
     delBtn.textContent = 'Eliminar';
@@ -417,6 +424,7 @@ document.getElementById('listUsersBtn')?.addEventListener('click', async () => {
 document.getElementById('createUserForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  payload.puntoVentaId = payload.puntoVentaId ? Number(payload.puntoVentaId) : null;
   try {
     const r = await api('/api/usuarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     showResult('ok', 'Usuario creado correctamente.', r);

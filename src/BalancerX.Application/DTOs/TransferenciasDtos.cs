@@ -8,8 +8,8 @@ public record ActualizarTransferenciaRequest(decimal Monto, int PuntoVentaId, in
 
 public record SubirPdfResponse(long Id, long TransferenciaId, string NombreOriginal, long TamanoBytes, DateTime SubidoEnUtc);
 
-public record UsuarioAdminResponse(int Id, string Usuario, string Rol, bool Activo, string FirmaElectronica);
-public record CrearUsuarioRequest(string Usuario, string Password, string Rol, string? PinAdmin, string FirmaElectronica);
+public record UsuarioAdminResponse(int Id, string Usuario, string Rol, bool Activo, string FirmaElectronica, int? PuntoVentaId);
+public record CrearUsuarioRequest(string Usuario, string Password, string Rol, string? PinAdmin, string FirmaElectronica, int? PuntoVentaId);
 public record EliminarPdfResponse(long TransferenciaId, bool Eliminado);
 
 public record CambiarPasswordRequest(string PasswordActual, string PasswordNueva);

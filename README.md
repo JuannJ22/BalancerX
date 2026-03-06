@@ -34,18 +34,23 @@ dotnet run --project src/BalancerX.Api
 
 - ADMIN: `admin` / `Admin123*` (PIN: `1234`)
 - TESORERIA: `tesoreria` / `Tesoreria123*`
-- AUXILIAR: `auxiliar` / `Auxiliar123*`
+- AUXILIAR: `auxiliar` / `Auxiliar123*` (asignado al punto de venta `1` en seed)
 
 ## Flujo principal
 1. Login en `/api/auth/login` para obtener JWT.
-2. Crear transferencia en `POST /api/transferencias` (incluye `bancoId` y `cuentaContableId`).
+2. Crear transferencia en `POST /api/transferencias` (solo `ADMIN` y `TESORERIA`).
 3. Subir PDF en `POST /api/transferencias/{id}/archivo`.
 4. Descargar PDF por API en `GET /api/transferencias/{id}/archivo`.
-5. Imprimir una sola vez en `POST /api/transferencias/{id}/print`.
+5. Imprimir una sola vez en `POST /api/transferencias/{id}/print` (`ADMIN`, `TESORERIA` y `AUXILIAR`).
 6. Reimprimir solo ADMIN en `POST /api/transferencias/{id}/reprint` con PIN y razón.
 7. Actualizar transferencia (solo ADMIN) en `PUT /api/transferencias/{id}`.
 8. Administrar usuarios (solo ADMIN) en `/api/usuarios` (listar/crear/eliminar).
 9. Eliminar PDF o transferencia (solo ADMIN) en `DELETE /api/transferencias/{id}/archivo` y `DELETE /api/transferencias/{id}`.
+
+## Regla operativa de AUXILIAR
+- No puede crear transferencias.
+- Solo puede consultar/operar transferencias de su `punto_venta_id` asignado en `bx.users`.
+- Si no tiene punto de venta asignado, el acceso queda bloqueado para operación de transferencias.
 
 ## Seguridad de archivos
 Los PDFs se guardan fuera de SQL en:
@@ -138,7 +143,7 @@ curl -X PUT http://localhost:5000/api/transferencias/1 \
 curl -X POST http://localhost:5000/api/usuarios \
   -H "Authorization: Bearer <TOKEN_ADMIN>" \
   -H "Content-Type: application/json" \
-  -d '{"usuario":"operador1","password":"Operador123*","rol":"AUXILIAR","pinAdmin":null,"firmaElectronica":"OPERADOR 1"}'
+  -d '{"usuario":"operador1","password":"Operador123*","rol":"AUXILIAR","pinAdmin":null,"firmaElectronica":"OPERADOR 1","puntoVentaId":2}'
 ```
 
 ### Eliminar PDF de una transferencia (solo ADMIN)
@@ -155,6 +160,10 @@ curl -X DELETE http://localhost:5000/api/transferencias/1 \
 
 ## Script SQL incremental recomendado
 Si ya tienes la BD creada, ejecuta: `database/alter_v2_admin_bancos_firma.sql`
+
+Para habilitar punto de venta por usuario (en especial `AUXILIAR`):
+
+- `database/alter_v8_auxiliar_punto_venta.sql`
 
 ## Reinicio de catálogos (modo solo-vistas)
 Si vas a limpiar por completo y dejar bancos/cuentas/vendedores solo en vistas, ejecuta en este orden:

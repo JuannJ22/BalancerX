@@ -55,6 +55,17 @@ public class TransferenciaServicio
         => (await transferenciaRepositorio.ListarAsync(filtroTransferenciaRequest, cancellationToken))
             .Select(registro => new TransferenciaResponse(registro.Id, registro.Monto, registro.PuntoVentaId, registro.VendedorId, registro.BancoId, registro.CuentaContableId, registro.Observacion, registro.Estado, registro.CreadoEnUtc, registro.ImpresaEnUtc)).ToList();
 
+    public async Task<List<TransferenciaResponse>> ListarPorUsuarioAsync(int usuarioId, FiltroTransferenciaRequest filtroTransferenciaRequest, CancellationToken cancellationToken)
+    {
+        var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
+        if (EsAuxiliar(usuario) && usuario.PuntoVentaAsignadoId.HasValue)
+        {
+            filtroTransferenciaRequest = filtroTransferenciaRequest with { PuntoVentaId = usuario.PuntoVentaAsignadoId.Value };
+        }
+
+        return await ListarAsync(filtroTransferenciaRequest, cancellationToken);
+    }
+
 
     public async Task<TransferenciaResponse> ActualizarAsync(long transferenciaId, ActualizarTransferenciaRequest request, int usuarioId, CancellationToken cancellationToken)
     {
@@ -92,6 +103,7 @@ public class TransferenciaServicio
         if (contenidoStream is null || !contenidoStream.CanRead) throw new InvalidOperationException("El contenido del archivo es inválido.");
 
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
         var archivoExistente = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken);
         if (archivoExistente is not null)
             throw new InvalidOperationException("La transferencia ya tiene un PDF cargado. Elimine el archivo actual antes de subir uno nuevo.");
@@ -154,14 +166,18 @@ public class TransferenciaServicio
         return eliminado;
     }
 
-    public async Task<(Stream Contenido, string NombreOriginal)> DescargarPdfAsync(long transferenciaId, CancellationToken cancellationToken)
+    public async Task<(Stream Contenido, string NombreOriginal)> DescargarPdfAsync(long transferenciaId, int usuarioId, CancellationToken cancellationToken)
     {
+        var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para la transferencia.");
         return await archivoSeguroServicio.ObtenerPdfAsync(archivo, cancellationToken);
     }
 
     public async Task ImprimirAsync(long transferenciaId, int usuarioId, CancellationToken cancellationToken)
     {
+        var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
         var pudoMarcar = await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
         if (!pudoMarcar) throw new InvalidOperationException("La transferencia ya fue impresa.");
@@ -172,6 +188,21 @@ public class TransferenciaServicio
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion { TransferenciaId = transferenciaId, EsReimpresion = false, EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Imprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "Impresión inicial", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
     }
+
+    private async Task ValidarAccesoAuxiliarPorPuntoVentaAsync(int usuarioId, int puntoVentaIdTransferencia, CancellationToken cancellationToken)
+    {
+        var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
+        if (!EsAuxiliar(usuario)) return;
+
+        if (!usuario.PuntoVentaAsignadoId.HasValue)
+            throw new UnauthorizedAccessException("El usuario AUXILIAR no tiene punto de venta asignado.");
+
+        if (usuario.PuntoVentaAsignadoId.Value != puntoVentaIdTransferencia)
+            throw new UnauthorizedAccessException("No tiene acceso a transferencias de otro punto de venta.");
+    }
+
+    private static bool EsAuxiliar(Usuario usuario)
+        => usuario.Roles.Any(r => string.Equals(r.Rol?.Nombre, "AUXILIAR", StringComparison.OrdinalIgnoreCase));
 
     public async Task ReimprimirAsync(long transferenciaId, ReimpresionRequest reimpresionRequest, int usuarioIdEjecutor, CancellationToken cancellationToken)
     {

@@ -12,7 +12,8 @@ CREATE TABLE bx.users (
     password_hash NVARCHAR(255) NOT NULL,
     admin_pin_hash NVARCHAR(255) NULL,
     activo BIT NOT NULL DEFAULT 1,
-    firma_electronica NVARCHAR(255) NULL
+    firma_electronica NVARCHAR(255) NULL,
+    punto_venta_id INT NULL
 );
 
 CREATE TABLE bx.user_roles (
@@ -27,6 +28,10 @@ CREATE TABLE bx.puntos_venta (
     id INT IDENTITY(1,1) PRIMARY KEY,
     nombre NVARCHAR(150) NOT NULL
 );
+
+ALTER TABLE bx.users
+ADD CONSTRAINT FK_users_punto_venta
+FOREIGN KEY (punto_venta_id) REFERENCES bx.puntos_venta(id);
 
 CREATE TABLE bx.transferencias (
     id BIGINT IDENTITY(1,1) PRIMARY KEY,
