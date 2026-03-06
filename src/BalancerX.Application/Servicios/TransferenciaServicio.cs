@@ -97,7 +97,7 @@ public class TransferenciaServicio
             throw new InvalidOperationException("La transferencia ya tiene un PDF cargado. Elimine el archivo actual antes de subir uno nuevo.");
 
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
-        var firma = string.IsNullOrWhiteSpace(usuario.FirmaElectronica) ? usuario.UsuarioNombre : usuario.FirmaElectronica;
+        var firma = usuario.FirmaElectronica;
 
         TransferenciaArchivo archivo;
         try

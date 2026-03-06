@@ -98,7 +98,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             ?? Path.Combine(AppContext.BaseDirectory, "storage", "transferencias");
     }
 
-    public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string firmaElectronica, CancellationToken cancellationToken)
+    public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, CancellationToken cancellationToken)
     {
         var ahora = DateTime.UtcNow;
         var carpeta = Path.Combine(rutaRaiz, ahora.Year.ToString(), ahora.Month.ToString("00"));
@@ -170,9 +170,11 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         return Task.CompletedTask;
     }
 
-    private static void AplicarMarcaAgua(string rutaArchivo, string firmaElectronica)
+    private static void AplicarMarcaAgua(string rutaArchivo, string? firmaElectronica)
     {
-        var firma = string.IsNullOrWhiteSpace(firmaElectronica) ? "FIRMA ELECTRÓNICA" : firmaElectronica;
+        if (string.IsNullOrWhiteSpace(firmaElectronica)) return;
+
+        var firma = firmaElectronica;
         var temporal = rutaArchivo + ".tmp";
 
         using var reader = new PdfReader(rutaArchivo);

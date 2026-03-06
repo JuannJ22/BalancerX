@@ -196,7 +196,7 @@ curl -X PUT http://localhost:5000/api/perfil/firma \
   -F "firma=@/ruta/firma.png"
 ```
 
-Las firmas se guardan en: `D:\BalancerX_Secure\Firmas\` y al subir PDF se aplica automáticamente la firma (imagen si existe; de lo contrario texto).
+Las firmas se guardan en: `D:\BalancerX_Secure\Firmas\` y al subir PDF se aplica automáticamente la firma solo si el usuario tiene una firma configurada (imagen o texto). Si no tiene firma, el PDF se guarda sin firmar.
 
 
 ## Catálogos operativos para frontend (nuevo)
