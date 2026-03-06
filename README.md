@@ -15,26 +15,25 @@ Arquitectura limpia con proyectos:
 
 ## Arranque rápido (local)
 1. Crear base de datos `BalancerX` en SQL Server.
-2. Ejecutar `database/schema.sql`.
-3. Ejecutar `database/seed.sql`.
-4. Revisar `src/BalancerX.Api/appsettings.json` (connection string + JWT).
-5. Crear carpeta segura para PDFs:
+2. Ejecutar `database/recreate.sql`.
+3. Revisar `src/BalancerX.Api/appsettings.json` (connection string + JWT).
+4. Crear carpeta segura para PDFs:
    - `D:\BalancerX_Secure\Transferencias\`
-6. Iniciar API:
+5. Iniciar API:
 
 ```bash
 dotnet restore
 dotnet run --project src/BalancerX.Api
 ```
 
-7. Abrir Swagger en `http://localhost:5000/swagger` (o el puerto que muestre la API).
+6. Abrir Swagger en `http://localhost:5000/swagger` (o el puerto que muestre la API).
 
-## Usuarios de desarrollo (seed.sql)
+## Usuarios de desarrollo (incluidos en recreate.sql)
 > Solo para entorno local de desarrollo.
 
 - ADMIN: `admin` / `Admin123*` (PIN: `1234`)
 - TESORERIA: `tesoreria` / `Tesoreria123*`
-- AUXILIAR: `auxiliar` / `Auxiliar123*` (asignado al punto de venta `1` en seed)
+- AUXILIAR: `auxiliar` / `Auxiliar123*` (asignado al punto de venta `1`)
 
 ## Flujo principal
 1. Login en `/api/auth/login` para obtener JWT.
@@ -102,8 +101,7 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 ```
 
 ## Base de datos
-- Script de esquema: `database/schema.sql`
-- Script de datos iniciales: `database/seed.sql`
+- Script único para recrear toda la base: `database/recreate.sql`
 
 
 ## Troubleshooting rápido
@@ -157,31 +155,6 @@ curl -X DELETE http://localhost:5000/api/transferencias/1/archivo \
 curl -X DELETE http://localhost:5000/api/transferencias/1 \
   -H "Authorization: Bearer <TOKEN_ADMIN>"
 ```
-
-## Script SQL incremental recomendado
-Si ya tienes la BD creada, ejecuta: `database/alter_v2_admin_bancos_firma.sql`
-
-Para habilitar punto de venta por usuario (en especial `AUXILIAR`):
-
-- `database/alter_v8_auxiliar_punto_venta.sql`
-
-## Reinicio de catálogos (modo solo-vistas)
-Si vas a limpiar por completo y dejar bancos/cuentas/vendedores solo en vistas, ejecuta en este orden:
-
-1. `database/alter_v6_catalogos_solo_vistas.sql`
-2. `database/alter_v5_vistas_catalogos_siigo_express.sql`
-
-Luego verifica catálogos:
-- `SELECT TOP (100) * FROM bx.vw_bancos_siigo ORDER BY Nombre;`
-- `SELECT TOP (100) * FROM bx.vw_cuentas_contables_siigo ORDER BY BancoId, NumeroCuenta;`
-- `SELECT TOP (100) * FROM bx.vw_vendedores_siigo ORDER BY Id;`
-
-Si el usuario de la app no tiene permisos a `SiigoCat` (error 916), ejecuta además:
-
-3. `database/alter_v7_catalogos_procs_execute_as_owner.sql`
-
-Ese script crea procedimientos `bx.sp_catalogo_*` con `EXECUTE AS OWNER` para exponer catálogos sin otorgar acceso directo del login de aplicación a `SiigoCat`.
-
 
 ### Ver PDF en visor (inline)
 ```bash
@@ -278,17 +251,3 @@ var infoX = pageSize.GetWidth() - 24;
 4. Ajusta factores hasta que quede en la posición exacta deseada.
 
 Tip práctico: trabaja con factores proporcionales (como está hoy) para que el estampado se adapte mejor a distintos tamaños de página.
-
-
-## Catálogos operativos para frontend (nuevo)
-
-Para que el formulario de transferencias funcione con combos predefinidos (punto de venta, vendedor, banco y cuenta contable por banco), ejecuta este script en bases existentes:
-
-- `database/alter_v3_catalogos_operativos.sql`
-
-Endpoints de catálogos consumidos por el frontend:
-
-- `GET /api/catalogos/puntos-venta`
-- `GET /api/catalogos/vendedores`
-- `GET /api/catalogos/bancos`
-- `GET /api/catalogos/bancos/{bancoId}/cuentas-contables`
