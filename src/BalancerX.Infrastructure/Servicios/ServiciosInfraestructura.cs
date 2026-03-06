@@ -181,8 +181,9 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         var temporal = rutaArchivo + ".tmp";
 
         using var reader = new PdfReader(rutaArchivo);
+        reader.SetUnethicalReading(true);
         using var writer = new PdfWriter(temporal);
-        using var pdf = new PdfDocument(reader, writer);
+        using var pdf = new PdfDocument(reader, writer, new StampingProperties().UseAppendMode());
         var font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
         var fontInfo = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
         var esImagenFirma = tieneFirma && File.Exists(firma);
