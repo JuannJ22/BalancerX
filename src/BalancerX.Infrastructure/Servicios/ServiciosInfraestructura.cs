@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using BalancerX.Application.Contratos;
 using iText.Kernel.Colors;
+using iText.Kernel.Exceptions;
 using iText.Kernel.Font;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Extgstate;
@@ -180,13 +181,33 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
         var temporal = rutaArchivo + ".tmp";
 
+        try
+        {
+            EstamparPdf(rutaArchivo, temporal, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: true);
+        }
+        catch (PdfException)
+        {
+            EliminarSilencioso(temporal);
+            EstamparPdf(rutaArchivo, temporal, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: false);
+        }
+
+        File.Delete(rutaArchivo);
+        File.Move(temporal, rutaArchivo);
+    }
+
+    private static void EstamparPdf(string rutaArchivo, string temporal, string? firma, string? puntoVentaNombre, string? vendedorNombre, bool usarAppendMode)
+    {
+        var tieneFirma = !string.IsNullOrWhiteSpace(firma);
+        var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre);
+        var esImagenFirma = tieneFirma && File.Exists(firma);
+
         using var reader = new PdfReader(rutaArchivo);
         reader.SetUnethicalReading(true);
         using var writer = new PdfWriter(temporal);
-        using var pdf = new PdfDocument(reader, writer, new StampingProperties().UseAppendMode());
+        var stamping = usarAppendMode ? new StampingProperties().UseAppendMode() : new StampingProperties();
+        using var pdf = new PdfDocument(reader, writer, stamping);
         var font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
         var fontInfo = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
-        var esImagenFirma = tieneFirma && File.Exists(firma);
 
         for (var i = 1; i <= pdf.GetNumberOfPages(); i++)
         {
@@ -242,8 +263,6 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             canvas.RestoreState();
         }
 
-        File.Delete(rutaArchivo);
-        File.Move(temporal, rutaArchivo);
     }
 
     private static void EliminarSilencioso(string ruta)
