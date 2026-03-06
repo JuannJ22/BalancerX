@@ -19,6 +19,7 @@ using BalancerX.Infrastructure.Repositorios;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace BalancerX.Infrastructure.Servicios;
@@ -92,9 +93,11 @@ public class JwtTokenServicio : IJwtTokenServicio
 public class ArchivoSeguroServicio : IArchivoSeguroServicio
 {
     private readonly string rutaRaiz;
+    private readonly ILogger<ArchivoSeguroServicio> logger;
 
-    public ArchivoSeguroServicio(IConfiguration configuracion)
+    public ArchivoSeguroServicio(IConfiguration configuracion, ILogger<ArchivoSeguroServicio> logger)
     {
+        this.logger = logger;
         rutaRaiz = configuracion["Storage:TransferenciasPath"]
             ?? Path.Combine(AppContext.BaseDirectory, "storage", "transferencias");
     }
@@ -127,7 +130,9 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             {
                 EliminarSilencioso(rutaInterna + ".append.tmp");
                 EliminarSilencioso(rutaInterna + ".rewrite.tmp");
-                throw new InvalidOperationException($"No fue posible aplicar firma y etiquetas al PDF. {ex.Message}", ex);
+                logger.LogWarning(ex,
+                    "No fue posible aplicar firma/etiquetas al PDF de transferencia {TransferenciaId}. Se conserva el archivo original sin estampar.",
+                    transferenciaId);
             }
         }
         catch
