@@ -179,20 +179,26 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre);
         if (!tieneFirma && !tieneEtiquetas) return;
 
-        var temporal = rutaArchivo + ".tmp";
+        var temporalAppend = rutaArchivo + ".append.tmp";
+        var temporalRewrite = rutaArchivo + ".rewrite.tmp";
+        string? temporalFinal = null;
 
         try
         {
-            EstamparPdf(rutaArchivo, temporal, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: true);
+            EstamparPdf(rutaArchivo, temporalAppend, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: true);
+            temporalFinal = temporalAppend;
         }
         catch (PdfException)
         {
-            EliminarSilencioso(temporal);
-            EstamparPdf(rutaArchivo, temporal, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: false);
+            EliminarSilencioso(temporalAppend);
+            EstamparPdf(rutaArchivo, temporalRewrite, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: false);
+            temporalFinal = temporalRewrite;
         }
 
         File.Delete(rutaArchivo);
-        File.Move(temporal, rutaArchivo);
+        File.Move(temporalFinal!, rutaArchivo);
+        EliminarSilencioso(temporalAppend);
+        EliminarSilencioso(temporalRewrite);
     }
 
     private static void EstamparPdf(string rutaArchivo, string temporal, string? firma, string? puntoVentaNombre, string? vendedorNombre, bool usarAppendMode)
