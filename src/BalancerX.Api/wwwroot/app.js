@@ -400,7 +400,20 @@ const listUsers = async () => {
   tbody.innerHTML = '';
   users.forEach((u) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.id ?? '-'}</td><td>${u.usuario ?? '-'}</td><td>${u.rol ?? '-'}</td><td>${u.puntoVentaId ?? '-'}</td><td>${u.activo ? 'Sí' : 'No'}</td><td>${u.firmaElectronica ?? '-'}</td><td class='actions'></td>`;
+    tr.innerHTML = `<td>${u.id ?? '-'}</td><td>${u.usuario ?? '-'}</td><td>${u.rolId ?? '-'} - ${u.rol ?? '-'}</td><td>${u.puntoVentaId ?? '-'}</td><td>${u.activo ? 'Sí' : 'No'}</td><td>${u.firmaElectronica ?? '-'}</td><td class='actions'></td>`;
+    const changeRoleBtn = document.createElement('button');
+    changeRoleBtn.className = 'ghost';
+    changeRoleBtn.textContent = 'Cambiar rol';
+    changeRoleBtn.onclick = async () => {
+      const nuevoRolId = Number(window.prompt(`Nuevo rolId para ${u.usuario} (1=ADMIN, 2=TESORERIA, 3=AUXILIAR):`, String(u.rolId ?? '')));
+      if (!Number.isInteger(nuevoRolId) || nuevoRolId <= 0) return;
+      try {
+        const r = await api(`/api/usuarios/${u.id}/rol`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ rolId: nuevoRolId }) });
+        showResult('ok', 'Rol actualizado correctamente.', r);
+        await listUsers();
+      } catch { }
+    };
+
     const delBtn = document.createElement('button');
     delBtn.className = 'danger';
     delBtn.textContent = 'Eliminar';
@@ -412,7 +425,7 @@ const listUsers = async () => {
         await listUsers();
       } catch { }
     };
-    tr.querySelector('.actions').append(delBtn);
+    tr.querySelector('.actions').append(changeRoleBtn, delBtn);
     tbody.append(tr);
   });
 
@@ -424,6 +437,7 @@ document.getElementById('listUsersBtn')?.addEventListener('click', async () => {
 document.getElementById('createUserForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  payload.rolId = payload.rolId ? Number(payload.rolId) : 0;
   payload.puntoVentaId = payload.puntoVentaId ? Number(payload.puntoVentaId) : null;
   try {
     const r = await api('/api/usuarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });

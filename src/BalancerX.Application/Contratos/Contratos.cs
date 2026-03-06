@@ -39,7 +39,9 @@ public interface IUsuarioRepositorio
     Task<Usuario?> ObtenerPorIdAsync(int usuarioId, CancellationToken cancellationToken);
     Task<bool> ValidarPinAdminAsync(int usuarioId, string pinAdminPlano, CancellationToken cancellationToken);
     Task<List<Usuario>> ListarUsuariosAsync(CancellationToken cancellationToken);
-    Task<Usuario> CrearUsuarioAsync(Usuario usuario, string rolNombre, CancellationToken cancellationToken);
+    Task<Usuario> CrearUsuarioAsync(Usuario usuario, int rolId, CancellationToken cancellationToken);
+    Task<Usuario> ActualizarRolUsuarioAsync(int usuarioId, int rolId, CancellationToken cancellationToken);
+    Task<Rol?> ObtenerRolPorIdAsync(int rolId, CancellationToken cancellationToken);
     Task<bool> EliminarUsuarioAsync(int usuarioId, CancellationToken cancellationToken);
     Task<bool> CambiarPasswordAsync(int usuarioId, string passwordActual, string passwordNueva, CancellationToken cancellationToken);
     Task<Usuario> ActualizarFirmaElectronicaAsync(int usuarioId, string firmaElectronica, CancellationToken cancellationToken);

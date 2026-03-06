@@ -28,6 +28,14 @@ public class UsuariosController : ControllerBase
         return Ok(usuario);
     }
 
+
+    [HttpPut("{id:int}/rol")]
+    public async Task<IActionResult> ActualizarRol([FromRoute] int id, [FromBody] ActualizarRolUsuarioRequest request, CancellationToken cancellationToken)
+    {
+        var usuario = await usuarioAdminServicio.ActualizarRolAsync(id, request, cancellationToken);
+        return Ok(usuario);
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Eliminar([FromRoute] int id, CancellationToken cancellationToken)
     {
