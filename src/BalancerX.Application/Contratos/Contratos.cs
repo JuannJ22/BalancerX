@@ -22,6 +22,8 @@ public interface ITransferenciaRepositorio
     Task<bool> ExisteVendedorAsync(int vendedorId, CancellationToken cancellationToken);
     Task<bool> ExisteBancoAsync(int bancoId, CancellationToken cancellationToken);
     Task<bool> ExisteCuentaContableEnBancoAsync(int cuentaContableId, int bancoId, CancellationToken cancellationToken);
+    Task<string?> ObtenerNombrePuntoVentaAsync(int puntoVentaId, CancellationToken cancellationToken);
+    Task<string?> ObtenerNombreVendedorAsync(int vendedorId, CancellationToken cancellationToken);
 }
 
 
@@ -50,7 +52,7 @@ public interface IJwtTokenServicio
 
 public interface IArchivoSeguroServicio
 {
-    Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, CancellationToken cancellationToken);
+    Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, CancellationToken cancellationToken);
     Task<(Stream Contenido, string NombreOriginal)> ObtenerPdfAsync(TransferenciaArchivo transferenciaArchivo, CancellationToken cancellationToken);
     Task EliminarPdfAsync(string rutaInterna, CancellationToken cancellationToken);
 }
