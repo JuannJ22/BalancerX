@@ -198,6 +198,78 @@ curl -X PUT http://localhost:5000/api/perfil/firma \
 
 Las firmas se guardan en: `D:\BalancerX_Secure\Firmas\` y al subir PDF se aplica automáticamente la firma solo si el usuario tiene una firma configurada (imagen o texto). Si no tiene firma, el PDF se guarda sin firmar.
 
+### Tutorial: cambiar la posición de los estampados en el PDF
+
+Si en algún momento quieres mover la firma (imagen/texto) o las etiquetas (`Punto de venta`, `Vendedor`) dentro del PDF, hazlo en este método:
+
+- `src/BalancerX.Infrastructure/Servicios/ServiciosInfraestructura.cs`
+- Método: `EstamparPdf(...)`
+
+#### 1) Ubica las coordenadas actuales
+
+Dentro del `for` por página están estas variables base:
+
+- `posicionX = pageSize.GetWidth() * 0.58f;`
+- `posicionY = pageSize.GetHeight() * 0.10f;`
+
+Eso ubica la firma hacia la parte inferior derecha (58% ancho, 10% alto).
+
+También están las etiquetas arriba a la derecha:
+
+- `infoY = pageSize.GetHeight() - 28;`
+- `infoX = pageSize.GetWidth() - 24;`
+
+#### 2) Mover la firma
+
+La firma usa `posicionX` y `posicionY` tanto para imagen como para texto.
+
+Regla rápida:
+- Subir firma: aumenta `posicionY` (ej. de `0.10f` a `0.18f`).
+- Bajar firma: reduce `posicionY`.
+- Mover a la derecha: aumenta `posicionX`.
+- Mover a la izquierda: reduce `posicionX`.
+
+Ejemplo:
+
+```csharp
+var posicionX = pageSize.GetWidth() * 0.65f;
+var posicionY = pageSize.GetHeight() * 0.16f;
+```
+
+#### 3) Ajustar tamaño del estampado (firma imagen)
+
+La imagen se escala aquí:
+
+```csharp
+var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.22f, pageSize.GetHeight() * 0.09f);
+```
+
+- Más grande: sube `0.22f` / `0.09f`.
+- Más pequeño: baja esos factores.
+
+#### 4) Mover etiquetas de punto de venta / vendedor
+
+Las etiquetas usan esquina superior derecha con:
+
+```csharp
+var infoY = pageSize.GetHeight() - 28;
+var infoX = pageSize.GetWidth() - 24;
+```
+
+- Más abajo: aumenta `- 28` (ej. `- 40`).
+- Más arriba: reduce ese valor (ej. `- 18`).
+- Más a la izquierda: aumenta `- 24` (ej. `- 60`).
+- Más a la derecha: reduce ese margen.
+
+#### 5) Probar y validar
+
+1. Compila y corre API.
+2. Sube un PDF de prueba en una transferencia.
+3. Descarga o abre visor (`/api/transferencias/{id}/archivo/visor`).
+4. Ajusta factores hasta que quede en la posición exacta deseada.
+
+Tip práctico: trabaja con factores proporcionales (como está hoy) para que el estampado se adapte mejor a distintos tamaños de página.
+
 
 ## Catálogos operativos para frontend (nuevo)
 
