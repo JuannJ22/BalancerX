@@ -125,7 +125,8 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             }
             catch (Exception ex)
             {
-                EliminarSilencioso(rutaInterna + ".tmp");
+                EliminarSilencioso(rutaInterna + ".append.tmp");
+                EliminarSilencioso(rutaInterna + ".rewrite.tmp");
                 throw new InvalidOperationException($"No fue posible aplicar firma y etiquetas al PDF. {ex.Message}", ex);
             }
         }
@@ -133,6 +134,8 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         {
             EliminarSilencioso(rutaInterna);
             EliminarSilencioso(rutaInterna + ".tmp");
+            EliminarSilencioso(rutaInterna + ".append.tmp");
+            EliminarSilencioso(rutaInterna + ".rewrite.tmp");
             throw;
         }
 
