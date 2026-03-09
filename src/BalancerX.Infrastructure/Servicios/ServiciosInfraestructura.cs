@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
+using System.Runtime.InteropServices;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -35,8 +37,8 @@ public static class ServiciosInfraestructura
         servicios.AddScoped<IJwtTokenServicio, JwtTokenServicio>();
         servicios.AddScoped<IArchivoSeguroServicio, ArchivoSeguroServicio>();
         servicios.AddScoped<IFirmaElectronicaServicio, FirmaElectronicaServicio>();
-        servicios.AddScoped<IPrintService, StubPrintService>();
         servicios.AddScoped<IAdaptadorImpresionWindows, AdaptadorImpresionWindows>();
+        servicios.AddScoped<IPrintService, PrintService>();
         servicios.AddScoped<BalancerX.Application.Servicios.UsuarioAdminServicio>();
         servicios.AddScoped<BalancerX.Application.Servicios.UsuarioPerfilServicio>();
         return servicios;
@@ -50,16 +52,74 @@ public interface IAdaptadorImpresionWindows
 
 public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
 {
-    public Task<bool> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken)
+    private readonly IConfiguration configuracion;
+    private readonly ILogger<AdaptadorImpresionWindows> logger;
+
+    public AdaptadorImpresionWindows(IConfiguration configuracion, ILogger<AdaptadorImpresionWindows> logger)
     {
-        // Punto de extensión para invocar motor externo Windows (SumatraPDF, Adobe Reader silent print, etc.)
-        return Task.FromResult(true);
+        this.configuracion = configuracion;
+        this.logger = logger;
+    }
+
+    public async Task<bool> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken)
+    {
+        if (!File.Exists(rutaArchivo)) return false;
+
+        var impresora = configuracion["Printing:PrinterName"];
+        var comando = configuracion["Printing:CommandTemplate"];
+
+        if (!string.IsNullOrWhiteSpace(comando))
+            return await EjecutarComandoAsync(comando, rutaArchivo, impresora, cancellationToken);
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            logger.LogWarning("No se configuró Printing:CommandTemplate en Windows. Configure un comando de impresión silenciosa.");
+            return false;
+        }
+
+        var comandoLinux = string.IsNullOrWhiteSpace(impresora)
+            ? "lp \"{file}\""
+            : "lp -d \"{printer}\" \"{file}\"";
+
+        return await EjecutarComandoAsync(comandoLinux, rutaArchivo, impresora, cancellationToken);
+    }
+
+    private async Task<bool> EjecutarComandoAsync(string plantilla, string rutaArchivo, string? impresora, CancellationToken cancellationToken)
+    {
+        var comando = plantilla.Replace("{file}", rutaArchivo).Replace("{printer}", impresora ?? string.Empty);
+        var inicio = new ProcessStartInfo
+        {
+            FileName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "cmd.exe" : "/bin/bash",
+            Arguments = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? $"/c {comando}" : $"-lc \"{comando.Replace("\"", "\\\"")}\"",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using var proceso = Process.Start(inicio);
+        if (proceso is null) return false;
+
+        await proceso.WaitForExitAsync(cancellationToken);
+        if (proceso.ExitCode == 0) return true;
+
+        var error = await proceso.StandardError.ReadToEndAsync(cancellationToken);
+        logger.LogError("Error ejecutando comando de impresión: {Error}", error);
+        return false;
     }
 }
 
-public class StubPrintService : IPrintService
+public class PrintService : IPrintService
 {
-    public Task<bool> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken) => Task.FromResult(true);
+    private readonly IAdaptadorImpresionWindows adaptadorImpresion;
+
+    public PrintService(IAdaptadorImpresionWindows adaptadorImpresion)
+    {
+        this.adaptadorImpresion = adaptadorImpresion;
+    }
+
+    public Task<bool> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken)
+        => adaptadorImpresion.ImprimirPdfAsync(rutaArchivo, cancellationToken);
 }
 
 public class JwtTokenServicio : IJwtTokenServicio

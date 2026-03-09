@@ -58,7 +58,7 @@
             </form>
           </article>
 
-          <article class="card viewer-card">
+          <article class="card viewer-card role-pdf-viewer">
             <h3>Visualización PDF</h3>
             <iframe id="pdfViewer" title="Visor PDF"></iframe>
           </article>
@@ -89,7 +89,7 @@
                 <input name="archivo" type="file" accept="application/pdf" required />
                 <button type="submit">Subir PDF</button>
               </form>
-              <form id="viewerForm" class="inline-form">
+              <form id="viewerForm" class="inline-form role-pdf-viewer">
                 <input name="transferenciaId" type="number" min="1" placeholder="ID para visor" required />
                 <button type="submit" class="ghost">Ver PDF</button>
               </form>
@@ -171,7 +171,7 @@
               <button type="submit">Actualizar</button>
             </form>
           </article>
-          <article class="card">
+          <article class="card role-signature-management">
             <h3>Actualizar firma</h3>
             <form id="signatureForm" class="form-grid compact">
               <label>Archivo firma <input name="firma" type="file" accept="image/png,image/jpeg,image/webp" required /></label>
