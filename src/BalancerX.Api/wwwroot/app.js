@@ -101,6 +101,16 @@ const api = async (url, opts = {}) => {
   return contentType.includes('application/json') ? response.json() : response.text();
 };
 
+const solicitarDatosReimpresion = () => {
+  const usuarioEncargado = String(window.prompt('Usuario del encargado:') || '').trim();
+  if (!usuarioEncargado) return null;
+  const pinEncargado = String(window.prompt('PIN del encargado:') || '').trim();
+  if (!pinEncargado) return null;
+  const razon = String(window.prompt('Razón de reimpresión:') || '').trim();
+  if (!razon) return null;
+  return { usuarioEncargado, pinEncargado, razon };
+};
+
 const setVisiblePanel = (panelId) => {
   document.querySelectorAll('.panel').forEach((panel) => panel.classList.remove('visible'));
   document.getElementById(panelId)?.classList.add('visible');
@@ -385,7 +395,22 @@ const renderTransferRow = (item) => {
   if (canPrint) {
     const printBtn = document.createElement('button');
     printBtn.textContent = 'Imprimir';
-    printBtn.onclick = async () => { try { const r = await api(`/api/transferencias/${item.id}/print`, { method: 'POST' }); showResult('ok', 'Impresión completada.', r); await listTransfers(); } catch { } };
+    printBtn.onclick = async () => {
+      try {
+        const r = await api(`/api/transferencias/${item.id}/print`, { method: 'POST' });
+        showResult('ok', 'Impresión completada.', r);
+        await listTransfers();
+      } catch (error) {
+        const mensaje = String(error?.message || '').toLowerCase();
+        if (!mensaje.includes('ya fue impresa')) return;
+        const datos = solicitarDatosReimpresion();
+        if (!datos) return;
+        try {
+          const r = await api(`/api/transferencias/${item.id}/reprint`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
+          showResult('ok', 'Reimpresión completada.', r);
+        } catch { }
+      }
+    };
     actions.append(printBtn);
   }
 
@@ -397,20 +422,22 @@ const renderTransferRow = (item) => {
     actions.append(viewBtn);
   }
 
-  if (isAdmin) {
+  if (canPrint) {
     const reprintBtn = document.createElement('button');
     reprintBtn.className = 'ghost';
     reprintBtn.textContent = 'Reprint';
     reprintBtn.onclick = async () => {
-      const pinAdmin = window.prompt('PIN admin:');
-      if (!pinAdmin) return;
-      const razon = window.prompt('Razón de reimpresión:') || 'Sin observación';
+      const datos = solicitarDatosReimpresion();
+      if (!datos) return;
       try {
-        const r = await api(`/api/transferencias/${item.id}/reprint`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pinAdmin, razon }) });
+        const r = await api(`/api/transferencias/${item.id}/reprint`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
         showResult('ok', 'Reimpresión completada.', r);
       } catch { }
     };
+    actions.append(reprintBtn);
+  }
 
+  if (isAdmin) {
     const delPdfBtn = document.createElement('button');
     delPdfBtn.className = 'danger';
     delPdfBtn.textContent = 'Borrar PDF';
@@ -427,7 +454,7 @@ const renderTransferRow = (item) => {
       try { const r = await api(`/api/transferencias/${item.id}`, { method: 'DELETE' }); showResult('ok', 'Transferencia eliminada.', r); await listTransfers(); } catch { }
     };
 
-    actions.append(reprintBtn, delPdfBtn, delTxBtn);
+    actions.append(delPdfBtn, delTxBtn);
   }
 
   return tr;

@@ -100,7 +100,7 @@ public class TransferenciasController : ControllerBase
     }
 
     [HttpPost("{id:long}/reprint")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> Reimprimir([FromRoute] long id, [FromBody] ReimpresionRequest reimpresionRequest, CancellationToken cancellationToken)
     {
         await transferenciaServicio.ReimprimirAsync(id, reimpresionRequest, ObtenerUsuarioId(), cancellationToken);
