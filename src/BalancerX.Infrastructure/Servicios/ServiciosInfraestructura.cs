@@ -102,7 +102,7 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             };
 
             using var proceso = Process.Start(inicio);
-            if (proceso is null) return false;
+            if (proceso is null) return Task.FromResult(false);
 
             logger.LogInformation(
                 "Se lanzó la impresión del archivo {RutaArchivo} usando el visor predeterminado de Windows{SufijoImpresora}.",
