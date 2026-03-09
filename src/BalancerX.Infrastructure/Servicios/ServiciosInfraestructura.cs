@@ -84,8 +84,11 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         return await EjecutarComandoAsync(comandoLinux, rutaArchivo, impresora, cancellationToken);
     }
 
-    private async Task<bool> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, string? impresora, CancellationToken cancellationToken)
+    private Task<bool> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, string? impresora, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<bool>(cancellationToken);
+
         try
         {
             var inicio = new ProcessStartInfo
@@ -101,13 +104,17 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             using var proceso = Process.Start(inicio);
             if (proceso is null) return false;
 
-            await proceso.WaitForExitAsync(cancellationToken);
-            return proceso.ExitCode == 0;
+            logger.LogInformation(
+                "Se lanzó la impresión del archivo {RutaArchivo} usando el visor predeterminado de Windows{SufijoImpresora}.",
+                rutaArchivo,
+                string.IsNullOrWhiteSpace(impresora) ? string.Empty : $" en la impresora '{impresora}'");
+
+            return Task.FromResult(true);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "No fue posible imprimir usando el visor predeterminado de Windows.");
-            return false;
+            return Task.FromResult(false);
         }
     }
 
