@@ -185,8 +185,6 @@ public class TransferenciaServicio
     {
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
-        var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
-        await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioIdEjecutor, transferencia.PuntoVentaId, cancellationToken);
 
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
         if (transferencia.ImpresaEnUtc.HasValue) throw new InvalidOperationException("La transferencia ya fue impresa.");
