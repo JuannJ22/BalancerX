@@ -66,7 +66,25 @@
           <article class="card wide">
             <div class="card-header"><h3>Listado y acciones</h3><button id="listTransfersBtn" class="ghost">Refrescar</button></div>
             <div class="toolbar">
-              <form id="uploadPdfForm" class="inline-form">
+              <form id="transferFiltersForm" class="inline-form">
+                <input list="puntosVentaList" name="puntoVentaTexto" placeholder="Filtro punto de venta" />
+                <input list="vendedoresList" name="vendedorTexto" placeholder="Filtro vendedor" />
+                <input name="fechaDesde" type="date" title="Fecha desde" />
+                <input name="fechaHasta" type="date" title="Fecha hasta" />
+                <select name="estado" title="Estado">
+                  <option value="">Todos los estados</option>
+                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="IMPRESA">IMPRESA</option>
+                </select>
+                <select name="impresa" title="Impresa">
+                  <option value="">Todas</option>
+                  <option value="true">Solo impresas</option>
+                  <option value="false">Solo no impresas</option>
+                </select>
+                <button type="submit" class="ghost">Aplicar filtros</button>
+                <button type="button" id="clearTransferFiltersBtn" class="ghost">Limpiar</button>
+              </form>
+              <form id="uploadPdfForm" class="inline-form role-manage-pdf">
                 <input name="transferenciaId" type="number" min="1" placeholder="ID transferencia" required />
                 <input name="archivo" type="file" accept="application/pdf" required />
                 <button type="submit">Subir PDF</button>

@@ -43,7 +43,7 @@ public class TransferenciasController : ControllerBase
     }
 
     [HttpPost("{id:long}/archivo")]
-    [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
+    [Authorize(Roles = "ADMIN,TESORERIA")]
     public async Task<IActionResult> SubirPdf([FromRoute] long id, IFormFile archivo, CancellationToken cancellationToken)
     {
         if (archivo is null || archivo.Length == 0) return BadRequest(new ProblemDetails { Title = "Archivo vacío", Status = 400 });
