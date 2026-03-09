@@ -185,6 +185,9 @@ public class TransferenciaServicio
     {
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
+        var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioIdEjecutor, transferencia.PuntoVentaId, cancellationToken);
+
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
         if (transferencia.ImpresaEnUtc.HasValue) throw new InvalidOperationException("La transferencia ya fue impresa.");
 
@@ -215,10 +218,19 @@ public class TransferenciaServicio
 
     public async Task ReimprimirAsync(long transferenciaId, ReimpresionRequest reimpresionRequest, int usuarioIdEjecutor, CancellationToken cancellationToken)
     {
-        var usuarioAdmin = await usuarioRepositorio.ObtenerPorIdAsync(usuarioIdEjecutor, cancellationToken) ?? throw new UnauthorizedAccessException();
-        var pinValido = await usuarioRepositorio.ValidarPinAdminAsync(usuarioAdmin.Id, reimpresionRequest.PinAdmin, cancellationToken);
-        if (!pinValido) throw new UnauthorizedAccessException("PIN admin inválido.");
+        if (string.IsNullOrWhiteSpace(reimpresionRequest.UsuarioEncargado)) throw new InvalidOperationException("El usuario del encargado es obligatorio.");
+        if (string.IsNullOrWhiteSpace(reimpresionRequest.PinEncargado)) throw new InvalidOperationException("El PIN del encargado es obligatorio.");
         if (string.IsNullOrWhiteSpace(reimpresionRequest.Razon)) throw new InvalidOperationException("La razón es obligatoria.");
+
+        var usuarioEjecutor = await usuarioRepositorio.ObtenerPorIdAsync(usuarioIdEjecutor, cancellationToken) ?? throw new UnauthorizedAccessException();
+        var usuarioEncargado = await usuarioRepositorio.ObtenerPorUsuarioNombreAsync(reimpresionRequest.UsuarioEncargado.Trim(), cancellationToken)
+            ?? throw new UnauthorizedAccessException("Usuario encargado inválido.");
+
+        var encargadoEsAdmin = usuarioEncargado.Roles.Any(r => string.Equals(r.Rol?.Nombre, "ADMIN", StringComparison.OrdinalIgnoreCase));
+        if (!encargadoEsAdmin) throw new UnauthorizedAccessException("El usuario indicado no tiene rol de encargado.");
+
+        var pinValido = await usuarioRepositorio.ValidarPinAdminAsync(usuarioEncargado.Id, reimpresionRequest.PinEncargado, cancellationToken);
+        if (!pinValido) throw new UnauthorizedAccessException("PIN de encargado inválido.");
 
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
         var resultadoImpresion = await servicioImpresion.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
@@ -228,11 +240,11 @@ public class TransferenciaServicio
         {
             TransferenciaId = transferenciaId,
             EsReimpresion = true,
-            EjecutadoPorUsuarioId = usuarioIdEjecutor,
-            AutorizadoPorUsuarioId = usuarioAdmin.Id,
+            EjecutadoPorUsuarioId = usuarioEjecutor.Id,
+            AutorizadoPorUsuarioId = usuarioEncargado.Id,
             Razon = reimpresionRequest.Razon
         }, cancellationToken);
-        await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Reimprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = reimpresionRequest.Razon, EjecutadoPorUsuarioId = usuarioIdEjecutor }, cancellationToken);
+        await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Reimprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = reimpresionRequest.Razon, EjecutadoPorUsuarioId = usuarioEjecutor.Id }, cancellationToken);
     }
 
     private async Task ValidarReferenciasAsync(int puntoVentaId, int vendedorId, int bancoId, int cuentaContableId, CancellationToken cancellationToken)
