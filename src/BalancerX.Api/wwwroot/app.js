@@ -42,6 +42,7 @@ sessionUser.textContent = `${userName} · ${role || 'ROL'}`;
 
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
 document.querySelectorAll('.role-create-transfer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
+document.querySelectorAll('.role-manage-pdf').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 
 const showResult = (kind, title, technical) => {
   resultMessage.className = `result ${kind}`;
@@ -225,13 +226,38 @@ const loadCatalogs = async () => {
   showResult('ok', 'Catálogos cargados correctamente.', details);
 };
 
+const buildTransferFiltersQuery = () => {
+  const form = document.getElementById('transferFiltersForm');
+  if (!form) return '';
+
+  const data = new FormData(form);
+  const puntoVentaId = resolveIdFromText(data.get('puntoVentaTexto'), catalogs.puntosVenta);
+  const vendedorId = resolveIdFromText(data.get('vendedorTexto'), catalogs.vendedores);
+  const fechaDesde = String(data.get('fechaDesde') || '').trim();
+  const fechaHasta = String(data.get('fechaHasta') || '').trim();
+  const estado = String(data.get('estado') || '').trim();
+  const impresa = String(data.get('impresa') || '').trim();
+
+  const params = new URLSearchParams();
+  if (puntoVentaId > 0) params.set('puntoVentaId', String(puntoVentaId));
+  if (vendedorId > 0) params.set('vendedorId', String(vendedorId));
+  if (fechaDesde) params.set('fechaDesde', `${fechaDesde}T00:00:00`);
+  if (fechaHasta) params.set('fechaHasta', `${fechaHasta}T23:59:59`);
+  if (estado) params.set('estado', estado);
+  if (impresa) params.set('impresa', impresa);
+
+  const query = params.toString();
+  return query ? `?${query}` : '';
+};
+
 const listTransfers = async () => {
-  const result = await api('/api/transferencias');
+  const query = buildTransferFiltersQuery();
+  const result = await api(`/api/transferencias${query}`);
   const items = Array.isArray(result) ? result : [];
   const tbody = document.getElementById('transferTableBody');
   tbody.innerHTML = '';
   items.forEach((item) => tbody.appendChild(renderTransferRow(item)));
-  showResult('ok', `Transferencias cargadas: ${items.length}.`, { total: items.length, transferencias: items });
+  showResult('ok', `Transferencias cargadas: ${items.length}.`, { total: items.length, filtros: query || 'sin filtros', transferencias: items });
 };
 
 document.getElementById('crearBancoId').addEventListener('change', async (event) => {
@@ -333,6 +359,17 @@ document.getElementById('signatureForm').addEventListener('submit', async (event
 });
 
 document.getElementById('listTransfersBtn').addEventListener('click', async () => {
+  try { await listTransfers(); } catch { }
+});
+
+document.getElementById('transferFiltersForm')?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  try { await listTransfers(); } catch { }
+});
+
+document.getElementById('clearTransferFiltersBtn')?.addEventListener('click', async () => {
+  const form = document.getElementById('transferFiltersForm');
+  form?.reset();
   try { await listTransfers(); } catch { }
 });
 

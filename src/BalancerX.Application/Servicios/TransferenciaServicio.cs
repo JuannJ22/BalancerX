@@ -24,6 +24,10 @@ public class TransferenciaServicio
 
     public async Task<TransferenciaResponse> CrearAsync(CrearTransferenciaRequest crearTransferenciaRequest, int usuarioId, CancellationToken cancellationToken)
     {
+        var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
+        if (EsAuxiliar(usuario))
+            throw new UnauthorizedAccessException("El usuario AUXILIAR no puede crear transferencias.");
+
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
         await ValidarReferenciasAsync(crearTransferenciaRequest.PuntoVentaId, crearTransferenciaRequest.VendedorId, crearTransferenciaRequest.BancoId, crearTransferenciaRequest.CuentaContableId, cancellationToken);
 
@@ -58,8 +62,11 @@ public class TransferenciaServicio
     public async Task<List<TransferenciaResponse>> ListarPorUsuarioAsync(int usuarioId, FiltroTransferenciaRequest filtroTransferenciaRequest, CancellationToken cancellationToken)
     {
         var usuario = await usuarioRepositorio.ObtenerPorIdAsync(usuarioId, cancellationToken) ?? throw new UnauthorizedAccessException();
-        if (EsAuxiliar(usuario) && usuario.PuntoVentaAsignadoId.HasValue)
+        if (EsAuxiliar(usuario))
         {
+            if (!usuario.PuntoVentaAsignadoId.HasValue)
+                throw new UnauthorizedAccessException("El usuario AUXILIAR no tiene punto de venta asignado.");
+
             filtroTransferenciaRequest = filtroTransferenciaRequest with { PuntoVentaId = usuario.PuntoVentaAsignadoId.Value };
         }
 
