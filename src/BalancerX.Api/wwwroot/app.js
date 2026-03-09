@@ -43,6 +43,8 @@ sessionUser.textContent = `${userName} · ${role || 'ROL'}`;
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
 document.querySelectorAll('.role-create-transfer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 document.querySelectorAll('.role-manage-pdf').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
+document.querySelectorAll('.role-signature-management').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
+document.querySelectorAll('.role-pdf-viewer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 
 const showResult = (kind, title, technical) => {
   resultMessage.className = `result ${kind}`;
@@ -382,16 +384,18 @@ const renderTransferRow = (item) => {
 
   if (canPrint) {
     const printBtn = document.createElement('button');
-    printBtn.textContent = 'Print';
+    printBtn.textContent = 'Imprimir';
     printBtn.onclick = async () => { try { const r = await api(`/api/transferencias/${item.id}/print`, { method: 'POST' }); showResult('ok', 'Impresión completada.', r); await listTransfers(); } catch { } };
     actions.append(printBtn);
   }
 
-  const viewBtn = document.createElement('button');
-  viewBtn.className = 'ghost';
-  viewBtn.textContent = 'Ver PDF';
-  viewBtn.onclick = async () => { try { await mostrarPdfEnVisor(item.id); } catch { } };
-  actions.append(viewBtn);
+  if (!isAuxiliar) {
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'ghost';
+    viewBtn.textContent = 'Ver PDF';
+    viewBtn.onclick = async () => { try { await mostrarPdfEnVisor(item.id); } catch { } };
+    actions.append(viewBtn);
+  }
 
   if (isAdmin) {
     const reprintBtn = document.createElement('button');

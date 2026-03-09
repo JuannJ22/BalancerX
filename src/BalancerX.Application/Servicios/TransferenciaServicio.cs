@@ -186,11 +186,13 @@ public class TransferenciaServicio
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
-        var pudoMarcar = await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
-        if (!pudoMarcar) throw new InvalidOperationException("La transferencia ya fue impresa.");
+        if (transferencia.ImpresaEnUtc.HasValue) throw new InvalidOperationException("La transferencia ya fue impresa.");
 
         var resultadoImpresion = await servicioImpresion.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
         if (!resultadoImpresion) throw new InvalidOperationException("Error al imprimir.");
+
+        var pudoMarcar = await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
+        if (!pudoMarcar) throw new InvalidOperationException("La transferencia ya fue impresa.");
 
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion { TransferenciaId = transferenciaId, EsReimpresion = false, EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Imprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "Impresión inicial", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
