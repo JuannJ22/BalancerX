@@ -73,8 +73,8 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            logger.LogWarning("No se configuró Printing:CommandTemplate en Windows. Configure un comando de impresión silenciosa.");
-            return false;
+            logger.LogWarning("No se configuró Printing:CommandTemplate en Windows. Se intentará imprimir con el visor predeterminado.");
+            return await EjecutarImpresionWindowsPredeterminadaAsync(rutaArchivo, impresora, cancellationToken);
         }
 
         var comandoLinux = string.IsNullOrWhiteSpace(impresora)
@@ -82,6 +82,33 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             : "lp -d \"{printer}\" \"{file}\"";
 
         return await EjecutarComandoAsync(comandoLinux, rutaArchivo, impresora, cancellationToken);
+    }
+
+    private async Task<bool> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, string? impresora, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var inicio = new ProcessStartInfo
+            {
+                FileName = rutaArchivo,
+                UseShellExecute = true,
+                Verb = string.IsNullOrWhiteSpace(impresora) ? "Print" : "PrintTo",
+                Arguments = string.IsNullOrWhiteSpace(impresora) ? string.Empty : $"\"{impresora}\"",
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden
+            };
+
+            using var proceso = Process.Start(inicio);
+            if (proceso is null) return false;
+
+            await proceso.WaitForExitAsync(cancellationToken);
+            return proceso.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "No fue posible imprimir usando el visor predeterminado de Windows.");
+            return false;
+        }
     }
 
     private async Task<bool> EjecutarComandoAsync(string plantilla, string rutaArchivo, string? impresora, CancellationToken cancellationToken)
