@@ -9,7 +9,7 @@ if (!token) window.location.href = '/login.html';
 
 const panelMeta = {
   transferPanel: { title: 'Operación de transferencias', hint: 'Crea y consulta transferencias con catálogos predefinidos.' },
-  adminPanel: { title: 'Funciones de administrador', hint: 'Gestión de usuarios y ajustes administrativos.' },
+  adminPanel: { title: 'Funciones de administrador', hint: 'Gestión de usuarios y controles de administración.' },
   profilePanel: { title: 'Mi perfil', hint: 'Gestión de contraseña y firma electrónica personal.' }
 };
 
@@ -221,7 +221,7 @@ const loadCatalogs = async () => {
   bindDatalist('vendedoresList', catalogs.vendedores);
 
   fillBankSelect('crearBancoId', catalogs.bancos);
-  fillBankSelect('adminBancoId', catalogs.bancos);
+  fillBankSelect('editModalBancoId', catalogs.bancos);
 
   const failed = [puntosRes, vendedoresRes, bancosRes].filter((x) => !x.ok);
   const details = {
@@ -277,10 +277,6 @@ document.getElementById('crearBancoId').addEventListener('change', async (event)
   await fillCuentaSelect('crearCuentaContableId', asNumber(event.target.value));
 });
 
-document.getElementById('adminBancoId').addEventListener('change', async (event) => {
-  await fillCuentaSelect('adminCuentaContableId', asNumber(event.target.value));
-});
-
 document.getElementById('createTransferForm').addEventListener('submit', async (event) => {
   if (isAuxiliar) {
     showResult('error', 'El rol AUXILIAR no puede crear transferencias.', { rol: role });
@@ -308,39 +304,62 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
 
 const estadosPermitidosTransferencia = ['SIN_IMPRIMIR', 'IMPRESA'];
 
-const cargarTransferenciaEnFormularioEdicion = async () => {
-  const form = document.getElementById('updateTransferForm');
-  if (!form) return;
+const editTransferModal = document.getElementById('editTransferModal');
+const editTransferModalForm = document.getElementById('editTransferModalForm');
 
-  const id = asNumber(new FormData(form).get('id'));
-  if (id <= 0) {
-    showResult('error', 'Debe indicar un ID válido para cargar la transferencia.', { id });
-    return;
-  }
+const closeEditTransferModal = () => {
+  if (!editTransferModal) return;
+  editTransferModal.close();
+  editTransferModalForm?.reset();
+};
+
+const cargarTransferenciaEnModalEdicion = async (id) => {
+  if (!editTransferModalForm) return;
 
   const transferencia = await api(`/api/transferencias/${id}`);
   const estado = estadosPermitidosTransferencia.includes(String(transferencia.estado || '').toUpperCase())
     ? String(transferencia.estado).toUpperCase()
     : 'SIN_IMPRIMIR';
 
-  form.querySelector('[name="monto"]').value = Number(transferencia.monto ?? 0);
-  form.querySelector('[name="puntoVentaTexto"]').value = resolveCatalogName(catalogs.puntosVenta, transferencia.puntoVentaId);
-  form.querySelector('[name="vendedorTexto"]').value = resolveCatalogName(catalogs.vendedores, transferencia.vendedorId);
+  editTransferModalForm.querySelector('[name="id"]').value = String(id);
+  editTransferModalForm.querySelector('[name="idReadOnly"]').value = String(id);
+  editTransferModalForm.querySelector('[name="monto"]').value = Number(transferencia.monto ?? 0);
+  editTransferModalForm.querySelector('[name="puntoVentaTexto"]').value = resolveCatalogName(catalogs.puntosVenta, transferencia.puntoVentaId);
+  editTransferModalForm.querySelector('[name="vendedorTexto"]').value = resolveCatalogName(catalogs.vendedores, transferencia.vendedorId);
 
-  const bancoSelect = form.querySelector('[name="bancoId"]');
+  const bancoSelect = editTransferModalForm.querySelector('[name="bancoId"]');
   bancoSelect.value = String(transferencia.bancoId ?? '');
-  await fillCuentaSelect('adminCuentaContableId', asNumber(transferencia.bancoId));
+  await fillCuentaSelect('editModalCuentaContableId', asNumber(transferencia.bancoId));
 
-  const cuentaSelect = form.querySelector('[name="cuentaContableId"]');
+  const cuentaSelect = editTransferModalForm.querySelector('[name="cuentaContableId"]');
   cuentaSelect.value = String(transferencia.cuentaContableId ?? '');
 
-  form.querySelector('[name="estado"]').value = estado;
-  form.querySelector('[name="observacion"]').value = transferencia.observacion || '';
+  editTransferModalForm.querySelector('[name="estado"]').value = estado;
+  editTransferModalForm.querySelector('[name="observacion"]').value = transferencia.observacion || '';
 
-  showResult('ok', `Transferencia ${id} cargada en el formulario para edición.`, transferencia);
+  showResult('ok', `Transferencia ${id} cargada para edición.`, transferencia);
 };
 
-document.getElementById('updateTransferForm')?.addEventListener('submit', async (event) => {
+const abrirModalEdicionTransferencia = async (id) => {
+  if (!editTransferModal || !editTransferModalForm) return;
+  await cargarTransferenciaEnModalEdicion(id);
+  editTransferModal.showModal();
+};
+
+document.getElementById('editModalBancoId')?.addEventListener('change', async (event) => {
+  await fillCuentaSelect('editModalCuentaContableId', asNumber(event.target.value));
+});
+
+document.getElementById('closeEditTransferModalBtn')?.addEventListener('click', () => {
+  closeEditTransferModal();
+});
+
+editTransferModal?.addEventListener('cancel', (event) => {
+  event.preventDefault();
+  closeEditTransferModal();
+});
+
+editTransferModalForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const f = new FormData(event.currentTarget);
   const id = asNumber(f.get('id'));
@@ -356,33 +375,20 @@ document.getElementById('updateTransferForm')?.addEventListener('submit', async 
 
   try {
     const res = await api(`/api/transferencias/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    showResult('ok', 'Transferencia actualizada correctamente.', res);
+
+    const archivo = f.get('archivo');
+    if (archivo instanceof File && archivo.size > 0) {
+      const pdfData = new FormData();
+      pdfData.set('archivo', archivo);
+      const pdfRes = await api(`/api/transferencias/${id}/archivo`, { method: 'POST', body: pdfData });
+      showResult('ok', 'Transferencia y PDF actualizados correctamente.', { transferencia: res, pdf: pdfRes });
+    } else {
+      showResult('ok', 'Transferencia actualizada correctamente.', res);
+    }
+
     await listTransfers();
+    closeEditTransferModal();
   } catch { }
-});
-
-
-document.getElementById('loadTransferForEditBtn')?.addEventListener('click', async () => {
-  try { await cargarTransferenciaEnFormularioEdicion(); } catch { }
-});
-
-document.getElementById('uploadPdfForm').addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const form = event.currentTarget;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const formData = new FormData(form);
-  const id = formData.get('transferenciaId');
-
-  if (submitBtn) submitBtn.disabled = true;
-  try {
-    const res = await api(`/api/transferencias/${id}/archivo`, { method: 'POST', body: formData });
-    await mostrarPdfEnVisor(id);
-    showResult('ok', `PDF cargado correctamente para la transferencia ${id}.`, res);
-    await listTransfers();
-  } catch { }
-  finally {
-    if (submitBtn) submitBtn.disabled = false;
-  }
 });
 
 document.getElementById('viewerForm').addEventListener('submit', async (event) => {
@@ -458,12 +464,9 @@ const renderTransferRow = (item) => {
   if (!isAuxiliar) {
     const editBtn = document.createElement('button');
     editBtn.className = 'ghost';
-    editBtn.textContent = 'Editar';
+    editBtn.textContent = 'Modificar';
     editBtn.onclick = async () => {
-      const form = document.getElementById('updateTransferForm');
-      if (!form) return;
-      form.querySelector('[name="id"]').value = String(item.id ?? '');
-      try { await cargarTransferenciaEnFormularioEdicion(); setVisiblePanel(isAdmin ? 'adminPanel' : 'transferPanel'); } catch { }
+      try { await abrirModalEdicionTransferencia(item.id); } catch { }
     };
     actions.append(editBtn);
 
