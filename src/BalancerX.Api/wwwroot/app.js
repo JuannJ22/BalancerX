@@ -37,11 +37,12 @@ const isAdmin = role === 'ADMIN';
 const isTesoreria = role === 'TESORERIA';
 const isAuxiliar = role === 'AUXILIAR';
 const canPrint = isAdmin || isTesoreria || isAuxiliar;
+const canUpdateTransfer = isAdmin || isTesoreria;
 
 sessionUser.textContent = `${userName} · ${role || 'ROL'}`;
 
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
-document.querySelectorAll('.role-update-transfer').forEach((node) => node.classList.toggle('hidden', !(isAdmin || isTesoreria)));
+document.querySelectorAll('.role-update-transfer').forEach((node) => node.classList.toggle('hidden', !canUpdateTransfer));
 document.querySelectorAll('.role-create-transfer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 document.querySelectorAll('.role-manage-pdf').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 document.querySelectorAll('.role-signature-management').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
@@ -342,6 +343,11 @@ const cargarTransferenciaEnModalEdicion = async (id) => {
 
 const abrirModalEdicionTransferencia = async (id) => {
   if (!editTransferModal || !editTransferModalForm) return;
+  if (!canUpdateTransfer) {
+    showResult('error', 'El rol actual no tiene permiso para modificar transferencias.', { rol: role });
+    return;
+  }
+
   await cargarTransferenciaEnModalEdicion(id);
   editTransferModal.showModal();
 };
@@ -361,6 +367,11 @@ editTransferModal?.addEventListener('cancel', (event) => {
 
 editTransferModalForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (!canUpdateTransfer) {
+    showResult('error', 'El rol actual no tiene permiso para modificar transferencias.', { rol: role });
+    return;
+  }
+
   const f = new FormData(event.currentTarget);
   const id = asNumber(f.get('id'));
   const payload = {
@@ -461,7 +472,7 @@ const renderTransferRow = (item) => {
     actions.append(printBtn);
   }
 
-  if (!isAuxiliar) {
+  if (canUpdateTransfer) {
     const editBtn = document.createElement('button');
     editBtn.className = 'ghost';
     editBtn.textContent = 'Modificar';
