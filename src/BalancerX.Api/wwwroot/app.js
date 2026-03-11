@@ -41,6 +41,7 @@ const canPrint = isAdmin || isTesoreria || isAuxiliar;
 sessionUser.textContent = `${userName} · ${role || 'ROL'}`;
 
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
+document.querySelectorAll('.role-update-transfer').forEach((node) => node.classList.toggle('hidden', !(isAdmin || isTesoreria)));
 document.querySelectorAll('.role-create-transfer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 document.querySelectorAll('.role-manage-pdf').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 document.querySelectorAll('.role-signature-management').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
@@ -304,6 +305,41 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
   } catch { }
 });
 
+
+const estadosPermitidosTransferencia = ['SIN_IMPRIMIR', 'IMPRESA'];
+
+const cargarTransferenciaEnFormularioEdicion = async () => {
+  const form = document.getElementById('updateTransferForm');
+  if (!form) return;
+
+  const id = asNumber(new FormData(form).get('id'));
+  if (id <= 0) {
+    showResult('error', 'Debe indicar un ID válido para cargar la transferencia.', { id });
+    return;
+  }
+
+  const transferencia = await api(`/api/transferencias/${id}`);
+  const estado = estadosPermitidosTransferencia.includes(String(transferencia.estado || '').toUpperCase())
+    ? String(transferencia.estado).toUpperCase()
+    : 'SIN_IMPRIMIR';
+
+  form.querySelector('[name="monto"]').value = Number(transferencia.monto ?? 0);
+  form.querySelector('[name="puntoVentaTexto"]').value = resolveCatalogName(catalogs.puntosVenta, transferencia.puntoVentaId);
+  form.querySelector('[name="vendedorTexto"]').value = resolveCatalogName(catalogs.vendedores, transferencia.vendedorId);
+
+  const bancoSelect = form.querySelector('[name="bancoId"]');
+  bancoSelect.value = String(transferencia.bancoId ?? '');
+  await fillCuentaSelect('adminCuentaContableId', asNumber(transferencia.bancoId));
+
+  const cuentaSelect = form.querySelector('[name="cuentaContableId"]');
+  cuentaSelect.value = String(transferencia.cuentaContableId ?? '');
+
+  form.querySelector('[name="estado"]').value = estado;
+  form.querySelector('[name="observacion"]').value = transferencia.observacion || '';
+
+  showResult('ok', `Transferencia ${id} cargada en el formulario para edición.`, transferencia);
+};
+
 document.getElementById('updateTransferForm')?.addEventListener('submit', async (event) => {
   event.preventDefault();
   const f = new FormData(event.currentTarget);
@@ -323,6 +359,11 @@ document.getElementById('updateTransferForm')?.addEventListener('submit', async 
     showResult('ok', 'Transferencia actualizada correctamente.', res);
     await listTransfers();
   } catch { }
+});
+
+
+document.getElementById('loadTransferForEditBtn')?.addEventListener('click', async () => {
+  try { await cargarTransferenciaEnFormularioEdicion(); } catch { }
 });
 
 document.getElementById('uploadPdfForm').addEventListener('submit', async (event) => {
@@ -415,6 +456,17 @@ const renderTransferRow = (item) => {
   }
 
   if (!isAuxiliar) {
+    const editBtn = document.createElement('button');
+    editBtn.className = 'ghost';
+    editBtn.textContent = 'Editar';
+    editBtn.onclick = async () => {
+      const form = document.getElementById('updateTransferForm');
+      if (!form) return;
+      form.querySelector('[name="id"]').value = String(item.id ?? '');
+      try { await cargarTransferenciaEnFormularioEdicion(); setVisiblePanel(isAdmin ? 'adminPanel' : 'transferPanel'); } catch { }
+    };
+    actions.append(editBtn);
+
     const viewBtn = document.createElement('button');
     viewBtn.className = 'ghost';
     viewBtn.textContent = 'Ver PDF';

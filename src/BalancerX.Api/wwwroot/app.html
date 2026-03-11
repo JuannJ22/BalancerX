@@ -12,7 +12,7 @@
       <div class="brand"><h1>BalancerX</h1><p>Panel operacional</p></div>
       <nav class="menu">
         <button class="nav-btn active" data-target="transferPanel">Operación de transferencias</button>
-        <button class="nav-btn role-admin" data-target="adminPanel">Funciones de administrador</button>
+        <button class="nav-btn role-update-transfer" data-target="adminPanel">Configuración de transferencias</button>
         <button class="nav-btn" data-target="profilePanel">Mi perfil</button>
       </nav>
       <div class="session-card">
@@ -73,7 +73,7 @@
                 <input name="fechaHasta" type="date" title="Fecha hasta" />
                 <select name="estado" title="Estado">
                   <option value="">Todos los estados</option>
-                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="SIN_IMPRIMIR">SIN IMPRIMIR</option>
                   <option value="IMPRESA">IMPRESA</option>
                 </select>
                 <select name="impresa" title="Impresa">
@@ -105,12 +105,13 @@
         </div>
       </section>
 
-      <section id="adminPanel" class="panel role-admin">
+      <section id="adminPanel" class="panel role-update-transfer">
         <div class="panel-grid">
-          <article class="card">
-            <h3>Actualizar transferencia (solo ADMIN)</h3>
+          <article class="card role-update-transfer">
+            <h3>Actualizar transferencia</h3>
             <form id="updateTransferForm" class="form-grid two-cols">
               <label>ID transferencia <input type="number" min="1" name="id" required /></label>
+              <button type="button" id="loadTransferForEditBtn" class="ghost">Cargar datos</button>
               <label>Monto <input type="number" step="0.01" min="0.01" name="monto" required /></label>
 
               <label>Punto de venta
@@ -131,7 +132,7 @@
 
               <label>Estado
                 <select name="estado" required>
-                  <option value="PENDIENTE">PENDIENTE</option>
+                  <option value="SIN_IMPRIMIR">SIN IMPRIMIR</option>
                   <option value="IMPRESA">IMPRESA</option>
                 </select>
               </label>
@@ -141,12 +142,12 @@
             </form>
           </article>
 
-          <article class="card wide">
+          <article class="card wide role-admin">
             <div class="card-header"><h3>Usuarios</h3><button id="listUsersBtn" class="ghost">Listar</button></div>
             <div class="table-wrap"><table><thead><tr><th>ID</th><th>Usuario</th><th>Rol</th><th>Punto de venta</th><th>Activo</th><th>Firma</th><th>Acciones</th></tr></thead><tbody id="usersTableBody"></tbody></table></div>
           </article>
 
-          <article class="card">
+          <article class="card role-admin">
             <h3>Crear usuario</h3>
             <form id="createUserForm" class="form-grid two-cols">
               <label>Usuario <input name="usuario" required /></label>

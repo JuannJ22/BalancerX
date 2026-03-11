@@ -32,8 +32,16 @@ public class TransferenciasController : ControllerBase
         => Ok(await transferenciaServicio.ListarPorUsuarioAsync(ObtenerUsuarioId(), filtroTransferenciaRequest, cancellationToken));
 
 
+    [HttpGet("{id:long}")]
+    [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
+    public async Task<IActionResult> ObtenerPorId([FromRoute] long id, CancellationToken cancellationToken)
+    {
+        var respuesta = await transferenciaServicio.ObtenerPorIdAsync(id, ObtenerUsuarioId(), cancellationToken);
+        return Ok(respuesta);
+    }
+
     [HttpPut("{id:long}")]
-    [Authorize(Roles = "ADMIN")]
+    [Authorize(Roles = "ADMIN,TESORERIA")]
     public async Task<IActionResult> Actualizar([FromRoute] long id, [FromBody] ActualizarTransferenciaRequest actualizarTransferenciaRequest, CancellationToken cancellationToken)
     {
         if (actualizarTransferenciaRequest.Monto <= 0) return BadRequest(new ProblemDetails { Title = "El monto debe ser mayor a 0", Status = 400 });

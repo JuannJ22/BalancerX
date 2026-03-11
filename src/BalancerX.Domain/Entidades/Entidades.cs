@@ -40,7 +40,7 @@ public class Transferencia
     public int BancoId { get; set; }
     public int CuentaContableId { get; set; }
     public string? Observacion { get; set; }
-    public string Estado { get; set; } = "CREADA";
+    public string Estado { get; set; } = "SIN_IMPRIMIR";
     public DateTime CreadoEnUtc { get; set; } = DateTime.UtcNow;
     public int CreadoPorUsuarioId { get; set; }
     public DateTime? ImpresaEnUtc { get; set; }

@@ -74,10 +74,18 @@ public class TransferenciaServicio
     }
 
 
+    public async Task<TransferenciaResponse> ObtenerPorIdAsync(long transferenciaId, int usuarioId, CancellationToken cancellationToken)
+    {
+        var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
+        return new TransferenciaResponse(transferencia.Id, transferencia.Monto, transferencia.PuntoVentaId, transferencia.VendedorId, transferencia.BancoId, transferencia.CuentaContableId, transferencia.Observacion, transferencia.Estado, transferencia.CreadoEnUtc, transferencia.ImpresaEnUtc);
+    }
+
+
     public async Task<TransferenciaResponse> ActualizarAsync(long transferenciaId, ActualizarTransferenciaRequest request, int usuarioId, CancellationToken cancellationToken)
     {
         if (request.Monto <= 0) throw new InvalidOperationException("El monto debe ser mayor a 0.");
-        if (string.IsNullOrWhiteSpace(request.Estado)) throw new InvalidOperationException("El estado es obligatorio.");
+        var estadoNormalizado = NormalizarEstado(request.Estado);
         await catalogosSyncServicio.SincronizarAsync(cancellationToken);
         await ValidarReferenciasAsync(request.PuntoVentaId, request.VendedorId, request.BancoId, request.CuentaContableId, cancellationToken);
 
@@ -89,7 +97,7 @@ public class TransferenciaServicio
         transferencia.BancoId = request.BancoId;
         transferencia.CuentaContableId = request.CuentaContableId;
         transferencia.Observacion = request.Observacion;
-        transferencia.Estado = request.Estado;
+        transferencia.Estado = estadoNormalizado;
 
         var actualizada = await transferenciaRepositorio.ActualizarAsync(transferencia, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria
@@ -97,7 +105,7 @@ public class TransferenciaServicio
             Accion = AccionesAuditoria.ActualizarTransferencia,
             Entidad = nameof(Transferencia),
             EntidadId = actualizada.Id.ToString(),
-            Detalle = "Transferencia actualizada por ADMIN",
+            Detalle = "Transferencia actualizada",
             EjecutadoPorUsuarioId = usuarioId
         }, cancellationToken);
 
@@ -133,7 +141,7 @@ public class TransferenciaServicio
         try
         {
             var guardado = await transferenciaRepositorio.GuardarArchivoAsync(archivo, cancellationToken);
-            await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, "SUBIDO", cancellationToken);
+            await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, DeterminarEstadoDesdeImpresion(false), cancellationToken);
             await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.SubirArchivo, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "PDF subido", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
             return new SubirPdfResponse(guardado.Id, guardado.TransferenciaId, guardado.NombreOriginal, guardado.TamanoBytes, guardado.SubidoEnUtc);
         }
@@ -152,7 +160,7 @@ public class TransferenciaServicio
 
         await archivoSeguroServicio.EliminarPdfAsync(archivo.RutaInterna, cancellationToken);
         var eliminado = await transferenciaRepositorio.EliminarArchivoPorTransferenciaAsync(transferenciaId, cancellationToken);
-        await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, "CREADA", cancellationToken);
+        await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, DeterminarEstadoDesdeImpresion(false), cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Anular, Entidad = nameof(TransferenciaArchivo), EntidadId = transferenciaId.ToString(), Detalle = "PDF eliminado por ADMIN", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
         return new EliminarPdfResponse(transferenciaId, eliminado);
     }
@@ -195,6 +203,7 @@ public class TransferenciaServicio
         var pudoMarcar = await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
         if (!pudoMarcar) throw new InvalidOperationException("La transferencia ya fue impresa.");
 
+        await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, DeterminarEstadoDesdeImpresion(true), cancellationToken);
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion { TransferenciaId = transferenciaId, EsReimpresion = false, EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Imprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = "Impresión inicial", EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
     }
@@ -244,6 +253,21 @@ public class TransferenciaServicio
         }, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria { Accion = AccionesAuditoria.Reimprimir, Entidad = nameof(Transferencia), EntidadId = transferenciaId.ToString(), Detalle = reimpresionRequest.Razon, EjecutadoPorUsuarioId = usuarioEjecutor.Id }, cancellationToken);
     }
+
+    private static string NormalizarEstado(string? estado)
+    {
+        if (string.IsNullOrWhiteSpace(estado))
+            throw new InvalidOperationException("El estado es obligatorio.");
+
+        var normalizado = estado.Trim().ToUpperInvariant();
+        if (!EstadosTransferencia.Permitidos.Contains(normalizado))
+            throw new InvalidOperationException($"Estado inválido. Estados permitidos: {EstadosTransferencia.SinImprimir}, {EstadosTransferencia.Impresa}.");
+
+        return normalizado;
+    }
+
+    private static string DeterminarEstadoDesdeImpresion(bool impresa)
+        => impresa ? EstadosTransferencia.Impresa : EstadosTransferencia.SinImprimir;
 
     private async Task ValidarReferenciasAsync(int puntoVentaId, int vendedorId, int bancoId, int cuentaContableId, CancellationToken cancellationToken)
     {

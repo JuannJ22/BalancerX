@@ -60,7 +60,7 @@ CREATE TABLE bx.transferencias (
     banco_id INT NOT NULL,
     cuenta_contable_id INT NOT NULL,
     observacion NVARCHAR(500) NULL,
-    estado NVARCHAR(30) NOT NULL DEFAULT 'CREADA',
+    estado NVARCHAR(30) NOT NULL DEFAULT 'SIN_IMPRIMIR',
     printed_at DATETIME2 NULL,
     created_at DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
     created_by INT NOT NULL,
