@@ -127,12 +127,12 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 - Esta base ya incluye un servicio de compatibilidad `CatalogosSyncServicio` (no-op) para evitar ese fallo.
 - Si persiste, elimina carpetas `bin/` y `obj/` de toda la solución y vuelve a ejecutar `dotnet clean && dotnet restore && dotnet build`.
 
-### Actualizar transferencia (solo ADMIN)
+### Actualizar transferencia (ADMIN/TESORERIA)
 ```bash
 curl -X PUT http://localhost:5000/api/transferencias/1 \
   -H "Authorization: Bearer <TOKEN_ADMIN>" \
   -H "Content-Type: application/json" \
-  -d '{"monto":18000.00,"puntoVentaId":1,"vendedorId":2,"bancoId":1,"cuentaContableId":1,"observacion":"Ajuste autorizado","estado":"CREADA"}'
+  -d '{"monto":18000.00,"puntoVentaId":1,"vendedorId":2,"bancoId":1,"cuentaContableId":1,"observacion":"Ajuste autorizado","estado":"SIN_IMPRIMIR"}'
 ```
 
 
