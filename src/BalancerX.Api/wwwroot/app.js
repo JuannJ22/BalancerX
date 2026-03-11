@@ -30,16 +30,44 @@ const decodeJwtPayload = (jwt) => {
 };
 
 const claims = decodeJwtPayload(token);
-const roleClaim = claims.role || claims['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || '';
-const role = String(roleClaim).toUpperCase();
+
+const normalizeRoleValue = (value) => String(value || '')
+  .split(',')
+  .map((item) => item.trim().toUpperCase())
+  .filter(Boolean);
+
+const resolveRoles = (jwtClaims) => {
+  const candidateKeys = [
+    'role',
+    'roles',
+    'http://schemas.microsoft.com/ws/2008/06/identity/claims/role'
+  ];
+
+  const roles = [];
+  candidateKeys.forEach((key) => {
+    const claimValue = jwtClaims?.[key];
+    if (Array.isArray(claimValue)) {
+      claimValue.forEach((item) => roles.push(...normalizeRoleValue(item)));
+      return;
+    }
+
+    roles.push(...normalizeRoleValue(claimValue));
+  });
+
+  return Array.from(new Set(roles));
+};
+
+const roles = resolveRoles(claims);
+const hasRole = (expectedRole) => roles.includes(String(expectedRole || '').trim().toUpperCase());
+const role = roles[0] || '';
 const userName = claims.unique_name || claims.name || claims.sub || 'usuario';
-const isAdmin = role === 'ADMIN';
-const isTesoreria = role === 'TESORERIA';
-const isAuxiliar = role === 'AUXILIAR';
+const isAdmin = hasRole('ADMIN');
+const isTesoreria = hasRole('TESORERIA');
+const isAuxiliar = hasRole('AUXILIAR');
 const canPrint = isAdmin || isTesoreria || isAuxiliar;
 const canUpdateTransfer = isAdmin || isTesoreria;
 
-sessionUser.textContent = `${userName} · ${role || 'ROL'}`;
+sessionUser.textContent = `${userName} · ${roles.join(', ') || 'ROL'}`;
 
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
 document.querySelectorAll('.role-update-transfer').forEach((node) => node.classList.toggle('hidden', !canUpdateTransfer));
