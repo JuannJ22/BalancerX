@@ -186,6 +186,21 @@ public class JwtTokenServicio : IJwtTokenServicio
 
 public class ArchivoSeguroServicio : IArchivoSeguroServicio
 {
+    private static class MarcaAguaLayout
+    {
+        public const float PosicionFirmaXRatio = 0.58f;
+        public const float PosicionFirmaYRatio = 0.10f;
+        public const float MaximoAnchoFirmaRatio = 0.22f;
+        public const float MaximoAltoFirmaRatio = 0.09f;
+        public const float DesplazamientoTextoFirmaX = 5f;
+        public const float DesplazamientoTextoFirmaY = 15f;
+        public const float OpacidadInfo = 1.00f;
+        public const float TamanoFuenteInfo = 15f;
+        public const float MargenInfoSuperior = 750f;
+        public const float MargenInfoDerecho = 450f;
+        public const float SeparacionLineasInfo = 25f;
+    }
+
     private readonly string rutaRaiz;
     private readonly ILogger<ArchivoSeguroServicio> logger;
 
@@ -325,8 +340,8 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             canvas.SaveState();
 
             using var layoutCanvas = new Canvas(canvas, pageSize);
-            var posicionX = pageSize.GetWidth() * 0.58f;
-            var posicionY = pageSize.GetHeight() * 0.10f;
+            var posicionX = pageSize.GetWidth() * MarcaAguaLayout.PosicionFirmaXRatio;
+            var posicionY = pageSize.GetHeight() * MarcaAguaLayout.PosicionFirmaYRatio;
 
             if (tieneFirma)
             {
@@ -335,7 +350,9 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
                     var gsImagen = new PdfExtGState().SetFillOpacity(0.95f);
                     canvas.SetExtGState(gsImagen);
                     var imageData = iText.IO.Image.ImageDataFactory.Create(firma!);
-                    var imagen = new Image(imageData).ScaleToFit(pageSize.GetWidth() * 0.22f, pageSize.GetHeight() * 0.09f);
+                    var imagen = new Image(imageData).ScaleToFit(
+                        pageSize.GetWidth() * MarcaAguaLayout.MaximoAnchoFirmaRatio,
+                        pageSize.GetHeight() * MarcaAguaLayout.MaximoAltoFirmaRatio);
                     imagen.SetFixedPosition(i, posicionX, posicionY);
                     layoutCanvas.Add(imagen);
                 }
@@ -344,22 +361,29 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
                     var gsTexto = new PdfExtGState().SetFillOpacity(0.12f);
                     canvas.SetExtGState(gsTexto);
                     layoutCanvas.SetFont(font).SetFontSize(18).SetFontColor(ColorConstants.GRAY);
-                    layoutCanvas.ShowTextAligned(new Paragraph(firma!), posicionX + 5, posicionY + 15, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
+                    layoutCanvas.ShowTextAligned(
+                        new Paragraph(firma!),
+                        posicionX + MarcaAguaLayout.DesplazamientoTextoFirmaX,
+                        posicionY + MarcaAguaLayout.DesplazamientoTextoFirmaY,
+                        i,
+                        TextAlignment.LEFT,
+                        VerticalAlignment.BOTTOM,
+                        0);
                 }
             }
 
             if (tieneEtiquetas)
             {
-                var gsInfo = new PdfExtGState().SetFillOpacity(0.90f);
+                var gsInfo = new PdfExtGState().SetFillOpacity(MarcaAguaLayout.OpacidadInfo);
                 canvas.SetExtGState(gsInfo);
-                layoutCanvas.SetFont(fontInfo).SetFontSize(9).SetFontColor(ColorConstants.DARK_GRAY);
+                layoutCanvas.SetFont(fontInfo).SetFontSize(MarcaAguaLayout.TamanoFuenteInfo).SetFontColor(ColorConstants.DARK_GRAY);
 
-                var infoY = pageSize.GetHeight() - 28;
-                var infoX = pageSize.GetWidth() - 24;
+                var infoY = pageSize.GetHeight() - MarcaAguaLayout.MargenInfoSuperior;
+                var infoX = pageSize.GetWidth() - MarcaAguaLayout.MargenInfoDerecho;
                 if (!string.IsNullOrWhiteSpace(puntoVentaNombre))
                 {
                     layoutCanvas.ShowTextAligned(new Paragraph($"Punto de venta: {puntoVentaNombre}"), infoX, infoY, i, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
-                    infoY -= 12;
+                    infoY -= MarcaAguaLayout.SeparacionLineasInfo;
                 }
 
                 if (!string.IsNullOrWhiteSpace(vendedorNombre))
