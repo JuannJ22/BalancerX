@@ -62,6 +62,30 @@ En base de datos se guardan metadatos:
 - tamaño
 - fecha y usuario de subida
 
+## Configuración de impresión en Windows
+
+Cuando `Printing:CommandTemplate` está vacío, el sistema usa el visor PDF predeterminado de Windows para lanzar la impresión. En equipos donde Adobe Acrobat/Reader es el predeterminado, esto puede abrir la aplicación visualmente.
+
+Para evitar afectar la impresión pero reducir esa molestia, ahora existen estas opciones:
+
+- `Printing:CloseViewerAfterPrint`: si es `true`, el sistema intenta cerrar el visor automáticamente después de enviar el trabajo a impresión.
+- `Printing:ViewerCloseDelayMs`: espera en milisegundos antes de intentar cerrar el visor. Recomendado iniciar con `5000`.
+- `Printing:ForceKillViewerOnTimeout`: si es `true`, fuerza el cierre del proceso cuando no se puede cerrar con `CloseMainWindow()`. Mantener en `false` salvo necesidad operativa real.
+
+Configuración sugerida:
+
+```json
+"Printing": {
+  "PrinterName": "",
+  "CommandTemplate": "",
+  "CloseViewerAfterPrint": true,
+  "ViewerCloseDelayMs": 5000,
+  "ForceKillViewerOnTimeout": false
+}
+```
+
+Si más adelante quieren una solución todavía más silenciosa, la vía más limpia es configurar `Printing:CommandTemplate` con una herramienta de impresión sin interfaz, para no depender del visor predeterminado del sistema.
+
 ## Ejemplos de requests
 
 ### Login
