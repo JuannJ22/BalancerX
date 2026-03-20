@@ -195,10 +195,11 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         public const float DesplazamientoTextoFirmaX = 5f;
         public const float DesplazamientoTextoFirmaY = 15f;
         public const float OpacidadInfo = 1.00f;
-        public const float TamanoFuenteInfo = 15f;
-        public const float MargenInfoSuperior = 750f;
-        public const float MargenInfoDerecho = 450f;
-        public const float SeparacionLineasInfo = 25f;
+        public const float TamanoFuenteInfo = 12f;
+        public const float MargenInfoIzquierdo = 42f;
+        public const float MargenInfoInferior = 46f;
+        public const float SeparacionHorizontalInfo = 170f;
+        public const float AnchoBloqueInfo = 160f;
     }
 
     private readonly string rutaRaiz;
@@ -378,23 +379,36 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
                 canvas.SetExtGState(gsInfo);
                 layoutCanvas.SetFont(fontInfo).SetFontSize(MarcaAguaLayout.TamanoFuenteInfo).SetFontColor(ColorConstants.DARK_GRAY);
 
-                var infoY = pageSize.GetHeight() - MarcaAguaLayout.MargenInfoSuperior;
-                var infoX = pageSize.GetWidth() - MarcaAguaLayout.MargenInfoDerecho;
+                var infoY = MarcaAguaLayout.MargenInfoInferior;
+                var puntoVentaX = MarcaAguaLayout.MargenInfoIzquierdo;
+                var vendedorX = puntoVentaX + MarcaAguaLayout.SeparacionHorizontalInfo;
+
                 if (!string.IsNullOrWhiteSpace(puntoVentaNombre))
                 {
-                    layoutCanvas.ShowTextAligned(new Paragraph($"Punto de venta: {puntoVentaNombre}"), infoX, infoY, i, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
-                    infoY -= MarcaAguaLayout.SeparacionLineasInfo;
+                    var parrafoPuntoVenta = CrearParrafoInfo("Punto de venta", puntoVentaNombre);
+                    layoutCanvas.ShowTextAligned(parrafoPuntoVenta, puntoVentaX, infoY, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
                 }
 
                 if (!string.IsNullOrWhiteSpace(vendedorNombre))
                 {
-                    layoutCanvas.ShowTextAligned(new Paragraph($"Vendedor: {vendedorNombre}"), infoX, infoY, i, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+                    var parrafoVendedor = CrearParrafoInfo("Vendedor", vendedorNombre);
+                    layoutCanvas.ShowTextAligned(parrafoVendedor, vendedorX, infoY, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
                 }
             }
 
             canvas.RestoreState();
         }
 
+    }
+
+    private static Paragraph CrearParrafoInfo(string etiqueta, string valor)
+    {
+        return new Paragraph()
+            .Add(new Text($"{etiqueta}: ").SetBold())
+            .Add(new Text(valor))
+            .SetMargin(0)
+            .SetMultipliedLeading(1f)
+            .SetWidth(MarcaAguaLayout.AnchoBloqueInfo);
     }
 
     private static void EliminarSilencioso(string ruta)
