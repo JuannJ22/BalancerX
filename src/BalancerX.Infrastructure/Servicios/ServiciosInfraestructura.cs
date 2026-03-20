@@ -195,11 +195,11 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         public const float DesplazamientoTextoFirmaX = 5f;
         public const float DesplazamientoTextoFirmaY = 15f;
         public const float OpacidadInfo = 1.00f;
-        public const float TamanoFuenteInfo = 10f;
+        public const float TamanoFuenteInfo = 12f;
         public const float MargenInfoIzquierdo = 42f;
-        public const float MargenInfoInferior = 32f;
+        public const float MargenInfoInferior = 46f;
         public const float SeparacionHorizontalInfo = 170f;
-        public const float AnchoBloqueInfo = 150f;
+        public const float AnchoBloqueInfo = 160f;
     }
 
     private readonly string rutaRaiz;
