@@ -50,14 +50,41 @@ public interface IAdaptadorImpresionWindows
     Task<bool> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken);
 }
 
+public sealed class PrintingOptions
+{
+    public string? PrinterName { get; init; }
+    public string? CommandTemplate { get; init; }
+    public bool CloseViewerAfterPrint { get; init; }
+    public int ViewerCloseDelayMs { get; init; } = 5000;
+    public bool ForceKillViewerOnTimeout { get; init; }
+
+    public static PrintingOptions Desde(IConfiguration configuracion)
+    {
+        var delay = 5000;
+        var delayConfigurado = configuracion["Printing:ViewerCloseDelayMs"];
+
+        if (int.TryParse(delayConfigurado, out var parsedDelay) && parsedDelay > 0)
+            delay = parsedDelay;
+
+        return new PrintingOptions
+        {
+            PrinterName = configuracion["Printing:PrinterName"],
+            CommandTemplate = configuracion["Printing:CommandTemplate"],
+            CloseViewerAfterPrint = bool.TryParse(configuracion["Printing:CloseViewerAfterPrint"], out var closeViewerAfterPrint) && closeViewerAfterPrint,
+            ViewerCloseDelayMs = delay,
+            ForceKillViewerOnTimeout = bool.TryParse(configuracion["Printing:ForceKillViewerOnTimeout"], out var forceKillViewerOnTimeout) && forceKillViewerOnTimeout
+        };
+    }
+}
+
 public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
 {
-    private readonly IConfiguration configuracion;
+    private readonly PrintingOptions opciones;
     private readonly ILogger<AdaptadorImpresionWindows> logger;
 
     public AdaptadorImpresionWindows(IConfiguration configuracion, ILogger<AdaptadorImpresionWindows> logger)
     {
-        this.configuracion = configuracion;
+        opciones = PrintingOptions.Desde(configuracion);
         this.logger = logger;
     }
 
@@ -65,26 +92,23 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
     {
         if (!File.Exists(rutaArchivo)) return false;
 
-        var impresora = configuracion["Printing:PrinterName"];
-        var comando = configuracion["Printing:CommandTemplate"];
-
-        if (!string.IsNullOrWhiteSpace(comando))
-            return await EjecutarComandoAsync(comando, rutaArchivo, impresora, cancellationToken);
+        if (!string.IsNullOrWhiteSpace(opciones.CommandTemplate))
+            return await EjecutarComandoAsync(opciones.CommandTemplate, rutaArchivo, opciones.PrinterName, cancellationToken);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            logger.LogWarning("No se configuró Printing:CommandTemplate en Windows. Se intentará imprimir con el visor predeterminado.");
-            return await EjecutarImpresionWindowsPredeterminadaAsync(rutaArchivo, impresora, cancellationToken);
+            logger.LogWarning("No se configuró Printing:CommandTemplate en Windows. Se usará el visor predeterminado y su cierre automático dependerá de la configuración.");
+            return await EjecutarImpresionWindowsPredeterminadaAsync(rutaArchivo, opciones, cancellationToken);
         }
 
-        var comandoLinux = string.IsNullOrWhiteSpace(impresora)
+        var comandoLinux = string.IsNullOrWhiteSpace(opciones.PrinterName)
             ? "lp \"{file}\""
             : "lp -d \"{printer}\" \"{file}\"";
 
-        return await EjecutarComandoAsync(comandoLinux, rutaArchivo, impresora, cancellationToken);
+        return await EjecutarComandoAsync(comandoLinux, rutaArchivo, opciones.PrinterName, cancellationToken);
     }
 
-    private Task<bool> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, string? impresora, CancellationToken cancellationToken)
+    private Task<bool> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, PrintingOptions opcionesImpresion, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<bool>(cancellationToken);
@@ -95,19 +119,24 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             {
                 FileName = rutaArchivo,
                 UseShellExecute = true,
-                Verb = string.IsNullOrWhiteSpace(impresora) ? "Print" : "PrintTo",
-                Arguments = string.IsNullOrWhiteSpace(impresora) ? string.Empty : $"\"{impresora}\"",
+                Verb = string.IsNullOrWhiteSpace(opcionesImpresion.PrinterName) ? "Print" : "PrintTo",
+                Arguments = string.IsNullOrWhiteSpace(opcionesImpresion.PrinterName) ? string.Empty : $"\"{opcionesImpresion.PrinterName}\"",
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             };
 
-            using var proceso = Process.Start(inicio);
+            var proceso = Process.Start(inicio);
             if (proceso is null) return Task.FromResult(false);
 
             logger.LogInformation(
                 "Se lanzó la impresión del archivo {RutaArchivo} usando el visor predeterminado de Windows{SufijoImpresora}.",
                 rutaArchivo,
-                string.IsNullOrWhiteSpace(impresora) ? string.Empty : $" en la impresora '{impresora}'");
+                string.IsNullOrWhiteSpace(opcionesImpresion.PrinterName) ? string.Empty : $" en la impresora '{opcionesImpresion.PrinterName}'");
+
+            if (opcionesImpresion.CloseViewerAfterPrint)
+                _ = CerrarVisorDespuesDeImprimirAsync(proceso, rutaArchivo, opcionesImpresion);
+            else
+                proceso.Dispose();
 
             return Task.FromResult(true);
         }
@@ -115,6 +144,49 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         {
             logger.LogError(ex, "No fue posible imprimir usando el visor predeterminado de Windows.");
             return Task.FromResult(false);
+        }
+    }
+
+    private async Task CerrarVisorDespuesDeImprimirAsync(Process proceso, string rutaArchivo, PrintingOptions opcionesImpresion)
+    {
+        try
+        {
+            await Task.Delay(opcionesImpresion.ViewerCloseDelayMs);
+
+            if (proceso.HasExited)
+                return;
+
+            if (proceso.CloseMainWindow())
+            {
+                logger.LogInformation(
+                    "Se solicitó cerrar el visor PDF tras imprimir el archivo {RutaArchivo}. Delay aplicado: {DelayMs} ms.",
+                    rutaArchivo,
+                    opcionesImpresion.ViewerCloseDelayMs);
+
+                await proceso.WaitForExitAsync(CancellationToken.None);
+                return;
+            }
+
+            if (!opcionesImpresion.ForceKillViewerOnTimeout)
+            {
+                logger.LogInformation(
+                    "El visor PDF no expuso una ventana principal para cerrarse automáticamente tras imprimir {RutaArchivo}.",
+                    rutaArchivo);
+                return;
+            }
+
+            proceso.Kill(entireProcessTree: false);
+            logger.LogWarning(
+                "Se forzó el cierre del visor PDF tras imprimir el archivo {RutaArchivo} porque CloseMainWindow no estuvo disponible.",
+                rutaArchivo);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "No fue posible cerrar automáticamente el visor PDF tras imprimir el archivo {RutaArchivo}.", rutaArchivo);
+        }
+        finally
+        {
+            proceso.Dispose();
         }
     }
 
