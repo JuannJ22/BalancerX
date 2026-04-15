@@ -95,6 +95,7 @@ Si más adelante quieren una solución todavía más silenciosa, la vía más li
 Para reducir exposición de archivos almacenados en disco:
 
 - `Storage:EnforceWindowsAcl`: cuando está en `true`, la API aplica ACLs de Windows en carpetas y PDFs creados para permitir acceso solo a la cuenta del servicio, Administradores y SYSTEM.
+- Recomendación operativa: iniciar con `false` para evitar bloquear cargas/visualización en despliegues existentes; habilitar en una ventana controlada y validar con el usuario del servicio de la API.
 - Las respuestas de descarga/visor ahora se envían con cabeceras `no-store/no-cache` y `nosniff`, disminuyendo persistencia en cachés del navegador/proxy.
 
 Ejemplo recomendado:
@@ -103,7 +104,7 @@ Ejemplo recomendado:
 "Storage": {
   "TransferenciasPath": "D:\\BalancerX_Secure\\Transferencias",
   "FirmasPath": "D:\\BalancerX_Secure\\Firmas",
-  "EnforceWindowsAcl": true
+  "EnforceWindowsAcl": false
 }
 ```
 

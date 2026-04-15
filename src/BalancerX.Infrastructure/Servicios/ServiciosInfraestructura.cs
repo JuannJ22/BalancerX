@@ -567,11 +567,10 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         {
             if (esDirectorio)
             {
-                var seguridad = new DirectorySecurity();
+                var seguridad = Directory.GetAccessControl(ruta);
                 var currentUser = WindowsIdentity.GetCurrent().User;
                 if (currentUser is null) return;
 
-                seguridad.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
                 seguridad.AddAccessRule(new FileSystemAccessRule(currentUser, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
                 seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
                 seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
@@ -579,11 +578,10 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             }
             else
             {
-                var seguridad = new FileSecurity();
+                var seguridad = File.GetAccessControl(ruta);
                 var currentUser = WindowsIdentity.GetCurrent().User;
                 if (currentUser is null) return;
 
-                seguridad.SetAccessRuleProtection(isProtected: true, preserveInheritance: false);
                 seguridad.AddAccessRule(new FileSystemAccessRule(currentUser, FileSystemRights.FullControl, AccessControlType.Allow));
                 seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, AccessControlType.Allow));
                 seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, AccessControlType.Allow));
