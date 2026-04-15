@@ -71,6 +71,8 @@ Para evitar afectar la impresión pero reducir esa molestia, ahora existen estas
 - `Printing:CloseViewerAfterPrint`: si es `true`, el sistema intenta cerrar el visor automáticamente después de enviar el trabajo a impresión.
 - `Printing:ViewerCloseDelayMs`: espera en milisegundos antes de intentar cerrar el visor. Recomendado iniciar con `5000`.
 - `Printing:ForceKillViewerOnTimeout`: si es `true`, fuerza el cierre del proceso cuando no se puede cerrar con `CloseMainWindow()`. Mantener en `false` salvo necesidad operativa real.
+- `Printing:AggressiveViewerProcessCleanup`: si es `true`, además del cierre normal intenta cerrar procesos del visor (ej. Acrobat) iniciados durante la impresión.
+- `Printing:ViewerProcessNames`: lista separada por coma de procesos a cerrar en la limpieza agresiva (`AcroRd32,Acrobat` por defecto).
 
 Configuración sugerida:
 
@@ -80,11 +82,30 @@ Configuración sugerida:
   "CommandTemplate": "",
   "CloseViewerAfterPrint": true,
   "ViewerCloseDelayMs": 5000,
-  "ForceKillViewerOnTimeout": false
+  "ForceKillViewerOnTimeout": false,
+  "AggressiveViewerProcessCleanup": true,
+  "ViewerProcessNames": "AcroRd32,Acrobat"
 }
 ```
 
 Si más adelante quieren una solución todavía más silenciosa, la vía más limpia es configurar `Printing:CommandTemplate` con una herramienta de impresión sin interfaz, para no depender del visor predeterminado del sistema.
+
+## Endurecimiento de seguridad en carpetas y PDFs
+
+Para reducir exposición de archivos almacenados en disco:
+
+- `Storage:EnforceWindowsAcl`: cuando está en `true`, la API aplica ACLs de Windows en carpetas y PDFs creados para permitir acceso solo a la cuenta del servicio, Administradores y SYSTEM.
+- Las respuestas de descarga/visor ahora se envían con cabeceras `no-store/no-cache` y `nosniff`, disminuyendo persistencia en cachés del navegador/proxy.
+
+Ejemplo recomendado:
+
+```json
+"Storage": {
+  "TransferenciasPath": "D:\\BalancerX_Secure\\Transferencias",
+  "FirmasPath": "D:\\BalancerX_Secure\\Firmas",
+  "EnforceWindowsAcl": true
+}
+```
 
 ## Ejemplos de requests
 
