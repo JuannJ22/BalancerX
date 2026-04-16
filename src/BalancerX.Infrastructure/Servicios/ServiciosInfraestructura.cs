@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Security.Principal;
 using System.Text;
 using BalancerX.Application.Contratos;
 using iText.Kernel.Colors;
@@ -57,6 +59,8 @@ public sealed class PrintingOptions
     public bool CloseViewerAfterPrint { get; init; }
     public int ViewerCloseDelayMs { get; init; } = 5000;
     public bool ForceKillViewerOnTimeout { get; init; }
+    public bool AggressiveViewerProcessCleanup { get; init; }
+    public string[] ViewerProcessNames { get; init; } = [];
 
     public static PrintingOptions Desde(IConfiguration configuracion)
     {
@@ -72,9 +76,20 @@ public sealed class PrintingOptions
             CommandTemplate = configuracion["Printing:CommandTemplate"],
             CloseViewerAfterPrint = bool.TryParse(configuracion["Printing:CloseViewerAfterPrint"], out var closeViewerAfterPrint) && closeViewerAfterPrint,
             ViewerCloseDelayMs = delay,
-            ForceKillViewerOnTimeout = bool.TryParse(configuracion["Printing:ForceKillViewerOnTimeout"], out var forceKillViewerOnTimeout) && forceKillViewerOnTimeout
+            ForceKillViewerOnTimeout = bool.TryParse(configuracion["Printing:ForceKillViewerOnTimeout"], out var forceKillViewerOnTimeout) && forceKillViewerOnTimeout,
+            AggressiveViewerProcessCleanup = bool.TryParse(configuracion["Printing:AggressiveViewerProcessCleanup"], out var aggressiveCleanup) && aggressiveCleanup,
+            ViewerProcessNames = ObtenerViewerProcessNames(configuracion["Printing:ViewerProcessNames"])
         };
     }
+
+    private static string[] ObtenerViewerProcessNames(string? value)
+        => string.IsNullOrWhiteSpace(value)
+            ? ["AcroRd32", "Acrobat"]
+            : value
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(static x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
 }
 
 public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
@@ -149,6 +164,8 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
 
     private async Task CerrarVisorDespuesDeImprimirAsync(Process proceso, string rutaArchivo, PrintingOptions opcionesImpresion)
     {
+        var intentoInicioUtc = DateTime.UtcNow;
+
         try
         {
             await Task.Delay(opcionesImpresion.ViewerCloseDelayMs);
@@ -172,6 +189,10 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
                 logger.LogInformation(
                     "El visor PDF no expuso una ventana principal para cerrarse automáticamente tras imprimir {RutaArchivo}.",
                     rutaArchivo);
+
+                if (opcionesImpresion.AggressiveViewerProcessCleanup)
+                    CerrarProcesosVisorPorNombre(rutaArchivo, opcionesImpresion.ViewerProcessNames, intentoInicioUtc);
+
                 return;
             }
 
@@ -179,6 +200,9 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             logger.LogWarning(
                 "Se forzó el cierre del visor PDF tras imprimir el archivo {RutaArchivo} porque CloseMainWindow no estuvo disponible.",
                 rutaArchivo);
+
+            if (opcionesImpresion.AggressiveViewerProcessCleanup)
+                CerrarProcesosVisorPorNombre(rutaArchivo, opcionesImpresion.ViewerProcessNames, intentoInicioUtc);
         }
         catch (Exception ex)
         {
@@ -187,6 +211,42 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         finally
         {
             proceso.Dispose();
+        }
+    }
+
+    private void CerrarProcesosVisorPorNombre(string rutaArchivo, string[] processNames, DateTime intentoInicioUtc)
+    {
+        foreach (var processName in processNames)
+        {
+            foreach (var candidato in Process.GetProcessesByName(processName))
+            {
+                try
+                {
+                    if (candidato.HasExited)
+                        continue;
+
+                    if (candidato.StartTime.ToUniversalTime() < intentoInicioUtc.AddMinutes(-1))
+                        continue;
+
+                    candidato.Kill(entireProcessTree: false);
+                    logger.LogWarning(
+                        "Se cerró proceso de visor {ProcessName} posterior a la impresión del archivo {RutaArchivo}.",
+                        processName,
+                        rutaArchivo);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogDebug(
+                        ex,
+                        "No fue posible cerrar proceso de visor {ProcessName} posterior a imprimir {RutaArchivo}.",
+                        processName,
+                        rutaArchivo);
+                }
+                finally
+                {
+                    candidato.Dispose();
+                }
+            }
         }
     }
 
@@ -258,6 +318,17 @@ public class JwtTokenServicio : IJwtTokenServicio
 
 public class ArchivoSeguroServicio : IArchivoSeguroServicio
 {
+    private sealed class StorageSecurityOptions
+    {
+        public bool EnforceWindowsAcl { get; init; }
+
+        public static StorageSecurityOptions Desde(IConfiguration configuracion)
+            => new()
+            {
+                EnforceWindowsAcl = bool.TryParse(configuracion["Storage:EnforceWindowsAcl"], out var enforceWindowsAcl) && enforceWindowsAcl
+            };
+    }
+
     private static class MarcaAguaLayout
     {
         public const float PosicionFirmaXRatio = 0.58f;
@@ -276,10 +347,12 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
     private readonly string rutaRaiz;
     private readonly ILogger<ArchivoSeguroServicio> logger;
+    private readonly StorageSecurityOptions opcionesSeguridad;
 
     public ArchivoSeguroServicio(IConfiguration configuracion, ILogger<ArchivoSeguroServicio> logger)
     {
         this.logger = logger;
+        opcionesSeguridad = StorageSecurityOptions.Desde(configuracion);
         rutaRaiz = configuracion["Storage:TransferenciasPath"]
             ?? Path.Combine(AppContext.BaseDirectory, "storage", "transferencias");
     }
@@ -289,6 +362,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         var ahora = DateTime.UtcNow;
         var carpeta = Path.Combine(rutaRaiz, ahora.Year.ToString(), ahora.Month.ToString("00"));
         Directory.CreateDirectory(carpeta);
+        AplicarSeguridadWindows(carpeta, esDirectorio: true);
 
         var nombreInterno = $"transferencia_{transferenciaId}_{Guid.NewGuid():N}.pdf";
         var rutaInterna = Path.Combine(carpeta, nombreInterno);
@@ -299,6 +373,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             {
                 await contenidoStream.CopyToAsync(archivoSalida, cancellationToken);
             }
+            AplicarSeguridadWindows(rutaInterna, esDirectorio: false);
 
             var tamanoOriginal = new FileInfo(rutaInterna).Length;
             if (tamanoOriginal == 0)
@@ -481,6 +556,44 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             .SetMargin(0)
             .SetMultipliedLeading(1f)
             .SetWidth(MarcaAguaLayout.AnchoBloqueInfo);
+    }
+
+    private void AplicarSeguridadWindows(string ruta, bool esDirectorio)
+    {
+        if (!opcionesSeguridad.EnforceWindowsAcl || !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return;
+
+        try
+        {
+            if (esDirectorio)
+            {
+                var directorio = new DirectoryInfo(ruta);
+                var seguridad = FileSystemAclExtensions.GetAccessControl(directorio);
+                var currentUser = WindowsIdentity.GetCurrent().User;
+                if (currentUser is null) return;
+
+                seguridad.AddAccessRule(new FileSystemAccessRule(currentUser, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+                FileSystemAclExtensions.SetAccessControl(directorio, seguridad);
+            }
+            else
+            {
+                var archivo = new FileInfo(ruta);
+                var seguridad = FileSystemAclExtensions.GetAccessControl(archivo);
+                var currentUser = WindowsIdentity.GetCurrent().User;
+                if (currentUser is null) return;
+
+                seguridad.AddAccessRule(new FileSystemAccessRule(currentUser, FileSystemRights.FullControl, AccessControlType.Allow));
+                seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null), FileSystemRights.FullControl, AccessControlType.Allow));
+                seguridad.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.LocalSystemSid, null), FileSystemRights.FullControl, AccessControlType.Allow));
+                FileSystemAclExtensions.SetAccessControl(archivo, seguridad);
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "No fue posible aplicar ACL de seguridad al recurso {Ruta}.", ruta);
+        }
     }
 
     private static void EliminarSilencioso(string ruta)
