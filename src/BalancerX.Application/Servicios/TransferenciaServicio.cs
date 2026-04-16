@@ -131,7 +131,16 @@ public class TransferenciaServicio
         TransferenciaArchivo archivo;
         try
         {
-            archivo = await archivoSeguroServicio.GuardarPdfAsync(transferencia.Id, nombreOriginal, contenidoStream, usuarioId, firma, puntoVentaNombre, vendedorNombre, cancellationToken);
+            archivo = await archivoSeguroServicio.GuardarPdfAsync(
+                transferencia.Id,
+                nombreOriginal,
+                contenidoStream,
+                usuarioId,
+                firma,
+                puntoVentaNombre,
+                vendedorNombre,
+                transferencia.Observacion,
+                cancellationToken);
         }
         catch (Exception ex)
         {
