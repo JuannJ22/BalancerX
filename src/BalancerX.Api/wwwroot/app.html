@@ -53,6 +53,7 @@
                 <select name="cuentaContableId" id="crearCuentaContableId" required></select>
               </label>
 
+              <button type="submit">Crear transferencia</button>
               <label>Observación <input name="observacion" maxlength="300" placeholder="Opcional" /></label>
               <div class="pdf-upload-field">
                 <label for="createTransferPdfInput">PDF de soporte (opcional)</label>
@@ -62,7 +63,6 @@
                   <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
                 </div>
               </div>
-              <button type="submit">Crear transferencia</button>
             </form>
             <p id="createTransferRestriction" class="hidden">Tu rol actual no permite crear transferencias. Solicita perfil TESORERIA o ADMIN si necesitas esta operación.</p>
           </article>
