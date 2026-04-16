@@ -54,14 +54,15 @@
               </label>
 
               <label>Observación <input name="observacion" maxlength="300" placeholder="Opcional" /></label>
-              <div class="pdf-upload-field">
-                <label for="createTransferPdfInput">PDF de soporte</label>
+              <fieldset class="pdf-upload-field">
+                <legend>Adjuntar PDF al crear</legend>
+                <label for="createTransferPdfInput">PDF de soporte (opcional)</label>
                 <input id="createTransferPdfInput" name="archivoPdf" type="file" accept="application/pdf" />
                 <div class="pdf-upload-actions">
                   <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
                   <button type="button" id="createTransferPdfClearButton" class="ghost">Quitar PDF</button>
                 </div>
-              </div>
+              </fieldset>
               <button type="submit" class="create-transfer-submit">Crear transferencia</button>
             </form>
             <p id="createTransferRestriction" class="hidden">Tu rol actual no permite crear transferencias. Solicita perfil TESORERIA o ADMIN si necesitas esta operación.</p>
