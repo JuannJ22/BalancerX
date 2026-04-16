@@ -341,8 +341,9 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         public const float TamanoFuenteInfo = 12f;
         public const float MargenInfoIzquierdo = 42f;
         public const float MargenInfoInferior = 46f;
-        public const float SeparacionHorizontalInfo = 170f;
-        public const float AnchoBloqueInfo = 160f;
+        public const float SeparacionHorizontalInfo = 135f;
+        public const float AnchoBloqueInfo = 125f;
+        public const int MaximoCaracteresInfo = 60;
     }
 
     private readonly string rutaRaiz;
@@ -357,7 +358,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
             ?? Path.Combine(AppContext.BaseDirectory, "storage", "transferencias");
     }
 
-    public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, CancellationToken cancellationToken)
+    public async Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, string? observacion, CancellationToken cancellationToken)
     {
         var ahora = DateTime.UtcNow;
         var carpeta = Path.Combine(rutaRaiz, ahora.Year.ToString(), ahora.Month.ToString("00"));
@@ -381,7 +382,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
             try
             {
-                AplicarMarcaAgua(rutaInterna, firmaElectronica, puntoVentaNombre, vendedorNombre);
+                AplicarMarcaAgua(rutaInterna, firmaElectronica, puntoVentaNombre, vendedorNombre, observacion);
             }
             catch (Exception ex)
             {
@@ -437,11 +438,11 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         return Task.CompletedTask;
     }
 
-    private static void AplicarMarcaAgua(string rutaArchivo, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre)
+    private static void AplicarMarcaAgua(string rutaArchivo, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, string? observacion)
     {
         var firma = firmaElectronica?.Trim();
         var tieneFirma = !string.IsNullOrWhiteSpace(firma);
-        var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre);
+        var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre) || !string.IsNullOrWhiteSpace(observacion);
         if (!tieneFirma && !tieneEtiquetas) return;
 
         var temporalAppend = rutaArchivo + ".append.tmp";
@@ -450,13 +451,13 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
         try
         {
-            EstamparPdf(rutaArchivo, temporalAppend, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: true);
+            EstamparPdf(rutaArchivo, temporalAppend, firma, puntoVentaNombre, vendedorNombre, observacion, usarAppendMode: true);
             temporalFinal = temporalAppend;
         }
         catch (PdfException)
         {
             EliminarSilencioso(temporalAppend);
-            EstamparPdf(rutaArchivo, temporalRewrite, firma, puntoVentaNombre, vendedorNombre, usarAppendMode: false);
+            EstamparPdf(rutaArchivo, temporalRewrite, firma, puntoVentaNombre, vendedorNombre, observacion, usarAppendMode: false);
             temporalFinal = temporalRewrite;
         }
 
@@ -466,10 +467,10 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
         EliminarSilencioso(temporalRewrite);
     }
 
-    private static void EstamparPdf(string rutaArchivo, string temporal, string? firma, string? puntoVentaNombre, string? vendedorNombre, bool usarAppendMode)
+    private static void EstamparPdf(string rutaArchivo, string temporal, string? firma, string? puntoVentaNombre, string? vendedorNombre, string? observacion, bool usarAppendMode)
     {
         var tieneFirma = !string.IsNullOrWhiteSpace(firma);
-        var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre);
+        var tieneEtiquetas = !string.IsNullOrWhiteSpace(puntoVentaNombre) || !string.IsNullOrWhiteSpace(vendedorNombre) || !string.IsNullOrWhiteSpace(observacion);
         var esImagenFirma = tieneFirma && File.Exists(firma);
 
         using var reader = new PdfReader(rutaArchivo);
@@ -529,6 +530,7 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
                 var infoY = MarcaAguaLayout.MargenInfoInferior;
                 var puntoVentaX = MarcaAguaLayout.MargenInfoIzquierdo;
                 var vendedorX = puntoVentaX + MarcaAguaLayout.SeparacionHorizontalInfo;
+                var observacionX = vendedorX + MarcaAguaLayout.SeparacionHorizontalInfo;
 
                 if (!string.IsNullOrWhiteSpace(puntoVentaNombre))
                 {
@@ -541,6 +543,12 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
                     var parrafoVendedor = CrearParrafoInfo("Vendedor", vendedorNombre);
                     layoutCanvas.ShowTextAligned(parrafoVendedor, vendedorX, infoY, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
                 }
+
+                if (!string.IsNullOrWhiteSpace(observacion))
+                {
+                    var parrafoObservacion = CrearParrafoInfo("Observación", observacion);
+                    layoutCanvas.ShowTextAligned(parrafoObservacion, observacionX, infoY, i, TextAlignment.LEFT, VerticalAlignment.BOTTOM, 0);
+                }
             }
 
             canvas.RestoreState();
@@ -550,12 +558,22 @@ public class ArchivoSeguroServicio : IArchivoSeguroServicio
 
     private static Paragraph CrearParrafoInfo(string etiqueta, string valor)
     {
+        var valorNormalizado = NormalizarTextoInfo(valor);
         return new Paragraph()
             .Add(new Text($"{etiqueta}: ").SetBold())
-            .Add(new Text(valor))
+            .Add(new Text(valorNormalizado))
             .SetMargin(0)
             .SetMultipliedLeading(1f)
             .SetWidth(MarcaAguaLayout.AnchoBloqueInfo);
+    }
+
+    private static string NormalizarTextoInfo(string? valor)
+    {
+        if (string.IsNullOrWhiteSpace(valor)) return string.Empty;
+
+        var limpio = valor.Replace("\r", " ").Replace("\n", " ").Trim();
+        if (limpio.Length <= MarcaAguaLayout.MaximoCaracteresInfo) return limpio;
+        return $"{limpio[..MarcaAguaLayout.MaximoCaracteresInfo]}...";
     }
 
     private void AplicarSeguridadWindows(string ruta, bool esDirectorio)

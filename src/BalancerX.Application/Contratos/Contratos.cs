@@ -54,7 +54,7 @@ public interface IJwtTokenServicio
 
 public interface IArchivoSeguroServicio
 {
-    Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, CancellationToken cancellationToken);
+    Task<TransferenciaArchivo> GuardarPdfAsync(long transferenciaId, string nombreOriginal, Stream contenidoStream, int subidoPorUsuarioId, string? firmaElectronica, string? puntoVentaNombre, string? vendedorNombre, string? observacion, CancellationToken cancellationToken);
     Task<(Stream Contenido, string NombreOriginal)> ObtenerPdfAsync(TransferenciaArchivo transferenciaArchivo, CancellationToken cancellationToken);
     Task EliminarPdfAsync(string rutaInterna, CancellationToken cancellationToken);
 }
