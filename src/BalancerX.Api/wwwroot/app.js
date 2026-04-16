@@ -314,6 +314,7 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
 
   event.preventDefault();
   const f = new FormData(event.currentTarget);
+  const archivoPdf = f.get('archivoPdf');
   const payload = {
     monto: asNumber(f.get('monto')),
     puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto'), catalogs.puntosVenta),
@@ -325,7 +326,20 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
 
   try {
     const res = await api('/api/transferencias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    showResult('ok', 'Transferencia creada correctamente.', res);
+    const transferenciaId = Number(res?.id ?? 0);
+    const tienePdf = archivoPdf instanceof File && archivoPdf.size > 0;
+
+    if (tienePdf && transferenciaId > 0) {
+      const pdfData = new FormData();
+      pdfData.set('archivo', archivoPdf);
+      const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
+      showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
+    } else {
+      showResult('warning', 'Transferencia creada sin PDF adjunto.', res);
+    }
+
+    event.currentTarget.reset();
+    await fillCuentaSelect('crearCuentaContableId', 0);
     await listTransfers();
   } catch { }
 });
