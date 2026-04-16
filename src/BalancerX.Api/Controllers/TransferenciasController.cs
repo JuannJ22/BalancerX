@@ -87,6 +87,7 @@ public class TransferenciasController : ControllerBase
     public async Task<IActionResult> ObtenerPdf([FromRoute] long id, CancellationToken cancellationToken)
     {
         var resultado = await transferenciaServicio.DescargarPdfAsync(id, ObtenerUsuarioId(), cancellationToken);
+        AgregarCabecerasSeguridadPdf();
         return File(resultado.Contenido, "application/pdf", resultado.NombreOriginal);
     }
 
@@ -96,6 +97,7 @@ public class TransferenciasController : ControllerBase
     public async Task<IActionResult> VerPdf([FromRoute] long id, CancellationToken cancellationToken)
     {
         var resultado = await transferenciaServicio.DescargarPdfAsync(id, ObtenerUsuarioId(), cancellationToken);
+        AgregarCabecerasSeguridadPdf();
         return File(resultado.Contenido, "application/pdf");
     }
 
@@ -119,5 +121,13 @@ public class TransferenciasController : ControllerBase
     {
         var claim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue(ClaimTypes.Sid) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
         return int.Parse(claim!);
+    }
+
+    private void AgregarCabecerasSeguridadPdf()
+    {
+        Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, private";
+        Response.Headers.Pragma = "no-cache";
+        Response.Headers.Expires = "0";
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
     }
 }
