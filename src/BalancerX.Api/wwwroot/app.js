@@ -319,6 +319,45 @@ const listTransfers = async (options = {}) => {
   return items;
 };
 
+const ensureCreateTransferPdfField = () => {
+  const createTransferForm = document.getElementById('createTransferForm');
+  if (!createTransferForm) return;
+
+  let pdfUploadField = createTransferForm.querySelector('.pdf-upload-field');
+  let pdfInput = document.getElementById('createTransferPdfInput');
+  let pdfName = document.getElementById('createTransferPdfName');
+  let pdfClearButton = document.getElementById('createTransferPdfClearButton');
+
+  if (!pdfUploadField || !pdfInput || !pdfName || !pdfClearButton) {
+    pdfUploadField = document.createElement('div');
+    pdfUploadField.className = 'pdf-upload-field';
+    pdfUploadField.innerHTML = `
+      <label for="createTransferPdfInput">PDF de soporte</label>
+      <input id="createTransferPdfInput" name="archivoPdf" type="file" accept="application/pdf" />
+      <div class="pdf-upload-actions">
+        <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
+        <button type="button" id="createTransferPdfClearButton" class="ghost">Quitar PDF</button>
+      </div>
+    `;
+
+    const submitButton = createTransferForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+      createTransferForm.insertBefore(pdfUploadField, submitButton);
+    } else {
+      createTransferForm.append(pdfUploadField);
+    }
+
+    pdfInput = document.getElementById('createTransferPdfInput');
+    pdfName = document.getElementById('createTransferPdfName');
+    pdfClearButton = document.getElementById('createTransferPdfClearButton');
+  }
+
+  pdfUploadField.classList.remove('hidden');
+  pdfUploadField.style.display = 'grid';
+};
+
+ensureCreateTransferPdfField();
+
 const createTransferPdfInput = document.getElementById('createTransferPdfInput');
 const createTransferPdfName = document.getElementById('createTransferPdfName');
 const createTransferPdfClearButton = document.getElementById('createTransferPdfClearButton');
