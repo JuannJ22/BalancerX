@@ -292,15 +292,37 @@ const buildTransferFiltersQuery = () => {
   return query ? `?${query}` : '';
 };
 
-const listTransfers = async () => {
+const listTransfers = async (options = {}) => {
   const query = buildTransferFiltersQuery();
   const result = await api(`/api/transferencias${query}`);
   const items = Array.isArray(result) ? result : [];
   const tbody = document.getElementById('transferTableBody');
   tbody.innerHTML = '';
   items.forEach((item) => tbody.appendChild(renderTransferRow(item)));
-  showResult('ok', `Transferencias cargadas: ${items.length}.`, { total: items.length, filtros: query || 'sin filtros', transferencias: items });
+  if (!options.suppressResult) {
+    showResult('ok', `Transferencias cargadas: ${items.length}.`, { total: items.length, filtros: query || 'sin filtros', transferencias: items });
+  }
+
+  return items;
 };
+
+const createTransferPdfInput = document.getElementById('createTransferPdfInput');
+const createTransferPdfButton = document.getElementById('createTransferPdfButton');
+const createTransferPdfName = document.getElementById('createTransferPdfName');
+
+const updateCreateTransferPdfName = () => {
+  if (!createTransferPdfInput || !createTransferPdfName) return;
+  const file = createTransferPdfInput.files?.[0];
+  createTransferPdfName.textContent = file ? file.name : 'Sin archivo seleccionado';
+};
+
+createTransferPdfButton?.addEventListener('click', () => {
+  createTransferPdfInput?.click();
+});
+
+createTransferPdfInput?.addEventListener('change', () => {
+  updateCreateTransferPdfName();
+});
 
 document.getElementById('crearBancoId').addEventListener('change', async (event) => {
   await fillCuentaSelect('crearCuentaContableId', asNumber(event.target.value));
@@ -314,6 +336,7 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
 
   event.preventDefault();
   const f = new FormData(event.currentTarget);
+  const archivoPdf = f.get('archivoPdf');
   const payload = {
     monto: asNumber(f.get('monto')),
     puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto'), catalogs.puntosVenta),
@@ -325,8 +348,22 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
 
   try {
     const res = await api('/api/transferencias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    showResult('ok', 'Transferencia creada correctamente.', res);
-    await listTransfers();
+    const transferenciaId = Number(res?.id ?? 0);
+    const tienePdf = archivoPdf instanceof File && archivoPdf.size > 0;
+
+    if (tienePdf && transferenciaId > 0) {
+      const pdfData = new FormData();
+      pdfData.set('archivo', archivoPdf);
+      const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
+      showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
+    } else {
+      showResult('warning', 'Transferencia creada sin PDF adjunto.', res);
+    }
+
+    event.currentTarget.reset();
+    updateCreateTransferPdfName();
+    await fillCuentaSelect('crearCuentaContableId', 0);
+    await listTransfers({ suppressResult: true });
   } catch { }
 });
 
