@@ -320,8 +320,8 @@ const listTransfers = async (options = {}) => {
 };
 
 const createTransferPdfInput = document.getElementById('createTransferPdfInput');
-const createTransferPdfButton = document.getElementById('createTransferPdfButton');
 const createTransferPdfName = document.getElementById('createTransferPdfName');
+const createTransferPdfClearButton = document.getElementById('createTransferPdfClearButton');
 
 const updateCreateTransferPdfName = () => {
   if (!createTransferPdfInput || !createTransferPdfName) return;
@@ -329,11 +329,13 @@ const updateCreateTransferPdfName = () => {
   createTransferPdfName.textContent = file ? file.name : 'Sin archivo seleccionado';
 };
 
-createTransferPdfButton?.addEventListener('click', () => {
-  createTransferPdfInput?.click();
+createTransferPdfInput?.addEventListener('change', () => {
+  updateCreateTransferPdfName();
 });
 
-createTransferPdfInput?.addEventListener('change', () => {
+createTransferPdfClearButton?.addEventListener('click', () => {
+  if (!createTransferPdfInput) return;
+  createTransferPdfInput.value = '';
   updateCreateTransferPdfName();
 });
 
@@ -366,10 +368,17 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
     const tienePdf = archivoPdf instanceof File && archivoPdf.size > 0;
 
     if (tienePdf && transferenciaId > 0) {
-      const pdfData = new FormData();
-      pdfData.set('archivo', archivoPdf);
-      const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
-      showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
+      try {
+        const pdfData = new FormData();
+        pdfData.set('archivo', archivoPdf);
+        const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
+        showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
+      } catch (error) {
+        showResult('warning', `Transferencia ${transferenciaId} creada, pero falló la carga del PDF. Puede adjuntarlo desde "Modificar".`, {
+          transferencia: res,
+          errorPdf: error?.message || 'No fue posible subir el archivo PDF en el alta.'
+        });
+      }
     } else {
       showResult('warning', 'Transferencia creada sin PDF adjunto.', res);
     }

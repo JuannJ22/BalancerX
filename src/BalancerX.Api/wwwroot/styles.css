@@ -88,21 +88,27 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
   grid-column:1 / -1;
   width:100%;
 }
+#createTransferForm .pdf-upload-field input[type="file"] {
+  background:#fff;
+}
 #createTransferForm .pdf-upload-actions {
   display:flex;
   align-items:center;
   gap:.5rem;
   flex-wrap:wrap;
 }
-#createTransferForm .pdf-upload-actions .ghost {
+#createTransferForm .pdf-upload-actions .ghost,
+#createTransferForm button[type="submit"] {
   width:auto;
-}
-.hidden-file-input {
-  display:none;
 }
 .file-name-placeholder {
   color:var(--muted);
   font-size:.85rem;
+}
+#createTransferForm button[type="submit"] {
+  grid-column:1 / -1;
+  justify-self:start;
+  min-width:240px;
 }
 #createTransferRestriction {
   margin:.75rem 0 0;
