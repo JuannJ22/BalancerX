@@ -82,6 +82,23 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 #createTransferForm button[type="submit"] {
   min-height:44px;
 }
+.pdf-upload-field {
+  display:grid;
+  gap:.35rem;
+}
+.pdf-upload-actions {
+  display:flex;
+  align-items:center;
+  gap:.5rem;
+  flex-wrap:wrap;
+}
+.hidden-file-input {
+  display:none;
+}
+.file-name-placeholder {
+  color:var(--muted);
+  font-size:.85rem;
+}
 #authOutput, #resultTechnical { margin:0; min-height:100px; overflow:auto; border-radius:12px; background:#0f2642; color:#d8e8ff; border:1px solid #1f3d67; padding:.78rem; }
 .result { border-radius:10px; padding:.7rem .8rem; margin:0 0 .7rem; font-weight:600; }
 .result.ok { background:var(--ok-bg); color:var(--ok-text); border:1px solid #bde5cd; }

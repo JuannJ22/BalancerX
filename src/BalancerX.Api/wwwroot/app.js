@@ -292,15 +292,37 @@ const buildTransferFiltersQuery = () => {
   return query ? `?${query}` : '';
 };
 
-const listTransfers = async () => {
+const listTransfers = async (options = {}) => {
   const query = buildTransferFiltersQuery();
   const result = await api(`/api/transferencias${query}`);
   const items = Array.isArray(result) ? result : [];
   const tbody = document.getElementById('transferTableBody');
   tbody.innerHTML = '';
   items.forEach((item) => tbody.appendChild(renderTransferRow(item)));
-  showResult('ok', `Transferencias cargadas: ${items.length}.`, { total: items.length, filtros: query || 'sin filtros', transferencias: items });
+  if (!options.suppressResult) {
+    showResult('ok', `Transferencias cargadas: ${items.length}.`, { total: items.length, filtros: query || 'sin filtros', transferencias: items });
+  }
+
+  return items;
 };
+
+const createTransferPdfInput = document.getElementById('createTransferPdfInput');
+const createTransferPdfButton = document.getElementById('createTransferPdfButton');
+const createTransferPdfName = document.getElementById('createTransferPdfName');
+
+const updateCreateTransferPdfName = () => {
+  if (!createTransferPdfInput || !createTransferPdfName) return;
+  const file = createTransferPdfInput.files?.[0];
+  createTransferPdfName.textContent = file ? file.name : 'Sin archivo seleccionado';
+};
+
+createTransferPdfButton?.addEventListener('click', () => {
+  createTransferPdfInput?.click();
+});
+
+createTransferPdfInput?.addEventListener('change', () => {
+  updateCreateTransferPdfName();
+});
 
 document.getElementById('crearBancoId').addEventListener('change', async (event) => {
   await fillCuentaSelect('crearCuentaContableId', asNumber(event.target.value));
@@ -339,8 +361,9 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
     }
 
     event.currentTarget.reset();
+    updateCreateTransferPdfName();
     await fillCuentaSelect('crearCuentaContableId', 0);
-    await listTransfers();
+    await listTransfers({ suppressResult: true });
   } catch { }
 });
 

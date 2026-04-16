@@ -54,9 +54,14 @@
               </label>
 
               <label>Observación <input name="observacion" maxlength="300" placeholder="Opcional" /></label>
-              <label>Adjuntar PDF (opcional)
-                <input name="archivoPdf" type="file" accept="application/pdf" />
-              </label>
+              <div class="pdf-upload-field">
+                <label for="createTransferPdfInput">PDF de soporte (opcional)</label>
+                <input id="createTransferPdfInput" name="archivoPdf" type="file" accept="application/pdf" class="hidden-file-input" />
+                <div class="pdf-upload-actions">
+                  <button type="button" id="createTransferPdfButton" class="ghost">Adjuntar PDF</button>
+                  <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
+                </div>
+              </div>
               <button type="submit">Crear transferencia</button>
             </form>
           </article>
