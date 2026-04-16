@@ -82,15 +82,20 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 #createTransferForm button[type="submit"] {
   min-height:44px;
 }
-.pdf-upload-field {
+#createTransferForm .pdf-upload-field {
   display:grid;
   gap:.35rem;
+  grid-column:1 / -1;
+  width:100%;
 }
-.pdf-upload-actions {
+#createTransferForm .pdf-upload-actions {
   display:flex;
   align-items:center;
   gap:.5rem;
   flex-wrap:wrap;
+}
+#createTransferForm .pdf-upload-actions .ghost {
+  width:auto;
 }
 .hidden-file-input {
   display:none;
