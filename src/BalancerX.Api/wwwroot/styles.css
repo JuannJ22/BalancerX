@@ -65,7 +65,7 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 #pdfViewer { width:100%; min-height:420px; border-radius:12px; border:1px solid var(--line); background:#fff; }
 .viewer-card { grid-column:span 6; }
 #createTransferForm.form-grid.two-cols {
-  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  grid-template-columns:repeat(4,minmax(180px,1fr));
   column-gap:1rem;
   row-gap:.9rem;
   align-items:end;
@@ -85,7 +85,7 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 #createTransferForm .pdf-upload-field {
   display:grid;
   gap:.35rem;
-  grid-column:1 / -1;
+  grid-column:3 / 5;
   width:100%;
 }
 #createTransferForm .pdf-upload-field input[type="file"] {
@@ -106,9 +106,24 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
   font-size:.85rem;
 }
 #createTransferForm button[type="submit"] {
-  grid-column:1 / -1;
+  grid-column:3 / 5;
   justify-self:start;
-  min-width:240px;
+  width:100%;
+  min-width:0;
+}
+#createTransferForm .create-transfer-submit {
+  margin-top:-.1rem;
+}
+
+@media (max-width:1200px){
+  #pdfViewer { min-height:360px; }
+  #createTransferForm.form-grid.two-cols {
+    grid-template-columns:repeat(2,minmax(220px,1fr));
+  }
+  #createTransferForm .pdf-upload-field,
+  #createTransferForm button[type="submit"] {
+    grid-column:1 / -1;
+  }
 }
 #createTransferRestriction {
   margin:.75rem 0 0;
@@ -125,8 +140,12 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 .result.error { background:var(--error-bg); color:var(--error-text); border:1px solid #f6b7c0; }
 .result.warning { background:var(--warning-bg); color:var(--warning-text); border:1px solid #f1d8a8; }
 .hidden { display:none!important; }
-@media (max-width:1200px){ #pdfViewer { min-height:360px; } }
 @media (max-width:980px){ .app-shell { grid-template-columns:1fr; } .sidebar{ position:sticky; top:0; z-index:4; } .panel-grid .card { grid-column:span 12; } }
+@media (max-width:640px){
+  #createTransferForm.form-grid.two-cols {
+    grid-template-columns:1fr;
+  }
+}
 
 .modal {
   width: min(960px, 94vw);

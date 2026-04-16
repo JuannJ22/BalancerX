@@ -319,48 +319,10 @@ const listTransfers = async (options = {}) => {
   return items;
 };
 
-const ensureCreateTransferPdfField = () => {
-  const createTransferForm = document.getElementById('createTransferForm');
-  if (!createTransferForm) return;
-
-  let pdfUploadField = createTransferForm.querySelector('.pdf-upload-field');
-  let pdfInput = document.getElementById('createTransferPdfInput');
-  let pdfName = document.getElementById('createTransferPdfName');
-  let pdfClearButton = document.getElementById('createTransferPdfClearButton');
-
-  if (!pdfUploadField || !pdfInput || !pdfName || !pdfClearButton) {
-    pdfUploadField = document.createElement('div');
-    pdfUploadField.className = 'pdf-upload-field';
-    pdfUploadField.innerHTML = `
-      <label for="createTransferPdfInput">PDF de soporte</label>
-      <input id="createTransferPdfInput" name="archivoPdf" type="file" accept="application/pdf" />
-      <div class="pdf-upload-actions">
-        <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
-        <button type="button" id="createTransferPdfClearButton" class="ghost">Quitar PDF</button>
-      </div>
-    `;
-
-    const submitButton = createTransferForm.querySelector('button[type="submit"]');
-    if (submitButton) {
-      createTransferForm.insertBefore(pdfUploadField, submitButton);
-    } else {
-      createTransferForm.append(pdfUploadField);
-    }
-
-    pdfInput = document.getElementById('createTransferPdfInput');
-    pdfName = document.getElementById('createTransferPdfName');
-    pdfClearButton = document.getElementById('createTransferPdfClearButton');
-  }
-
-  pdfUploadField.classList.remove('hidden');
-  pdfUploadField.style.display = 'grid';
-};
-
-ensureCreateTransferPdfField();
-
 const createTransferPdfInput = document.getElementById('createTransferPdfInput');
 const createTransferPdfName = document.getElementById('createTransferPdfName');
 const createTransferPdfClearButton = document.getElementById('createTransferPdfClearButton');
+const createTransferPdfMaxBytes = 10 * 1024 * 1024;
 
 const updateCreateTransferPdfName = () => {
   if (!createTransferPdfInput || !createTransferPdfName) return;
@@ -378,6 +340,38 @@ createTransferPdfClearButton?.addEventListener('click', () => {
   updateCreateTransferPdfName();
 });
 
+const buildCreateTransferPayload = (formData) => ({
+  monto: asNumber(formData.get('monto')),
+  puntoVentaId: resolveIdFromText(formData.get('puntoVentaTexto'), catalogs.puntosVenta),
+  vendedorId: resolveIdFromText(formData.get('vendedorTexto'), catalogs.vendedores),
+  bancoId: asNumber(formData.get('bancoId')),
+  cuentaContableId: asNumber(formData.get('cuentaContableId')),
+  observacion: String(formData.get('observacion') || '')
+});
+
+const validateCreateTransferPdf = (file) => {
+  if (!(file instanceof File) || file.size <= 0) return { ok: true, file: null };
+
+  const fileName = String(file.name || '').toLowerCase();
+  const isPdfByMime = String(file.type || '').toLowerCase() === 'application/pdf';
+  const isPdfByName = fileName.endsWith('.pdf');
+  if (!isPdfByMime && !isPdfByName) {
+    return { ok: false, reason: 'El archivo seleccionado no es PDF.' };
+  }
+
+  if (file.size > createTransferPdfMaxBytes) {
+    return { ok: false, reason: 'El PDF excede 10 MB. Seleccione un archivo más liviano.' };
+  }
+
+  return { ok: true, file };
+};
+
+const uploadTransferPdf = async (transferenciaId, file) => {
+  const pdfData = new FormData();
+  pdfData.set('archivo', file);
+  return api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
+};
+
 document.getElementById('crearBancoId').addEventListener('change', async (event) => {
   await fillCuentaSelect('crearCuentaContableId', asNumber(event.target.value));
 });
@@ -391,26 +385,21 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
   }
 
   const f = new FormData(event.currentTarget);
-  const archivoPdf = f.get('archivoPdf');
-  const payload = {
-    monto: asNumber(f.get('monto')),
-    puntoVentaId: resolveIdFromText(f.get('puntoVentaTexto'), catalogs.puntosVenta),
-    vendedorId: resolveIdFromText(f.get('vendedorTexto'), catalogs.vendedores),
-    bancoId: asNumber(f.get('bancoId')),
-    cuentaContableId: asNumber(f.get('cuentaContableId')),
-    observacion: String(f.get('observacion') || '')
-  };
+  const payload = buildCreateTransferPayload(f);
+  const archivoPdfResultado = validateCreateTransferPdf(f.get('archivoPdf'));
+  if (!archivoPdfResultado.ok) {
+    showResult('error', archivoPdfResultado.reason, { validacion: 'archivoPdf' });
+    return;
+  }
 
   try {
     const res = await api('/api/transferencias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
     const transferenciaId = Number(res?.id ?? 0);
-    const tienePdf = archivoPdf instanceof File && archivoPdf.size > 0;
+    const tienePdf = Boolean(archivoPdfResultado.file);
 
     if (tienePdf && transferenciaId > 0) {
       try {
-        const pdfData = new FormData();
-        pdfData.set('archivo', archivoPdf);
-        const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
+        const pdfRes = await uploadTransferPdf(transferenciaId, archivoPdfResultado.file);
         showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
       } catch (error) {
         showResult('warning', `Transferencia ${transferenciaId} creada, pero falló la carga del PDF. Puede adjuntarlo desde "Modificar".`, {
