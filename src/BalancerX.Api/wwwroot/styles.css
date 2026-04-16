@@ -85,8 +85,19 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 #createTransferForm .pdf-upload-field {
   display:grid;
   gap:.35rem;
-  grid-column:3 / 5;
+  grid-column:1 / -1;
   width:100%;
+  margin:0;
+  padding:.65rem .75rem .75rem;
+  border:1px dashed #9cb9df;
+  border-radius:10px;
+  background:#f8fbff;
+}
+#createTransferForm .pdf-upload-field legend {
+  padding:0 .3rem;
+  font-size:.82rem;
+  font-weight:600;
+  color:#335d8f;
 }
 #createTransferForm .pdf-upload-field input[type="file"] {
   background:#fff;
@@ -106,7 +117,7 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
   font-size:.85rem;
 }
 #createTransferForm button[type="submit"] {
-  grid-column:3 / 5;
+  grid-column:1 / -1;
   justify-self:start;
   width:100%;
   min-width:0;
