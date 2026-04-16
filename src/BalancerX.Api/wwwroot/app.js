@@ -319,6 +319,34 @@ const listTransfers = async (options = {}) => {
   return items;
 };
 
+const ensureCreateTransferPdfControls = () => {
+  const createTransferForm = document.getElementById('createTransferForm');
+  if (!createTransferForm) return;
+  if (document.getElementById('createTransferPdfInput')) return;
+
+  const submitButton = createTransferForm.querySelector('.create-transfer-submit');
+
+  const fieldset = document.createElement('fieldset');
+  fieldset.className = 'pdf-upload-field';
+  fieldset.innerHTML = `
+    <legend>Adjuntar PDF al crear</legend>
+    <label for="createTransferPdfInput">PDF de soporte (opcional)</label>
+    <input id="createTransferPdfInput" name="archivoPdf" type="file" accept="application/pdf" />
+    <div class="pdf-upload-actions">
+      <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
+      <button type="button" id="createTransferPdfClearButton" class="ghost">Quitar PDF</button>
+    </div>
+  `;
+
+  if (submitButton) {
+    createTransferForm.insertBefore(fieldset, submitButton);
+  } else {
+    createTransferForm.append(fieldset);
+  }
+};
+
+ensureCreateTransferPdfControls();
+
 const createTransferPdfInput = document.getElementById('createTransferPdfInput');
 const createTransferPdfName = document.getElementById('createTransferPdfName');
 const createTransferPdfClearButton = document.getElementById('createTransferPdfClearButton');
