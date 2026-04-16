@@ -319,9 +319,48 @@ const listTransfers = async (options = {}) => {
   return items;
 };
 
+const ensureCreateTransferPdfField = () => {
+  const createTransferForm = document.getElementById('createTransferForm');
+  if (!createTransferForm) return;
+
+  let pdfUploadField = createTransferForm.querySelector('.pdf-upload-field');
+  let pdfInput = document.getElementById('createTransferPdfInput');
+  let pdfName = document.getElementById('createTransferPdfName');
+  let pdfClearButton = document.getElementById('createTransferPdfClearButton');
+
+  if (!pdfUploadField || !pdfInput || !pdfName || !pdfClearButton) {
+    pdfUploadField = document.createElement('div');
+    pdfUploadField.className = 'pdf-upload-field';
+    pdfUploadField.innerHTML = `
+      <label for="createTransferPdfInput">PDF de soporte</label>
+      <input id="createTransferPdfInput" name="archivoPdf" type="file" accept="application/pdf" />
+      <div class="pdf-upload-actions">
+        <span id="createTransferPdfName" class="file-name-placeholder">Sin archivo seleccionado</span>
+        <button type="button" id="createTransferPdfClearButton" class="ghost">Quitar PDF</button>
+      </div>
+    `;
+
+    const submitButton = createTransferForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+      createTransferForm.insertBefore(pdfUploadField, submitButton);
+    } else {
+      createTransferForm.append(pdfUploadField);
+    }
+
+    pdfInput = document.getElementById('createTransferPdfInput');
+    pdfName = document.getElementById('createTransferPdfName');
+    pdfClearButton = document.getElementById('createTransferPdfClearButton');
+  }
+
+  pdfUploadField.classList.remove('hidden');
+  pdfUploadField.style.display = 'grid';
+};
+
+ensureCreateTransferPdfField();
+
 const createTransferPdfInput = document.getElementById('createTransferPdfInput');
-const createTransferPdfButton = document.getElementById('createTransferPdfButton');
 const createTransferPdfName = document.getElementById('createTransferPdfName');
+const createTransferPdfClearButton = document.getElementById('createTransferPdfClearButton');
 
 const updateCreateTransferPdfName = () => {
   if (!createTransferPdfInput || !createTransferPdfName) return;
@@ -329,11 +368,13 @@ const updateCreateTransferPdfName = () => {
   createTransferPdfName.textContent = file ? file.name : 'Sin archivo seleccionado';
 };
 
-createTransferPdfButton?.addEventListener('click', () => {
-  createTransferPdfInput?.click();
+createTransferPdfInput?.addEventListener('change', () => {
+  updateCreateTransferPdfName();
 });
 
-createTransferPdfInput?.addEventListener('change', () => {
+createTransferPdfClearButton?.addEventListener('click', () => {
+  if (!createTransferPdfInput) return;
+  createTransferPdfInput.value = '';
   updateCreateTransferPdfName();
 });
 
@@ -366,10 +407,17 @@ document.getElementById('createTransferForm').addEventListener('submit', async (
     const tienePdf = archivoPdf instanceof File && archivoPdf.size > 0;
 
     if (tienePdf && transferenciaId > 0) {
-      const pdfData = new FormData();
-      pdfData.set('archivo', archivoPdf);
-      const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
-      showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
+      try {
+        const pdfData = new FormData();
+        pdfData.set('archivo', archivoPdf);
+        const pdfRes = await api(`/api/transferencias/${transferenciaId}/archivo`, { method: 'POST', body: pdfData });
+        showResult('ok', 'Transferencia creada y PDF adjuntado correctamente.', { transferencia: res, pdf: pdfRes });
+      } catch (error) {
+        showResult('warning', `Transferencia ${transferenciaId} creada, pero falló la carga del PDF. Puede adjuntarlo desde "Modificar".`, {
+          transferencia: res,
+          errorPdf: error?.message || 'No fue posible subir el archivo PDF en el alta.'
+        });
+      }
     } else {
       showResult('warning', 'Transferencia creada sin PDF adjunto.', res);
     }
