@@ -72,22 +72,8 @@ sessionUser.textContent = `${userName} · ${roles.join(', ') || 'ROL'}`;
 document.querySelectorAll('.role-admin').forEach((node) => node.classList.toggle('hidden', !isAdmin));
 document.querySelectorAll('.role-update-transfer').forEach((node) => node.classList.toggle('hidden', !canUpdateTransfer));
 document.querySelectorAll('.role-manage-pdf').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
-document.querySelectorAll('.role-signature-management').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 document.querySelectorAll('.role-pdf-viewer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
-
-const setCreateTransferAvailability = () => {
-  const createTransferForm = document.getElementById('createTransferForm');
-  const createTransferRestriction = document.getElementById('createTransferRestriction');
-  if (!createTransferForm) return;
-
-  createTransferRestriction?.classList.toggle('hidden', !isAuxiliar);
-  const controls = createTransferForm.querySelectorAll('input, select, button, textarea');
-  controls.forEach((control) => {
-    control.disabled = isAuxiliar;
-  });
-};
-
-setCreateTransferAvailability();
+document.querySelectorAll('.role-create-transfer').forEach((node) => node.classList.toggle('hidden', isAuxiliar));
 
 const showResult = (kind, title, technical) => {
   resultMessage.className = `result ${kind}`;
