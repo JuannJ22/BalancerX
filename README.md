@@ -147,6 +147,17 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 ```
 
 
+## Ejecutar siempre activo como servicio
+
+Si quieres que la API quede siempre activa en el servidor:
+
+- **Windows (recomendado en este proyecto):**
+  - Instalación inicial: `deploy/windows/install-service.ps1`
+  - Despliegue de nuevas versiones: `deploy/windows/deploy-release.ps1`
+- **Linux:** usa plantilla `deploy/linux/balancerx.service` con `systemd`.
+
+Guía completa en `docs/DEPLOYMENT_RUNBOOK.md` (secciones *3.1* y *3.2*).
+
 ## Despliegue profesional (producción + staging paralelo)
 
 Para desplegar en una nueva URL sin interrumpir la operación actual y dejar base lista para escalamiento:

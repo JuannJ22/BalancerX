@@ -71,6 +71,89 @@ Ajusta al menos:
 4. Ejecutar pruebas de humo sobre staging.
 5. Promover a producción nueva.
 
+
+### 3.1 Mantener la API siempre activa como servicio
+
+> Recomendado: ejecutar detrás de IIS/Nginx y levantar Kestrel como servicio interno.
+
+#### Opción A (Windows Service, recomendado para tu escenario actual)
+1. Publica la API en carpeta versionada (ejemplo: `C:\apps\balancerx\releases\2026-04-17`).
+2. Crea/actualiza enlace `current` hacia la versión activa.
+3. Instala el servicio con el script `deploy/windows/install-service.ps1`.
+
+Ejemplo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\install-service.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -PublishedDllPath "C:\apps\balancerx\current\BalancerX.Api.dll" `
+  -Environment "Production" `
+  -Urls "http://127.0.0.1:5000"
+```
+
+El script configura:
+- `start=auto` + `DelayedAutoStart`
+- reinicio automático en falla (`sc failure ... restart`)
+- variables de entorno del servicio (`ASPNETCORE_ENVIRONMENT`, `ASPNETCORE_URLS`)
+
+Comandos de operación:
+
+```powershell
+sc.exe query BalancerX.Api
+sc.exe stop BalancerX.Api
+sc.exe start BalancerX.Api
+sc.exe failure BalancerX.Api
+```
+
+### 3.2 Playbook operativo (Windows) para instalar y desplegar versiones
+
+> Este flujo está pensado para que puedas operar en servidor con una rutina simple y profesional.
+
+1. **Primera instalación del servicio** (solo una vez):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\install-service.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -PublishedDllPath "C:\apps\balancerx\current\BalancerX.Api.dll" `
+  -Environment "Production" `
+  -Urls "http://127.0.0.1:5000"
+```
+
+2. **Desplegar nueva versión** (cada release):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\deploy-release.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
+  -BasePath "C:\apps\balancerx" `
+  -Environment "Production" `
+  -Urls "http://127.0.0.1:5000"
+```
+
+3. **Verificación post-despliegue**:
+
+```powershell
+sc.exe query BalancerX.Api
+Invoke-WebRequest http://127.0.0.1:5000/swagger -UseBasicParsing
+```
+
+4. **Rollback rápido**:
+   - Detener servicio.
+   - Apuntar `C:\apps\balancerx\current` al release anterior.
+   - Iniciar servicio y validar `/swagger`.
+
+#### Opción B (Linux con systemd)
+Usar plantilla `deploy/linux/balancerx.service`:
+
+```bash
+sudo cp deploy/linux/balancerx.service /etc/systemd/system/balancerx.service
+sudo systemctl daemon-reload
+sudo systemctl enable balancerx
+sudo systemctl start balancerx
+sudo systemctl status balancerx
+```
+
+---
 ### Checklist mínimo previo a go-live
 - Login válido con usuario de prueba.
 - Crear transferencia.
