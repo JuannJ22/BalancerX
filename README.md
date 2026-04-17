@@ -157,6 +157,7 @@ Si quieres que la API quede siempre activa en el servidor:
 - **Linux:** usa plantilla `deploy/linux/balancerx.service` con `systemd`.
 
 Guía completa en `docs/DEPLOYMENT_RUNBOOK.md` (secciones *3.1* y *3.2*).
+Guía operativa paso a paso para instalar y versionar sin riesgo: `docs/WINDOWS_OPERATIONS_GUIDE.md`.
 
 ## Despliegue profesional (producción + staging paralelo)
 

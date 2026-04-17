@@ -223,3 +223,5 @@ Con este flujo tendrás:
 - una URL nueva operando en infraestructura controlada,
 - un ambiente de pruebas paralelo para escalar sin interrupciones,
 - base sólida para seguir evolucionando el sistema de forma profesional.
+
+Para operación diaria detallada en Windows (instalación, versionado, rollback y controles anti-incidentes), usar también: `docs/WINDOWS_OPERATIONS_GUIDE.md`.
