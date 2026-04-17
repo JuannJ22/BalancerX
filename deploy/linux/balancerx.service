@@ -1,0 +1,18 @@
+[Unit]
+Description=BalancerX API
+After=network.target
+
+[Service]
+WorkingDirectory=/opt/balancerx/current
+ExecStart=/usr/bin/dotnet /opt/balancerx/current/BalancerX.Api.dll
+Restart=always
+RestartSec=5
+KillSignal=SIGINT
+SyslogIdentifier=balancerx-api
+User=balancerx
+Group=balancerx
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=ASPNETCORE_URLS=http://127.0.0.1:5000
+
+[Install]
+WantedBy=multi-user.target
