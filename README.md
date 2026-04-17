@@ -146,6 +146,31 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
   -d '{"pinAdmin":"1234","razon":"Comprobante ilegible"}'
 ```
 
+
+## Ejecutar siempre activo como servicio
+
+Si quieres que la API quede siempre activa en el servidor:
+
+- **Windows (recomendado en este proyecto):**
+  - Instalación inicial: `deploy/windows/install-service.ps1`
+  - Despliegue de nuevas versiones: `deploy/windows/deploy-release.ps1`
+- **Linux:** usa plantilla `deploy/linux/balancerx.service` con `systemd`.
+
+Guía completa en `docs/DEPLOYMENT_RUNBOOK.md` (secciones *3.1* y *3.2*).
+
+## Despliegue profesional (producción + staging paralelo)
+
+Para desplegar en una nueva URL sin interrumpir la operación actual y dejar base lista para escalamiento:
+
+1. Configura ambientes separados (`Staging` y `Production`) con sus propios `appsettings.{Environment}.json`.
+2. Usa bases independientes (`BalancerX_Staging` y `BalancerX_Prod`) con `database/recreate.sql`.
+3. Separa también el almacenamiento de archivos por ambiente (`Storage:TransferenciasPath` y `Storage:FirmasPath`).
+4. Sigue el runbook completo en `docs/DEPLOYMENT_RUNBOOK.md`.
+
+> Plantillas incluidas:
+> - `src/BalancerX.Api/appsettings.Staging.json`
+> - `src/BalancerX.Api/appsettings.Production.json`
+
 ## Base de datos
 - Script único para recrear toda la base: `database/recreate.sql`
 
