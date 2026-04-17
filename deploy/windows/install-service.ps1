@@ -3,22 +3,21 @@ param(
     [string]$ServiceName,
 
     [Parameter(Mandatory = $true)]
-    [string]$PublishedDllPath,
+    [string]$PublishedExePath,
 
     [string]$Environment = "Production",
-    [string]$Urls = "http://127.0.0.1:5000",
+    [string]$Urls = "http://0.0.0.0:5000",
     [string]$ServiceUser = "",
     [string]$ServicePassword = ""
 )
 
 $ErrorActionPreference = "Stop"
 
-if (!(Test-Path $PublishedDllPath)) {
-    throw "No existe PublishedDllPath: $PublishedDllPath"
+if (!(Test-Path $PublishedExePath)) {
+    throw "No existe PublishedExePath: $PublishedExePath"
 }
 
-$dotnetCmd = (Get-Command dotnet -ErrorAction Stop).Source
-$binaryPath = '"{0}" "{1}"' -f $dotnetCmd, $PublishedDllPath
+$binaryPath = '"{0}"' -f $PublishedExePath
 
 $serviceExists = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if ($serviceExists) {
