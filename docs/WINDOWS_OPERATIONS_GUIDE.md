@@ -55,9 +55,9 @@ Editar `appsettings.Production.json` con:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\deploy\windows\install-service.ps1 `
   -ServiceName "BalancerX.Api" `
-  -PublishedDllPath "C:\apps\balancerx\current\BalancerX.Api.dll" `
+  -PublishedExePath "C:\apps\balancerx\current\BalancerX.Api.exe" `
   -Environment "Production" `
-  -Urls "http://127.0.0.1:5000" `
+  -Urls "http://0.0.0.0:5000" `
   -ServiceUser "DOMINIO\svc_balancerx" `
   -ServicePassword "<SECRETO>"
 ```
@@ -98,7 +98,7 @@ powershell -ExecutionPolicy Bypass -File .\deploy\windows\deploy-release.ps1 `
   -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
   -BasePath "C:\apps\balancerx" `
   -Environment "Production" `
-  -Urls "http://127.0.0.1:5000"
+  -Urls "http://0.0.0.0:5000"
 ```
 
 El script realiza:

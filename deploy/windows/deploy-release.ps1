@@ -3,8 +3,9 @@ param(
     [string]$ProjectPath = ".\src\BalancerX.Api\BalancerX.Api.csproj",
     [string]$BasePath = "C:\apps\balancerx",
     [string]$Environment = "Production",
-    [string]$Urls = "http://127.0.0.1:5000",
-    [string]$Configuration = "Release"
+    [string]$Urls = "http://0.0.0.0:5000",
+    [string]$Configuration = "Release",
+    [string]$Runtime = "win-x64"
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,7 +25,7 @@ New-Item -ItemType Directory -Force -Path $releasesPath | Out-Null
 New-Item -ItemType Directory -Force -Path $logsPath | Out-Null
 
 Write-Host "[1/6] Publicando release en $releasePath" -ForegroundColor Cyan
-& $dotnetCmd publish $ProjectPath -c $Configuration -o $releasePath
+& $dotnetCmd publish $ProjectPath -c $Configuration -r $Runtime --self-contained true -o $releasePath
 
 $service = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
 if (-not $service) {
@@ -43,12 +44,12 @@ if (Test-Path $currentPath) {
 }
 New-Item -ItemType Junction -Path $currentPath -Target $releasePath | Out-Null
 
-$serviceDllPath = Join-Path $currentPath "BalancerX.Api.dll"
-if (!(Test-Path $serviceDllPath)) {
-    throw "No se encontró BalancerX.Api.dll en $serviceDllPath"
+$serviceExePath = Join-Path $currentPath "BalancerX.Api.exe"
+if (!(Test-Path $serviceExePath)) {
+    throw "No se encontró BalancerX.Api.exe en $serviceExePath"
 }
 
-$binaryPath = '"{0}" "{1}"' -f $dotnetCmd, $serviceDllPath
+$binaryPath = '"{0}"' -f $serviceExePath
 Write-Host "[4/6] Actualizando binPath del servicio" -ForegroundColor Cyan
 sc.exe config $ServiceName binPath= $binaryPath | Out-Null
 
