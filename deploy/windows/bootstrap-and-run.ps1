@@ -39,7 +39,7 @@ function Publish-InitialRelease {
 
     Write-Host "[Bootstrap 2/4] Actualizando enlace current" -ForegroundColor Cyan
     if (Test-Path $currentPath) {
-        Remove-Item -Path $currentPath -Force
+        Remove-Item -Path $currentPath -Recurse -Force -ErrorAction Stop
     }
     New-Item -ItemType Junction -Path $currentPath -Target $releasePath | Out-Null
 
