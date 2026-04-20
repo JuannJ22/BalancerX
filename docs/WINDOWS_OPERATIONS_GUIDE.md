@@ -201,6 +201,16 @@ Si en consola aparece `Now listening on http://0.0.0.0:5000` pero desde navegado
    ```
 4. Si la regla no existe, re-ejecutar `install-service.ps1` o `deploy-release.ps1` con `-Urls` correcto.
 
+También puedes ejecutar el diagnóstico integral incluido en el repositorio:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\diagnose-connectivity.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -Urls "http://0.0.0.0:5000"
+```
+
+Este script revisa estado del servicio, variables de entorno efectivas, puerto en escucha, sonda local (`/login.html`) y regla de firewall esperada.
+
 ---
 
 ## 11) Flujo exacto para evitar errores (qué correr y cuándo)
