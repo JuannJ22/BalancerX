@@ -69,6 +69,8 @@ sc.exe query BalancerX.Api
 Invoke-WebRequest http://127.0.0.1:5000/swagger -UseBasicParsing
 ```
 
+> Nota operativa: el script `install-service.ps1` ahora crea automáticamente una regla de firewall de entrada por cada puerto configurado en `-Urls` (por ejemplo, `BalancerX.Api TCP 5000`). Esto evita el caso típico donde el servicio inicia, pero la IP de red (`http://<IP_SERVIDOR>:5000`) queda inaccesible por timeout.
+
 ---
 
 ## 4) Cómo manejar versiones de producción sin dañar
@@ -106,6 +108,7 @@ El script realiza:
 - detiene servicio.
 - actualiza `current`.
 - actualiza `binPath` + variables de entorno.
+- garantiza regla de firewall para los puertos definidos en `-Urls`.
 - inicia servicio.
 
 ## 4.4 Checklist post-release (obligatorio)
@@ -177,3 +180,75 @@ Para trabajar sin dañar todo:
 4. checklist obligatorio,
 5. rollback ensayado,
 6. cambios SQL primero en STAGING.
+
+---
+
+## 10) Diagnóstico rápido cuando "no responde por IP"
+
+Si en consola aparece `Now listening on http://0.0.0.0:5000` pero desde navegador remoto hay timeout:
+
+1. Verificar localmente:
+   ```powershell
+   Invoke-WebRequest http://127.0.0.1:5000/login.html -UseBasicParsing
+   ```
+2. Verificar regla de firewall:
+   ```powershell
+   Get-NetFirewallRule -DisplayName "BalancerX.Api TCP 5000" | Format-Table DisplayName, Enabled, Direction, Action
+   ```
+3. Verificar puerto escuchando:
+   ```powershell
+   netstat -ano | findstr :5000
+   ```
+4. Si la regla no existe, re-ejecutar `install-service.ps1` o `deploy-release.ps1` con `-Urls` correcto.
+
+---
+
+## 11) Flujo exacto para evitar errores (qué correr y cuándo)
+
+Esta es la secuencia recomendada para un pase profesional a servidor principal, sin mezclar responsabilidades:
+
+### Escenario A: primera instalación en el servidor
+
+1. **Compilar/publicar en equipo de build o en el mismo servidor**:
+   ```powershell
+   dotnet publish .\src\BalancerX.Api\BalancerX.Api.csproj -c Release -r win-x64 --self-contained true -o C:\apps\balancerx\releases\bootstrap
+   ```
+2. Crear/actualizar junction `current` al release publicado.
+3. Ejecutar **una sola vez** `install-service.ps1`:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\deploy\windows\install-service.ps1 `
+     -ServiceName "BalancerX.Api" `
+     -PublishedExePath "C:\apps\balancerx\current\BalancerX.Api.exe" `
+     -Environment "Production" `
+     -Urls "http://0.0.0.0:5000"
+   ```
+
+> En este escenario **no** se usa `dotnet run` para producción. El servicio Windows debe ejecutar el binario publicado (`BalancerX.Api.exe`).
+
+### Escenario B: actualización de versión en servidor ya instalado
+
+Con el servicio ya creado, para nuevas versiones ejecuta **solo**:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\deploy-release.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
+  -BasePath "C:\apps\balancerx" `
+  -Environment "Production" `
+  -Urls "http://0.0.0.0:5000"
+```
+
+Este script ya hace publish, stop/start del servicio, actualización de `current`, variables y firewall.
+
+### ¿Cuándo usar `dotnet run`?
+
+- Solo para **desarrollo local** o pruebas rápidas.
+- No usar `dotnet run` como estrategia de ejecución permanente en producción.
+
+### Checklist mínimo post-ejecución
+
+```powershell
+sc.exe query BalancerX.Api
+Invoke-WebRequest http://127.0.0.1:5000/swagger -UseBasicParsing
+Get-NetFirewallRule -DisplayName "BalancerX.Api TCP 5000" | Format-Table DisplayName, Enabled, Direction, Action
+```
