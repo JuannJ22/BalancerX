@@ -35,7 +35,7 @@ function Publish-InitialRelease {
     New-Item -ItemType Directory -Force -Path $logsPath | Out-Null
 
     Write-Host "[Bootstrap 1/4] Publicando release inicial en $releasePath" -ForegroundColor Cyan
-    & $dotnetCmd publish $ProjectFilePath -c $BuildConfiguration -r $BuildRuntime --self-contained true -o $releasePath
+    & $dotnetCmd publish $ProjectFilePath -c $BuildConfiguration -r $BuildRuntime --self-contained true -o $releasePath | Out-Null
 
     Write-Host "[Bootstrap 2/4] Actualizando enlace current" -ForegroundColor Cyan
     if (Test-Path $currentPath) {
