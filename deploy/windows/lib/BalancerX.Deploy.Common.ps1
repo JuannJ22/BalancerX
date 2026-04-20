@@ -1,5 +1,36 @@
 Set-StrictMode -Version Latest
 
+function Test-IsRunningAsAdministrator {
+    $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Assert-RunningAsAdministrator {
+    param([string]$OperationName = "operación de despliegue")
+
+    if (Test-IsRunningAsAdministrator) {
+        return
+    }
+
+    throw "Se requieren privilegios de administrador para $OperationName. Ejecuta PowerShell como Administrador y reintenta."
+}
+
+function Invoke-NativeCommandOrThrow {
+    param(
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$Command,
+
+        [Parameter(Mandatory = $true)]
+        [string]$FailureMessage
+    )
+
+    & $Command | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "$FailureMessage (exit code: $LASTEXITCODE)."
+    }
+}
+
 function Get-HttpPortsFromUrls {
     param([string]$RawUrls)
 
@@ -63,13 +94,20 @@ function Ensure-FirewallRulesForUrls {
         $ruleName = "$ServiceNameForRule TCP $port"
         $existingRule = Get-NetFirewallRule -DisplayName $ruleName -ErrorAction SilentlyContinue
         if (-not $existingRule) {
-            New-NetFirewallRule -DisplayName $ruleName `
-                -Direction Inbound `
-                -Profile Any `
-                -Action Allow `
-                -Protocol TCP `
-                -LocalPort $port | Out-Null
-            Write-Host "Regla de firewall creada: $ruleName" -ForegroundColor Yellow
+            try {
+                New-NetFirewallRule -DisplayName $ruleName `
+                    -Direction Inbound `
+                    -Profile Any `
+                    -Action Allow `
+                    -Protocol TCP `
+                    -LocalPort $port `
+                    -ErrorAction Stop | Out-Null
+
+                Write-Host "Regla de firewall creada: $ruleName" -ForegroundColor Yellow
+            }
+            catch {
+                throw "No se pudo crear la regla de firewall '$ruleName'. Error: $($_.Exception.Message)"
+            }
         }
         else {
             Write-Host "Regla de firewall ya existente: $ruleName" -ForegroundColor DarkYellow

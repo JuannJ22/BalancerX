@@ -67,6 +67,8 @@ if (!(Test-Path $ProjectPath)) {
     throw "No existe el proyecto en ProjectPath: $ProjectPath"
 }
 
+Assert-RunningAsAdministrator -OperationName "actualizar servicios de Windows"
+
 $dotnetCmd = (Get-Command dotnet -ErrorAction Stop).Source
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $releasesPath = Join-Path $BasePath "releases"
@@ -93,7 +95,7 @@ if ($service.Status -ne "Stopped") {
 
 Write-Host "[3/6] Actualizando enlace current" -ForegroundColor Cyan
 if (Test-Path $currentPath) {
-    Remove-Item -Path $currentPath -Force
+    Remove-Item -Path $currentPath -Recurse -Force -ErrorAction Stop
 }
 New-Item -ItemType Junction -Path $currentPath -Target $releasePath | Out-Null
 
@@ -104,10 +106,15 @@ if (!(Test-Path $serviceExePath)) {
 
 $binaryPath = '"{0}"' -f $serviceExePath
 Write-Host "[4/6] Actualizando binPath del servicio" -ForegroundColor Cyan
-sc.exe config $ServiceName binPath= $binaryPath | Out-Null
+Invoke-NativeCommandOrThrow `
+    -Command { sc.exe config $ServiceName binPath= $binaryPath } `
+    -FailureMessage "No se pudo actualizar binPath del servicio '$ServiceName'"
 
 Write-Host "[5/6] Actualizando variables de entorno del servicio" -ForegroundColor Cyan
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\$ServiceName" /v "Environment" /t REG_MULTI_SZ /d "ASPNETCORE_ENVIRONMENT=$Environment\0ASPNETCORE_URLS=$Urls" /f | Out-Null
+Invoke-NativeCommandOrThrow `
+    -Command { reg add "HKLM\SYSTEM\CurrentControlSet\Services\$ServiceName" /v "Environment" /t REG_MULTI_SZ /d "ASPNETCORE_ENVIRONMENT=$Environment\0ASPNETCORE_URLS=$Urls" /f } `
+    -FailureMessage "No se pudieron actualizar las variables de entorno del servicio '$ServiceName'"
+
 Ensure-FirewallRulesForUrls -ServiceNameForRule $ServiceName -RawUrls $Urls
 
 Write-Host "[6/6] Iniciando servicio $ServiceName" -ForegroundColor Cyan
