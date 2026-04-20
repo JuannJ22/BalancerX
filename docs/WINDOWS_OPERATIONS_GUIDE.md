@@ -69,6 +69,8 @@ sc.exe query BalancerX.Api
 Invoke-WebRequest http://127.0.0.1:5000/swagger -UseBasicParsing
 ```
 
+> Nota operativa: el script `install-service.ps1` ahora crea automáticamente una regla de firewall de entrada por cada puerto configurado en `-Urls` (por ejemplo, `BalancerX.Api TCP 5000`). Esto evita el caso típico donde el servicio inicia, pero la IP de red (`http://<IP_SERVIDOR>:5000`) queda inaccesible por timeout.
+
 ---
 
 ## 4) Cómo manejar versiones de producción sin dañar
@@ -106,6 +108,7 @@ El script realiza:
 - detiene servicio.
 - actualiza `current`.
 - actualiza `binPath` + variables de entorno.
+- garantiza regla de firewall para los puertos definidos en `-Urls`.
 - inicia servicio.
 
 ## 4.4 Checklist post-release (obligatorio)
@@ -177,3 +180,23 @@ Para trabajar sin dañar todo:
 4. checklist obligatorio,
 5. rollback ensayado,
 6. cambios SQL primero en STAGING.
+
+---
+
+## 10) Diagnóstico rápido cuando "no responde por IP"
+
+Si en consola aparece `Now listening on http://0.0.0.0:5000` pero desde navegador remoto hay timeout:
+
+1. Verificar localmente:
+   ```powershell
+   Invoke-WebRequest http://127.0.0.1:5000/login.html -UseBasicParsing
+   ```
+2. Verificar regla de firewall:
+   ```powershell
+   Get-NetFirewallRule -DisplayName "BalancerX.Api TCP 5000" | Format-Table DisplayName, Enabled, Direction, Action
+   ```
+3. Verificar puerto escuchando:
+   ```powershell
+   netstat -ano | findstr :5000
+   ```
+4. Si la regla no existe, re-ejecutar `install-service.ps1` o `deploy-release.ps1` con `-Urls` correcto.
