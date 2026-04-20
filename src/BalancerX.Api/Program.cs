@@ -79,6 +79,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.MapGet("/favicon.ico", () => Results.NoContent());
 
 app.UseAuthentication();
 app.UseAuthorization();
