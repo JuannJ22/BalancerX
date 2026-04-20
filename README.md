@@ -184,6 +184,18 @@ Para desplegar en una nueva URL sin interrumpir la operación actual y dejar bas
 - Si el puerto 5000 está ocupado, usa otro:
   - `set ASPNETCORE_URLS=http://localhost:5080`
 
+### 1.1) La API inicia pero el navegador no conecta (`http://IP:5000`)
+- Síntoma típico: consola muestra `Now listening on: http://0.0.0.0:5000`, pero el navegador queda en timeout.
+- Ejecuta diagnóstico guiado en el servidor:
+  - `powershell -ExecutionPolicy Bypass -File .\deploy\windows\diagnose-connectivity.ps1 -ServiceName "BalancerX.Api" -Urls "http://0.0.0.0:5000"`
+- Este script valida en orden:
+  1. estado del servicio Windows;
+  2. variables de entorno efectivas (`ASPNETCORE_URLS`, `ASPNETCORE_ENVIRONMENT`);
+  3. puerto en escucha (`netstat`);
+  4. sonda local a `http://127.0.0.1:<puerto>/login.html`;
+  5. regla de firewall esperada (`BalancerX.Api TCP <puerto>`).
+- Si la sonda local funciona y desde otra máquina no conecta, el problema es de firewall/red, no del código de la API.
+
 ### 2) Login falla con error de columnas (`Invalid column name 'Activo'`, `Id`, `Nombre`)
 - Ese error sucede cuando la base está en collation case-sensitive y el mapeo no coincide.
 - Esta rama ya incluye mapeo explícito de columnas en `BalancerXDbContext`.
