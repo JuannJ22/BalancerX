@@ -152,12 +152,31 @@ curl -X POST http://localhost:5000/api/transferencias/1/reprint \
 Si quieres que la API quede siempre activa en el servidor:
 
 - **Windows (recomendado en este proyecto):**
+  - Flujo completo (inicialización + publicación + instalación/actualización + arranque + diagnóstico): `deploy/windows/bootstrap-and-run.ps1`
   - Instalación inicial: `deploy/windows/install-service.ps1`
   - Despliegue de nuevas versiones: `deploy/windows/deploy-release.ps1`
 - **Linux:** usa plantilla `deploy/linux/balancerx.service` con `systemd`.
 
 Guía completa en `docs/DEPLOYMENT_RUNBOOK.md` (secciones *3.1* y *3.2*).
 Guía operativa paso a paso para instalar y versionar sin riesgo: `docs/WINDOWS_OPERATIONS_GUIDE.md`.
+
+### One-shot recomendado en Windows (todo en un solo script)
+
+Para ejecutar todo el ciclo (desde publish hasta servicio en ejecución y diagnóstico):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\bootstrap-and-run.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
+  -BasePath "C:\apps\balancerx" `
+  -Environment "Production" `
+  -Urls "http://0.0.0.0:5000"
+```
+
+El script detecta automáticamente:
+- si el servicio no existe: hace publish inicial, crea `current`, instala y arranca;
+- si el servicio ya existe: hace deploy de nueva versión y reinicio controlado;
+- al final ejecuta diagnóstico de conectividad.
 
 ## Despliegue profesional (producción + staging paralelo)
 
@@ -183,6 +202,18 @@ Para desplegar en una nueva URL sin interrumpir la operación actual y dejar bas
   - `set ASPNETCORE_ENVIRONMENT=Development`
 - Si el puerto 5000 está ocupado, usa otro:
   - `set ASPNETCORE_URLS=http://localhost:5080`
+
+### 1.1) La API inicia pero el navegador no conecta (`http://IP:5000`)
+- Síntoma típico: consola muestra `Now listening on: http://0.0.0.0:5000`, pero el navegador queda en timeout.
+- Ejecuta diagnóstico guiado en el servidor:
+  - `powershell -ExecutionPolicy Bypass -File .\deploy\windows\diagnose-connectivity.ps1 -ServiceName "BalancerX.Api" -Urls "http://0.0.0.0:5000"`
+- Este script valida en orden:
+  1. estado del servicio Windows;
+  2. variables de entorno efectivas (`ASPNETCORE_URLS`, `ASPNETCORE_ENVIRONMENT`);
+  3. puerto en escucha (`netstat`);
+  4. sonda local a `http://127.0.0.1:<puerto>/login.html`;
+  5. regla de firewall esperada (`BalancerX.Api TCP <puerto>`).
+- Si la sonda local funciona y desde otra máquina no conecta, el problema es de firewall/red, no del código de la API.
 
 ### 2) Login falla con error de columnas (`Invalid column name 'Activo'`, `Id`, `Nombre`)
 - Ese error sucede cuando la base está en collation case-sensitive y el mapeo no coincide.

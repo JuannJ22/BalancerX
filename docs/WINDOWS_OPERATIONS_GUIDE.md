@@ -201,11 +201,38 @@ Si en consola aparece `Now listening on http://0.0.0.0:5000` pero desde navegado
    ```
 4. Si la regla no existe, re-ejecutar `install-service.ps1` o `deploy-release.ps1` con `-Urls` correcto.
 
+También puedes ejecutar el diagnóstico integral incluido en el repositorio:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\diagnose-connectivity.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -Urls "http://0.0.0.0:5000"
+```
+
+Este script revisa estado del servicio, variables de entorno efectivas, puerto en escucha, sonda local (`/login.html`) y regla de firewall esperada.
+
 ---
 
 ## 11) Flujo exacto para evitar errores (qué correr y cuándo)
 
 Esta es la secuencia recomendada para un pase profesional a servidor principal, sin mezclar responsabilidades:
+
+### Opción recomendada: flujo one-shot con un solo script
+
+Si quieres ejecutar todo con un único comando (inicialización o actualización, según corresponda):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\bootstrap-and-run.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
+  -BasePath "C:\apps\balancerx" `
+  -Environment "Production" `
+  -Urls "http://0.0.0.0:5000"
+```
+
+Comportamiento:
+- Si el servicio no existe: publish inicial + enlace `current` + instalación + arranque + diagnóstico.
+- Si el servicio existe: deploy-release + reinicio controlado + diagnóstico.
 
 ### Escenario A: primera instalación en el servidor
 
