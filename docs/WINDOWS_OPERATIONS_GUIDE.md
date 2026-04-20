@@ -211,6 +211,31 @@ powershell -ExecutionPolicy Bypass -File .\deploy\windows\diagnose-connectivity.
 
 Este script revisa estado del servicio, variables de entorno efectivas, puerto en escucha, sonda local (`/login.html`) y regla de firewall esperada.
 
+## 10.1 Diagnóstico cuando aparece "Error 5: Acceso denegado" al iniciar el servicio
+
+Si Windows Services muestra **"Windows no pudo iniciar ... Error 5: Acceso denegado"**, normalmente el problema está en permisos/cuenta del servicio, no en la red.
+
+Checklist recomendado (en este orden):
+
+1. Revisar cuenta efectiva del servicio:
+   ```powershell
+   Get-CimInstance Win32_Service -Filter "Name='BalancerX.Api'" | Select-Object Name, StartName, State, ExitCode
+   ```
+2. Si `StartName` es una cuenta de dominio/local (no `LocalSystem`), validar privilegio **Iniciar sesión como servicio**.
+3. Validar ACL de ejecución y lectura sobre el binario publicado:
+   ```powershell
+   Get-Acl "C:\apps\balancerx\current\BalancerX.Api.exe" | Format-List
+   ```
+4. Validar permisos de la carpeta raíz de releases (`C:\apps\balancerx\releases`) y del release activo.
+5. Revisar eventos de `Service Control Manager` para causa exacta:
+   ```powershell
+   Get-WinEvent -LogName System -MaxEvents 80 |
+     Where-Object { $_.ProviderName -eq 'Service Control Manager' } |
+     Select-Object TimeCreated, Id, LevelDisplayName, Message -First 20
+   ```
+
+Nota: `install-service.ps1` ya imprime este diagnóstico de forma automática cuando `Start-Service` falla, para acelerar el análisis en primer despliegue.
+
 ---
 
 ## 11) Flujo exacto para evitar errores (qué correr y cuándo)
