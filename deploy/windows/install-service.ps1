@@ -96,6 +96,6 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\$ServiceName" /v "Environment" /
 Ensure-FirewallRulesForUrls -ServiceNameForRule $ServiceName -RawUrls $Urls
 
 Start-Service -Name $ServiceName
-Test-LocalEndpointAfterStart -RawUrls $Urls -ServiceNameForHint $ServiceName
+Test-LocalEndpointAfterStart -RawUrls $Urls
 
 Write-Host "Servicio '$ServiceName' instalado y ejecutándose." -ForegroundColor Green
