@@ -4,32 +4,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-
-function Get-HttpPortsFromUrls {
-    param([string]$RawUrls)
-
-    if ([string]::IsNullOrWhiteSpace($RawUrls)) {
-        return @()
-    }
-
-    $ports = New-Object System.Collections.Generic.HashSet[int]
-    $urls = $RawUrls.Split(';', [System.StringSplitOptions]::RemoveEmptyEntries)
-    foreach ($urlText in $urls) {
-        $trimmed = $urlText.Trim()
-        if ([string]::IsNullOrWhiteSpace($trimmed)) {
-            continue
-        }
-
-        $parsedUrl = $null
-        if ([System.Uri]::TryCreate($trimmed, [System.UriKind]::Absolute, [ref]$parsedUrl)) {
-            if ($parsedUrl.Scheme -eq 'http' -or $parsedUrl.Scheme -eq 'https') {
-                $ports.Add($parsedUrl.Port) | Out-Null
-            }
-        }
-    }
-
-    return @($ports)
-}
+$commonScriptPath = Join-Path $PSScriptRoot "lib\BalancerX.Deploy.Common.ps1"
+. $commonScriptPath
 
 function Show-Section {
     param([string]$Title)

@@ -109,6 +109,17 @@ sc.exe failure BalancerX.Api
 
 > Este flujo está pensado para que puedas operar en servidor con una rutina simple y profesional.
 
+Si prefieres un flujo automatizado end-to-end en un solo comando, usa:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\bootstrap-and-run.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
+  -BasePath "C:\apps\balancerx" `
+  -Environment "Production" `
+  -Urls "http://0.0.0.0:5000"
+```
+
 1. **Primera instalación del servicio** (solo una vez):
 
 ```powershell

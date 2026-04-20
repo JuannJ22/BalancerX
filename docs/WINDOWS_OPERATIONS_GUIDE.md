@@ -217,6 +217,23 @@ Este script revisa estado del servicio, variables de entorno efectivas, puerto e
 
 Esta es la secuencia recomendada para un pase profesional a servidor principal, sin mezclar responsabilidades:
 
+### Opción recomendada: flujo one-shot con un solo script
+
+Si quieres ejecutar todo con un único comando (inicialización o actualización, según corresponda):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\deploy\windows\bootstrap-and-run.ps1 `
+  -ServiceName "BalancerX.Api" `
+  -ProjectPath ".\src\BalancerX.Api\BalancerX.Api.csproj" `
+  -BasePath "C:\apps\balancerx" `
+  -Environment "Production" `
+  -Urls "http://0.0.0.0:5000"
+```
+
+Comportamiento:
+- Si el servicio no existe: publish inicial + enlace `current` + instalación + arranque + diagnóstico.
+- Si el servicio existe: deploy-release + reinicio controlado + diagnóstico.
+
 ### Escenario A: primera instalación en el servidor
 
 1. **Compilar/publicar en equipo de build o en el mismo servidor**:
