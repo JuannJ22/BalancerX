@@ -236,6 +236,50 @@ Checklist recomendado (en este orden):
 
 Nota: `install-service.ps1` ya imprime este diagnóstico de forma automática cuando `Start-Service` falla, para acelerar el análisis en primer despliegue.
 
+## 10.2 Diagnóstico cuando Windows muestra "No se puede acceder al dispositivo/ruta/archivo especificado" al abrir `BalancerX.Api.exe`
+
+Si al hacer doble clic sobre `C:\apps\balancerx\current\BalancerX.Api.exe` aparece el cuadro:
+
+- **"Windows no puede acceder al dispositivo, la ruta de acceso o el archivo especificados"**
+
+entonces el problema suele estar en **ACL/bloqueo del ejecutable**, no en ASP.NET ni en la API.
+
+Checklist recomendado (en este orden):
+
+1. Verificar que el ejecutable realmente existe en el `current` activo:
+   ```powershell
+   Get-Item "C:\apps\balancerx\current\BalancerX.Api.exe" | Select-Object FullName, Length, LastWriteTime
+   ```
+2. Confirmar que `current` apunta a un release válido (junction/symlink):
+   ```powershell
+   Get-Item "C:\apps\balancerx\current" | Select-Object FullName, LinkType, Target
+   ```
+3. Revisar ACL y confirmar permisos de **Read & Execute** para la cuenta que ejecuta (usuario interactivo y/o cuenta del servicio):
+   ```powershell
+   icacls "C:\apps\balancerx\current\BalancerX.Api.exe"
+   icacls "C:\apps\balancerx\current"
+   ```
+4. Si el archivo fue copiado desde internet/ZIP, quitar bloqueo de seguridad (Mark-of-the-Web):
+   ```powershell
+   Get-Item "C:\apps\balancerx\current\BalancerX.Api.exe" -Stream Zone.Identifier -ErrorAction SilentlyContinue
+   Unblock-File "C:\apps\balancerx\current\BalancerX.Api.exe"
+   ```
+5. Verificar que no esté siendo bloqueado por antivirus/EDR (Microsoft Defender u otro):
+   ```powershell
+   Get-MpThreatDetection | Select-Object InitialDetectionTime, Resources, ThreatName -First 10
+   ```
+6. Probar ejecución por consola para obtener error más explícito:
+   ```powershell
+   cd C:\apps\balancerx\current
+   .\BalancerX.Api.exe
+   ```
+7. Si falla igual, reconstruir release limpio y reapuntar `current`:
+   - publicar en una carpeta nueva bajo `releases\`;
+   - validar ejecución manual del `.exe`;
+   - luego actualizar `current`.
+
+> Práctica recomendada: no ejecutar la API con doble clic en producción. Ejecutar y diagnosticar desde PowerShell (o como servicio) para tener salida de error completa y trazable.
+
 ---
 
 ## 11) Flujo exacto para evitar errores (qué correr y cuándo)
