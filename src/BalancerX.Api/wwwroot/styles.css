@@ -145,7 +145,12 @@ td.actions { display:flex; gap:.35rem; flex-wrap:wrap; }
   color:var(--warning-text);
   font-size:.9rem;
 }
-#authOutput, #resultTechnical { margin:0; min-height:100px; overflow:auto; border-radius:12px; background:#0f2642; color:#d8e8ff; border:1px solid #1f3d67; padding:.78rem; }
+#authOutput, #resultTechnical { margin:0; min-height:56px; overflow:auto; border-radius:12px; border:1px solid var(--line); padding:.78rem; white-space:pre-wrap; }
+#authOutput { background:#eff5ff; color:#315680; }
+#authOutput[data-state="success"] { background:var(--ok-bg); color:var(--ok-text); border-color:#bde5cd; }
+#authOutput[data-state="error"] { background:var(--error-bg); color:var(--error-text); border-color:#f6b7c0; }
+#authOutput[data-state="info"] { background:#eff5ff; color:#315680; border-color:#c5daf8; }
+#resultTechnical { background:#0f2642; color:#d8e8ff; border-color:#1f3d67; min-height:100px; }
 .result { border-radius:10px; padding:.7rem .8rem; margin:0 0 .7rem; font-weight:600; }
 .result.ok { background:var(--ok-bg); color:var(--ok-text); border:1px solid #bde5cd; }
 .result.error { background:var(--error-bg); color:var(--error-text); border:1px solid #f6b7c0; }
