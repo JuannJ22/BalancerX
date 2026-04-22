@@ -272,13 +272,15 @@ Checklist recomendado:
 
 1. Verificar visor PDF instalado en el servidor (Adobe Reader / SumatraPDF / Edge).
 2. Confirmar asociación predeterminada para `.pdf` en la sesión de Windows del servidor.
-3. Preferir siempre impresión por comando explícito (sin depender de UI):
+3. Recordar alcance: la impresión siempre sucede en el host donde corre la API (servidor o PC local), no en el navegador cliente.
+4. Preferir siempre impresión por comando explícito (sin depender de UI), dejando `PrinterName` vacío para usar la predeterminada del host:
    ```json
    "Printing": {
-     "CommandTemplate": "SumatraPDF.exe -print-to-default \"{file}\""
+     "PrinterName": "",
+     "CommandTemplate": "SumatraPDF.exe -print-to-default \"{file}\" -silent"
    }
    ```
-4. Si se requiere impresora específica:
+5. Si se requiere impresora específica:
    ```json
    "Printing": {
      "PrinterName": "NOMBRE_IMPRESORA",
@@ -291,21 +293,21 @@ Buenas prácticas de arquitectura:
 - Mantener la lógica de impresión encapsulada por contrato (`IPrintService`) y reportar errores con motivo técnico explícito (archivo inexistente, comando fallido, asociación PDF faltante).
 - Evitar que el backend dependa de sesiones interactivas de escritorio.
 - En escenarios de alta criticidad, migrar a cola de impresión (job queue + reintentos + auditoría).
-4. Si el archivo fue copiado desde internet/ZIP, quitar bloqueo de seguridad (Mark-of-the-Web):
+6. Si el archivo fue copiado desde internet/ZIP, quitar bloqueo de seguridad (Mark-of-the-Web):
    ```powershell
    Get-Item "C:\apps\balancerx\current\BalancerX.Api.exe" -Stream Zone.Identifier -ErrorAction SilentlyContinue
    Unblock-File "C:\apps\balancerx\current\BalancerX.Api.exe"
    ```
-5. Verificar que no esté siendo bloqueado por antivirus/EDR (Microsoft Defender u otro):
+7. Verificar que no esté siendo bloqueado por antivirus/EDR (Microsoft Defender u otro):
    ```powershell
    Get-MpThreatDetection | Select-Object InitialDetectionTime, Resources, ThreatName -First 10
    ```
-6. Probar ejecución por consola para obtener error más explícito:
+8. Probar ejecución por consola para obtener error más explícito:
    ```powershell
    cd C:\apps\balancerx\current
    .\BalancerX.Api.exe
    ```
-7. Si falla igual, reconstruir release limpio y reapuntar `current`:
+9. Si falla igual, reconstruir release limpio y reapuntar `current`:
    - publicar en una carpeta nueva bajo `releases\`;
    - validar ejecución manual del `.exe`;
    - luego actualizar `current`.

@@ -284,7 +284,7 @@ public class TransferenciaServicio
         => resultadoImpresion.FailureReason switch
         {
             PrintFailureReason.FileNotFound => "No se encontró el PDF a imprimir en el servidor.",
-            PrintFailureReason.MissingPdfAssociation => "No hay una aplicación PDF asociada para impresión en Windows. Configure Printing:CommandTemplate o establezca un visor PDF predeterminado en el servidor.",
+            PrintFailureReason.MissingPdfAssociation => "No hay una aplicación PDF asociada para impresión en Windows. La impresión se ejecuta en el host donde corre la API (servidor o PC local), no en el navegador cliente. Configure Printing:CommandTemplate (ej. SumatraPDF.exe -print-to-default \"{file}\" -silent) o establezca un visor PDF predeterminado en ese host.",
             PrintFailureReason.CommandExecutionFailed => $"Falló el comando de impresión configurado. {resultadoImpresion.Detail}",
             _ => string.IsNullOrWhiteSpace(resultadoImpresion.Detail) ? "Error al imprimir." : $"Error al imprimir. {resultadoImpresion.Detail}"
         };
