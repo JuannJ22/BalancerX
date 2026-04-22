@@ -90,6 +90,24 @@ Configuración sugerida:
 
 Si más adelante quieren una solución todavía más silenciosa, la vía más limpia es configurar `Printing:CommandTemplate` con una herramienta de impresión sin interfaz, para no depender del visor predeterminado del sistema.
 
+### Forzar que siempre use la impresora predeterminada del host
+
+Para operación estable, define este criterio:
+
+- `PrinterName` vacío (`""`) para que se use la impresora predeterminada.
+- `CommandTemplate` explícito con `-print-to-default`, evitando depender de asociaciones `.pdf` del sistema.
+
+Ejemplo recomendado en Windows:
+
+```json
+"Printing": {
+  "PrinterName": "",
+  "CommandTemplate": "SumatraPDF.exe -print-to-default \"{file}\" -silent"
+}
+```
+
+> Importante: la impresión ocurre en el equipo donde se ejecuta la API (servidor o PC local), no en el navegador del usuario. Si “afuera del servidor” usan otra instancia de la API, esa instancia tendrá su propia impresora predeterminada.
+
 ## Endurecimiento de seguridad en carpetas y PDFs
 
 Para reducir exposición de archivos almacenados en disco:
