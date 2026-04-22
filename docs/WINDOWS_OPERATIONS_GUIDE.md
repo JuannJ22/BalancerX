@@ -259,6 +259,38 @@ Checklist recomendado (en este orden):
    icacls "C:\apps\balancerx\current\BalancerX.Api.exe"
    icacls "C:\apps\balancerx\current"
    ```
+
+## 10.3 Diagnóstico cuando `/api/transferencias/{id}/print` devuelve error por PDF en Windows
+
+Si el endpoint de impresión responde 400 con detalle similar a:
+
+- **"No hay una aplicación PDF asociada para impresión en Windows..."**
+
+la causa no es el flujo de negocio ni el login, sino la infraestructura de impresión del servidor.
+
+Checklist recomendado:
+
+1. Verificar visor PDF instalado en el servidor (Adobe Reader / SumatraPDF / Edge).
+2. Confirmar asociación predeterminada para `.pdf` en la sesión de Windows del servidor.
+3. Preferir siempre impresión por comando explícito (sin depender de UI):
+   ```json
+   "Printing": {
+     "CommandTemplate": "SumatraPDF.exe -print-to-default \"{file}\""
+   }
+   ```
+4. Si se requiere impresora específica:
+   ```json
+   "Printing": {
+     "PrinterName": "NOMBRE_IMPRESORA",
+     "CommandTemplate": "AcroRd32.exe /t \"{file}\" \"{printer}\""
+   }
+   ```
+
+Buenas prácticas de arquitectura:
+
+- Mantener la lógica de impresión encapsulada por contrato (`IPrintService`) y reportar errores con motivo técnico explícito (archivo inexistente, comando fallido, asociación PDF faltante).
+- Evitar que el backend dependa de sesiones interactivas de escritorio.
+- En escenarios de alta criticidad, migrar a cola de impresión (job queue + reintentos + auditoría).
 4. Si el archivo fue copiado desde internet/ZIP, quitar bloqueo de seguridad (Mark-of-the-Web):
    ```powershell
    Get-Item "C:\apps\balancerx\current\BalancerX.Api.exe" -Stream Zone.Identifier -ErrorAction SilentlyContinue

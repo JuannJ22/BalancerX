@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Runtime.InteropServices;
 using System.Security.AccessControl;
@@ -65,7 +66,7 @@ public static class ServiciosInfraestructura
 
 public interface IAdaptadorImpresionWindows
 {
-    Task<bool> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken);
+    Task<PrintExecutionResult> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken);
 }
 
 public sealed class PrintingOptions
@@ -119,9 +120,10 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         this.logger = logger;
     }
 
-    public async Task<bool> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken)
+    public async Task<PrintExecutionResult> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken)
     {
-        if (!File.Exists(rutaArchivo)) return false;
+        if (!File.Exists(rutaArchivo))
+            return PrintExecutionResult.Fail(PrintFailureReason.FileNotFound, "El archivo PDF no existe en la ruta indicada.");
 
         if (!string.IsNullOrWhiteSpace(opciones.CommandTemplate))
             return await EjecutarComandoAsync(opciones.CommandTemplate, rutaArchivo, opciones.PrinterName, cancellationToken);
@@ -139,10 +141,10 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         return await EjecutarComandoAsync(comandoLinux, rutaArchivo, opciones.PrinterName, cancellationToken);
     }
 
-    private Task<bool> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, PrintingOptions opcionesImpresion, CancellationToken cancellationToken)
+    private Task<PrintExecutionResult> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, PrintingOptions opcionesImpresion, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
-            return Task.FromCanceled<bool>(cancellationToken);
+            return Task.FromCanceled<PrintExecutionResult>(cancellationToken);
 
         try
         {
@@ -157,7 +159,8 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             };
 
             var proceso = Process.Start(inicio);
-            if (proceso is null) return Task.FromResult(false);
+            if (proceso is null)
+                return Task.FromResult(PrintExecutionResult.Fail(PrintFailureReason.UnexpectedError, "No fue posible iniciar el proceso de impresión."));
 
             logger.LogInformation(
                 "Se lanzó la impresión del archivo {RutaArchivo} usando el visor predeterminado de Windows{SufijoImpresora}.",
@@ -169,12 +172,19 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             else
                 proceso.Dispose();
 
-            return Task.FromResult(true);
+            return Task.FromResult(PrintExecutionResult.Ok());
+        }
+        catch (Win32Exception ex) when (ex.NativeErrorCode == 1155)
+        {
+            logger.LogError(ex, "No hay una aplicación asociada para abrir/imprimir archivos PDF en el servidor Windows.");
+            return Task.FromResult(PrintExecutionResult.Fail(
+                PrintFailureReason.MissingPdfAssociation,
+                "No hay una aplicación PDF asociada en Windows para imprimir con el método predeterminado. Configure Printing:CommandTemplate o defina un visor PDF predeterminado."));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "No fue posible imprimir usando el visor predeterminado de Windows.");
-            return Task.FromResult(false);
+            return Task.FromResult(PrintExecutionResult.Fail(PrintFailureReason.UnexpectedError, ex.Message));
         }
     }
 
@@ -266,7 +276,7 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         }
     }
 
-    private async Task<bool> EjecutarComandoAsync(string plantilla, string rutaArchivo, string? impresora, CancellationToken cancellationToken)
+    private async Task<PrintExecutionResult> EjecutarComandoAsync(string plantilla, string rutaArchivo, string? impresora, CancellationToken cancellationToken)
     {
         var comando = plantilla.Replace("{file}", rutaArchivo).Replace("{printer}", impresora ?? string.Empty);
         var inicio = new ProcessStartInfo
@@ -280,14 +290,15 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         };
 
         using var proceso = Process.Start(inicio);
-        if (proceso is null) return false;
+        if (proceso is null)
+            return PrintExecutionResult.Fail(PrintFailureReason.UnexpectedError, "No fue posible iniciar el comando de impresión configurado.");
 
         await proceso.WaitForExitAsync(cancellationToken);
-        if (proceso.ExitCode == 0) return true;
+        if (proceso.ExitCode == 0) return PrintExecutionResult.Ok();
 
         var error = await proceso.StandardError.ReadToEndAsync(cancellationToken);
         logger.LogError("Error ejecutando comando de impresión: {Error}", error);
-        return false;
+        return PrintExecutionResult.Fail(PrintFailureReason.CommandExecutionFailed, string.IsNullOrWhiteSpace(error) ? "El comando de impresión finalizó con error." : error.Trim());
     }
 }
 
@@ -300,7 +311,7 @@ public class PrintService : IPrintService
         this.adaptadorImpresion = adaptadorImpresion;
     }
 
-    public Task<bool> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken)
+    public Task<PrintExecutionResult> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken)
         => adaptadorImpresion.ImprimirPdfAsync(rutaArchivo, cancellationToken);
 }
 
