@@ -32,7 +32,8 @@ public static class ServiciosInfraestructura
 {
     public static IServiceCollection AgregarInfraestructura(this IServiceCollection servicios, IConfiguration configuracion)
     {
-        servicios.AddDbContext<BalancerXDbContext>(opciones => opciones.UseSqlServer(configuracion.GetConnectionString("SqlServer")));
+        var connectionString = ObtenerConnectionStringSqlServer(configuracion);
+        servicios.AddDbContext<BalancerXDbContext>(opciones => opciones.UseSqlServer(connectionString));
         servicios.AddScoped<ITransferenciaRepositorio, TransferenciaRepositorio>();
         servicios.AddScoped<ICatalogosSyncServicio, CatalogosSyncServicio>();
         servicios.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
@@ -45,7 +46,22 @@ public static class ServiciosInfraestructura
         servicios.AddScoped<BalancerX.Application.Servicios.UsuarioPerfilServicio>();
         return servicios;
     }
+
+    private static string ObtenerConnectionStringSqlServer(IConfiguration configuracion)
+    {
+        var connectionString = configuracion.GetConnectionString("SqlServer");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+            throw new InvalidOperationException("No se encontró la cadena de conexión 'ConnectionStrings:SqlServer'. Configure appsettings o la variable de entorno 'ConnectionStrings__SqlServer'.");
+
+        var placeholders = new[] { "TU_SERVIDOR_SQL", "TU_USUARIO", "TU_PASSWORD" };
+        if (placeholders.Any(ph => connectionString.Contains(ph, StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("La cadena de conexión 'ConnectionStrings:SqlServer' contiene valores de ejemplo. Reemplace TU_SERVIDOR_SQL, TU_USUARIO y TU_PASSWORD por credenciales reales.");
+
+        return connectionString;
+    }
 }
+
 
 public interface IAdaptadorImpresionWindows
 {
