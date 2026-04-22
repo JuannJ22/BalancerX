@@ -207,7 +207,8 @@ public class TransferenciaServicio
         if (transferencia.ImpresaEnUtc.HasValue) throw new InvalidOperationException("La transferencia ya fue impresa.");
 
         var resultadoImpresion = await servicioImpresion.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
-        if (!resultadoImpresion) throw new InvalidOperationException("Error al imprimir.");
+        if (!resultadoImpresion.Success)
+            throw new InvalidOperationException(ConstruirMensajeErrorImpresion(resultadoImpresion));
 
         var pudoMarcar = await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
         if (!pudoMarcar) throw new InvalidOperationException("La transferencia ya fue impresa.");
@@ -250,7 +251,8 @@ public class TransferenciaServicio
 
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
         var resultadoImpresion = await servicioImpresion.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
-        if (!resultadoImpresion) throw new InvalidOperationException("Error al imprimir.");
+        if (!resultadoImpresion.Success)
+            throw new InvalidOperationException(ConstruirMensajeErrorImpresion(resultadoImpresion));
 
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion
         {
@@ -277,6 +279,15 @@ public class TransferenciaServicio
 
     private static string DeterminarEstadoDesdeImpresion(bool impresa)
         => impresa ? EstadosTransferencia.Impresa : EstadosTransferencia.SinImprimir;
+
+    private static string ConstruirMensajeErrorImpresion(PrintExecutionResult resultadoImpresion)
+        => resultadoImpresion.FailureReason switch
+        {
+            PrintFailureReason.FileNotFound => "No se encontró el PDF a imprimir en el servidor.",
+            PrintFailureReason.MissingPdfAssociation => "No hay una aplicación PDF asociada para impresión en Windows. Configure Printing:CommandTemplate o establezca un visor PDF predeterminado en el servidor.",
+            PrintFailureReason.CommandExecutionFailed => $"Falló el comando de impresión configurado. {resultadoImpresion.Detail}",
+            _ => string.IsNullOrWhiteSpace(resultadoImpresion.Detail) ? "Error al imprimir." : $"Error al imprimir. {resultadoImpresion.Detail}"
+        };
 
     private async Task ValidarReferenciasAsync(int puntoVentaId, int vendedorId, int bancoId, int cuentaContableId, CancellationToken cancellationToken)
     {

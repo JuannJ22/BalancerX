@@ -61,10 +61,25 @@ public interface IArchivoSeguroServicio
 
 public interface IPrintService
 {
-    Task<bool> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken);
+    Task<PrintExecutionResult> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken);
 }
 
 public interface IFirmaElectronicaServicio
 {
     Task<string> GuardarFirmaAsync(int usuarioId, string nombreArchivo, Stream contenido, CancellationToken cancellationToken);
+}
+
+public enum PrintFailureReason
+{
+    None = 0,
+    FileNotFound = 1,
+    CommandExecutionFailed = 2,
+    MissingPdfAssociation = 3,
+    UnexpectedError = 4
+}
+
+public sealed record PrintExecutionResult(bool Success, PrintFailureReason FailureReason = PrintFailureReason.None, string? Detail = null)
+{
+    public static PrintExecutionResult Ok() => new(true);
+    public static PrintExecutionResult Fail(PrintFailureReason failureReason, string? detail = null) => new(false, failureReason, detail);
 }
