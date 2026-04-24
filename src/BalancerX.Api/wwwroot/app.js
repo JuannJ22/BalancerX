@@ -109,6 +109,55 @@ const mostrarPdfEnVisor = async (transferenciaId) => {
   document.getElementById('pdfViewer').src = pdfViewerObjectUrl;
 };
 
+const imprimirPdfEnEquipoActual = async (transferenciaId) => {
+  const response = await fetch(`/api/transferencias/${transferenciaId}/archivo/visor`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {}
+  });
+
+  if (!response.ok) {
+    const parsed = await parseApiError(response);
+    showResult('error', parsed.friendly, parsed.technical);
+    throw new Error(parsed.friendly);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const frame = document.createElement('iframe');
+  frame.style.position = 'fixed';
+  frame.style.opacity = '0';
+  frame.style.pointerEvents = 'none';
+  frame.style.width = '0';
+  frame.style.height = '0';
+  frame.src = objectUrl;
+  document.body.append(frame);
+
+  await new Promise((resolve, reject) => {
+    const cleanup = () => {
+      setTimeout(() => {
+        frame.remove();
+        URL.revokeObjectURL(objectUrl);
+      }, 1200);
+    };
+
+    frame.onload = () => {
+      try {
+        frame.contentWindow?.focus();
+        frame.contentWindow?.print();
+        cleanup();
+        resolve();
+      } catch (error) {
+        cleanup();
+        reject(error);
+      }
+    };
+
+    frame.onerror = () => {
+      cleanup();
+      reject(new Error('No fue posible abrir el PDF para impresión local.'));
+    };
+  });
+};
+
 const api = async (url, opts = {}) => {
   const headers = opts.headers ? { ...opts.headers } : {};
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -586,7 +635,8 @@ const renderTransferRow = (item) => {
     printBtn.onclick = async () => {
       try {
         const r = await api(`/api/transferencias/${item.id}/print`, { method: 'POST' });
-        showResult('ok', 'Impresión completada.', r);
+        await imprimirPdfEnEquipoActual(item.id);
+        showResult('ok', 'Impresión enviada al equipo que inició sesión.', r);
         await listTransfers();
       } catch (error) {
         const mensaje = String(error?.message || '').toLowerCase();
@@ -595,7 +645,9 @@ const renderTransferRow = (item) => {
         if (!datos) return;
         try {
           const r = await api(`/api/transferencias/${item.id}/reprint`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
-          showResult('ok', 'Reimpresión completada.', r);
+          await imprimirPdfEnEquipoActual(item.id);
+          showResult('ok', 'Reimpresión enviada al equipo que inició sesión.', r);
+          await listTransfers();
         } catch { }
       }
     };
@@ -627,7 +679,9 @@ const renderTransferRow = (item) => {
       if (!datos) return;
       try {
         const r = await api(`/api/transferencias/${item.id}/reprint`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(datos) });
-        showResult('ok', 'Reimpresión completada.', r);
+        await imprimirPdfEnEquipoActual(item.id);
+        showResult('ok', 'Reimpresión enviada al equipo que inició sesión.', r);
+        await listTransfers();
       } catch { }
     };
     actions.append(reprintBtn);
