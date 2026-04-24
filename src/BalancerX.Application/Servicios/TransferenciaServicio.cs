@@ -10,15 +10,13 @@ public class TransferenciaServicio
     private readonly ITransferenciaRepositorio transferenciaRepositorio;
     private readonly IArchivoSeguroServicio archivoSeguroServicio;
     private readonly IUsuarioRepositorio usuarioRepositorio;
-    private readonly IPrintService servicioImpresion;
     private readonly ICatalogosSyncServicio catalogosSyncServicio;
 
-    public TransferenciaServicio(ITransferenciaRepositorio transferenciaRepositorio, IArchivoSeguroServicio archivoSeguroServicio, IUsuarioRepositorio usuarioRepositorio, IPrintService servicioImpresion, ICatalogosSyncServicio catalogosSyncServicio)
+    public TransferenciaServicio(ITransferenciaRepositorio transferenciaRepositorio, IArchivoSeguroServicio archivoSeguroServicio, IUsuarioRepositorio usuarioRepositorio, ICatalogosSyncServicio catalogosSyncServicio)
     {
         this.transferenciaRepositorio = transferenciaRepositorio;
         this.archivoSeguroServicio = archivoSeguroServicio;
         this.usuarioRepositorio = usuarioRepositorio;
-        this.servicioImpresion = servicioImpresion;
         this.catalogosSyncServicio = catalogosSyncServicio;
     }
 
@@ -98,6 +96,12 @@ public class TransferenciaServicio
         transferencia.CuentaContableId = request.CuentaContableId;
         transferencia.Observacion = request.Observacion;
         transferencia.Estado = estadoNormalizado;
+        transferencia.ImpresaEnUtc = estadoNormalizado switch
+        {
+            EstadosTransferencia.SinImprimir => null,
+            EstadosTransferencia.Impresa when !transferencia.ImpresaEnUtc.HasValue => DateTime.UtcNow,
+            _ => transferencia.ImpresaEnUtc
+        };
 
         var actualizada = await transferenciaRepositorio.ActualizarAsync(transferencia, cancellationToken);
         await transferenciaRepositorio.GuardarEventoAuditoriaAsync(new EventoAuditoria
@@ -203,15 +207,12 @@ public class TransferenciaServicio
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
 
-        var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
-        if (transferencia.ImpresaEnUtc.HasValue) throw new InvalidOperationException("La transferencia ya fue impresa.");
+        _ = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
+        if (!string.Equals(transferencia.Estado, EstadosTransferencia.SinImprimir, StringComparison.OrdinalIgnoreCase))
+            throw new InvalidOperationException("La transferencia ya fue impresa.");
 
-        var resultadoImpresion = await servicioImpresion.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
-        if (!resultadoImpresion.Success)
-            throw new InvalidOperationException(ConstruirMensajeErrorImpresion(resultadoImpresion));
-
-        var pudoMarcar = await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
-        if (!pudoMarcar) throw new InvalidOperationException("La transferencia ya fue impresa.");
+        if (!transferencia.ImpresaEnUtc.HasValue)
+            await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
 
         await transferenciaRepositorio.ActualizarEstadoAsync(transferenciaId, DeterminarEstadoDesdeImpresion(true), cancellationToken);
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion { TransferenciaId = transferenciaId, EsReimpresion = false, EjecutadoPorUsuarioId = usuarioId }, cancellationToken);
@@ -249,10 +250,7 @@ public class TransferenciaServicio
         var pinValido = await usuarioRepositorio.ValidarPinAdminAsync(usuarioEncargado.Id, reimpresionRequest.PinEncargado, cancellationToken);
         if (!pinValido) throw new UnauthorizedAccessException("PIN de encargado inválido.");
 
-        var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
-        var resultadoImpresion = await servicioImpresion.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
-        if (!resultadoImpresion.Success)
-            throw new InvalidOperationException(ConstruirMensajeErrorImpresion(resultadoImpresion));
+        _ = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
 
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion
         {
@@ -279,15 +277,6 @@ public class TransferenciaServicio
 
     private static string DeterminarEstadoDesdeImpresion(bool impresa)
         => impresa ? EstadosTransferencia.Impresa : EstadosTransferencia.SinImprimir;
-
-    private static string ConstruirMensajeErrorImpresion(PrintExecutionResult resultadoImpresion)
-        => resultadoImpresion.FailureReason switch
-        {
-            PrintFailureReason.FileNotFound => "No se encontró el PDF a imprimir en el servidor.",
-            PrintFailureReason.MissingPdfAssociation => "No hay una aplicación PDF asociada para impresión en Windows. La impresión se ejecuta en el host donde corre la API (servidor o PC local), no en el navegador cliente. Configure Printing:CommandTemplate (ej. SumatraPDF.exe -print-to-default \"{file}\" -silent) o establezca un visor PDF predeterminado en ese host.",
-            PrintFailureReason.CommandExecutionFailed => $"Falló el comando de impresión configurado. {resultadoImpresion.Detail}",
-            _ => string.IsNullOrWhiteSpace(resultadoImpresion.Detail) ? "Error al imprimir." : $"Error al imprimir. {resultadoImpresion.Detail}"
-        };
 
     private async Task ValidarReferenciasAsync(int puntoVentaId, int vendedorId, int bancoId, int cuentaContableId, CancellationToken cancellationToken)
     {
