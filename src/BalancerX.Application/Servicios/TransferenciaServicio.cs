@@ -9,13 +9,15 @@ public class TransferenciaServicio
 {
     private readonly ITransferenciaRepositorio transferenciaRepositorio;
     private readonly IArchivoSeguroServicio archivoSeguroServicio;
+    private readonly IPrintService printService;
     private readonly IUsuarioRepositorio usuarioRepositorio;
     private readonly ICatalogosSyncServicio catalogosSyncServicio;
 
-    public TransferenciaServicio(ITransferenciaRepositorio transferenciaRepositorio, IArchivoSeguroServicio archivoSeguroServicio, IUsuarioRepositorio usuarioRepositorio, ICatalogosSyncServicio catalogosSyncServicio)
+    public TransferenciaServicio(ITransferenciaRepositorio transferenciaRepositorio, IArchivoSeguroServicio archivoSeguroServicio, IPrintService printService, IUsuarioRepositorio usuarioRepositorio, ICatalogosSyncServicio catalogosSyncServicio)
     {
         this.transferenciaRepositorio = transferenciaRepositorio;
         this.archivoSeguroServicio = archivoSeguroServicio;
+        this.printService = printService;
         this.usuarioRepositorio = usuarioRepositorio;
         this.catalogosSyncServicio = catalogosSyncServicio;
     }
@@ -207,9 +209,13 @@ public class TransferenciaServicio
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
 
-        _ = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
+        var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
         if (!string.Equals(transferencia.Estado, EstadosTransferencia.SinImprimir, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("La transferencia ya fue impresa.");
+
+        var impresion = await printService.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
+        if (!impresion.Success)
+            throw new InvalidOperationException($"No fue posible enviar la transferencia a impresión. {impresion.Detail ?? "Revise la configuración de impresión del servidor."}".Trim());
 
         if (!transferencia.ImpresaEnUtc.HasValue)
             await transferenciaRepositorio.MarcarImpresaPrimeraVezAsync(transferenciaId, DateTime.UtcNow, cancellationToken);
@@ -250,7 +256,11 @@ public class TransferenciaServicio
         var pinValido = await usuarioRepositorio.ValidarPinAdminAsync(usuarioEncargado.Id, reimpresionRequest.PinEncargado, cancellationToken);
         if (!pinValido) throw new UnauthorizedAccessException("PIN de encargado inválido.");
 
-        _ = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
+        var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
+
+        var impresion = await printService.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
+        if (!impresion.Success)
+            throw new InvalidOperationException($"No fue posible enviar la reimpresión. {impresion.Detail ?? "Revise la configuración de impresión del servidor."}".Trim());
 
         await transferenciaRepositorio.GuardarEventoImpresionAsync(new EventoImpresion
         {
