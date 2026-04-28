@@ -81,3 +81,13 @@ public class EventoAuditoria
     public int EjecutadoPorUsuarioId { get; set; }
     public DateTime EventoEnUtc { get; set; } = DateTime.UtcNow;
 }
+
+public class PrintDestination
+{
+    public int Id { get; set; }
+    public int? PuntoVentaId { get; set; }
+    public int? UsuarioId { get; set; }
+    public string? TerminalId { get; set; }
+    public string PrinterName { get; set; } = string.Empty;
+    public bool Activo { get; set; } = true;
+}
