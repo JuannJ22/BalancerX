@@ -42,6 +42,7 @@ public static class ServiciosInfraestructura
         servicios.AddScoped<IArchivoSeguroServicio, ArchivoSeguroServicio>();
         servicios.AddScoped<IFirmaElectronicaServicio, FirmaElectronicaServicio>();
         servicios.AddScoped<IAdaptadorImpresionWindows, AdaptadorImpresionWindows>();
+        servicios.AddScoped<IPrintDestinationResolver, PrintDestinationResolver>();
         servicios.AddScoped<IPrintService, PrintService>();
         servicios.AddScoped<BalancerX.Application.Servicios.UsuarioAdminServicio>();
         servicios.AddScoped<BalancerX.Application.Servicios.UsuarioPerfilServicio>();
@@ -66,12 +67,12 @@ public static class ServiciosInfraestructura
 
 public interface IAdaptadorImpresionWindows
 {
-    Task<PrintExecutionResult> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken);
+    Task<PrintExecutionResult> ImprimirPdfAsync(string rutaArchivo, string? printerName, CancellationToken cancellationToken);
 }
 
 public sealed class PrintingOptions
 {
-    public string? PrinterName { get; init; }
+    public string? DefaultPrinterName { get; init; }
     public string? CommandTemplate { get; init; }
     public bool CloseViewerAfterPrint { get; init; }
     public int ViewerCloseDelayMs { get; init; } = 5000;
@@ -89,7 +90,7 @@ public sealed class PrintingOptions
 
         return new PrintingOptions
         {
-            PrinterName = configuracion["Printing:PrinterName"],
+            DefaultPrinterName = configuracion["Printing:DefaultPrinterName"] ?? configuracion["Printing:PrinterName"],
             CommandTemplate = configuracion["Printing:CommandTemplate"],
             CloseViewerAfterPrint = bool.TryParse(configuracion["Printing:CloseViewerAfterPrint"], out var closeViewerAfterPrint) && closeViewerAfterPrint,
             ViewerCloseDelayMs = delay,
@@ -120,28 +121,28 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
         this.logger = logger;
     }
 
-    public async Task<PrintExecutionResult> ImprimirPdfAsync(string rutaArchivo, CancellationToken cancellationToken)
+    public async Task<PrintExecutionResult> ImprimirPdfAsync(string rutaArchivo, string? printerName, CancellationToken cancellationToken)
     {
         if (!File.Exists(rutaArchivo))
             return PrintExecutionResult.Fail(PrintFailureReason.FileNotFound, "El archivo PDF no existe en la ruta indicada.");
 
         if (!string.IsNullOrWhiteSpace(opciones.CommandTemplate))
-            return await EjecutarComandoAsync(opciones.CommandTemplate, rutaArchivo, opciones.PrinterName, cancellationToken);
+            return await EjecutarComandoAsync(opciones.CommandTemplate, rutaArchivo, printerName, cancellationToken);
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             logger.LogWarning("No se configuró Printing:CommandTemplate en Windows. Se usará el visor predeterminado y su cierre automático dependerá de la configuración.");
-            return await EjecutarImpresionWindowsPredeterminadaAsync(rutaArchivo, opciones, cancellationToken);
+            return await EjecutarImpresionWindowsPredeterminadaAsync(rutaArchivo, opciones, printerName, cancellationToken);
         }
 
-        var comandoLinux = string.IsNullOrWhiteSpace(opciones.PrinterName)
+        var comandoLinux = string.IsNullOrWhiteSpace(printerName)
             ? "lp \"{file}\""
             : "lp -d \"{printer}\" \"{file}\"";
 
-        return await EjecutarComandoAsync(comandoLinux, rutaArchivo, opciones.PrinterName, cancellationToken);
+        return await EjecutarComandoAsync(comandoLinux, rutaArchivo, printerName, cancellationToken);
     }
 
-    private Task<PrintExecutionResult> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, PrintingOptions opcionesImpresion, CancellationToken cancellationToken)
+    private Task<PrintExecutionResult> EjecutarImpresionWindowsPredeterminadaAsync(string rutaArchivo, PrintingOptions opcionesImpresion, string? printerName, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<PrintExecutionResult>(cancellationToken);
@@ -152,8 +153,8 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             {
                 FileName = rutaArchivo,
                 UseShellExecute = true,
-                Verb = string.IsNullOrWhiteSpace(opcionesImpresion.PrinterName) ? "Print" : "PrintTo",
-                Arguments = string.IsNullOrWhiteSpace(opcionesImpresion.PrinterName) ? string.Empty : $"\"{opcionesImpresion.PrinterName}\"",
+                Verb = string.IsNullOrWhiteSpace(printerName) ? "Print" : "PrintTo",
+                Arguments = string.IsNullOrWhiteSpace(printerName) ? string.Empty : $"\"{printerName}\"",
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden
             };
@@ -165,7 +166,7 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
             logger.LogInformation(
                 "Se lanzó la impresión del archivo {RutaArchivo} usando el visor predeterminado de Windows{SufijoImpresora}.",
                 rutaArchivo,
-                string.IsNullOrWhiteSpace(opcionesImpresion.PrinterName) ? string.Empty : $" en la impresora '{opcionesImpresion.PrinterName}'");
+                string.IsNullOrWhiteSpace(printerName) ? string.Empty : $" en la impresora '{printerName}'");
 
             if (opcionesImpresion.CloseViewerAfterPrint)
                 _ = CerrarVisorDespuesDeImprimirAsync(proceso, rutaArchivo, opcionesImpresion);
@@ -302,17 +303,66 @@ public class AdaptadorImpresionWindows : IAdaptadorImpresionWindows
     }
 }
 
+public sealed class PrintDestinationResolver : IPrintDestinationResolver
+{
+    private readonly BalancerXDbContext contexto;
+    private readonly PrintingOptions opciones;
+    private readonly ILogger<PrintDestinationResolver> logger;
+
+    public PrintDestinationResolver(BalancerXDbContext contexto, IConfiguration configuracion, ILogger<PrintDestinationResolver> logger)
+    {
+        this.contexto = contexto;
+        opciones = PrintingOptions.Desde(configuracion);
+        this.logger = logger;
+    }
+
+    public async Task<string?> ResolveAsync(PrintRequestContext contextoImpresion, CancellationToken cancellationToken)
+    {
+        var destinos = await contexto.PrintDestinations
+            .AsNoTracking()
+            .Where(x => x.Activo)
+            .Where(x =>
+                (!x.PuntoVentaId.HasValue || x.PuntoVentaId == contextoImpresion.PuntoVentaId) &&
+                (!x.UsuarioId.HasValue || x.UsuarioId == contextoImpresion.UsuarioId) &&
+                (string.IsNullOrWhiteSpace(x.TerminalId) || x.TerminalId == contextoImpresion.TerminalId))
+            .ToListAsync(cancellationToken);
+
+        var seleccionado = destinos
+            .OrderByDescending(x => x.UsuarioId.HasValue)
+            .ThenByDescending(x => !string.IsNullOrWhiteSpace(x.TerminalId))
+            .ThenByDescending(x => x.PuntoVentaId.HasValue)
+            .FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(seleccionado?.PrinterName))
+            return seleccionado.PrinterName.Trim();
+
+        if (!string.IsNullOrWhiteSpace(opciones.DefaultPrinterName))
+            return opciones.DefaultPrinterName.Trim();
+
+        logger.LogWarning("No se encontró destino de impresión para UsuarioId={UsuarioId}, PuntoVentaId={PuntoVentaId}, TerminalId={TerminalId}.", contextoImpresion.UsuarioId, contextoImpresion.PuntoVentaId, contextoImpresion.TerminalId);
+        return null;
+    }
+}
+
 public class PrintService : IPrintService
 {
     private readonly IAdaptadorImpresionWindows adaptadorImpresion;
+    private readonly IPrintDestinationResolver destinationResolver;
 
-    public PrintService(IAdaptadorImpresionWindows adaptadorImpresion)
+    public PrintService(IAdaptadorImpresionWindows adaptadorImpresion, IPrintDestinationResolver destinationResolver)
     {
         this.adaptadorImpresion = adaptadorImpresion;
+        this.destinationResolver = destinationResolver;
     }
 
-    public Task<PrintExecutionResult> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken)
-        => adaptadorImpresion.ImprimirPdfAsync(rutaArchivo, cancellationToken);
+    public async Task<PrintExecutionResult> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, PrintRequestContext contexto, CancellationToken cancellationToken)
+    {
+        var printerName = await destinationResolver.ResolveAsync(contexto, cancellationToken);
+        if (string.IsNullOrWhiteSpace(printerName))
+            return PrintExecutionResult.Fail(PrintFailureReason.UnexpectedError, "No hay un destino de impresión configurado para el contexto actual.");
+
+        return await adaptadorImpresion.ImprimirPdfAsync(rutaArchivo, printerName, cancellationToken);
+    }
 }
 
 public class JwtTokenServicio : IJwtTokenServicio

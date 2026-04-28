@@ -85,6 +85,17 @@ CREATE TABLE bx.audit_events (
     executed_by INT NOT NULL,
     FOREIGN KEY (executed_by) REFERENCES bx.users(id)
 );
+
+CREATE TABLE bx.print_destinations (
+    id INT IDENTITY(1,1) PRIMARY KEY,
+    punto_venta_id INT NULL,
+    usuario_id INT NULL,
+    terminal_id NVARCHAR(100) NULL,
+    printer_name NVARCHAR(255) NOT NULL,
+    activo BIT NOT NULL DEFAULT 1,
+    FOREIGN KEY (punto_venta_id) REFERENCES bx.puntos_venta(id),
+    FOREIGN KEY (usuario_id) REFERENCES bx.users(id)
+);
 GO
 
 INSERT INTO bx.roles (nombre) VALUES ('ADMIN'), ('TESORERIA'), ('AUXILIAR');

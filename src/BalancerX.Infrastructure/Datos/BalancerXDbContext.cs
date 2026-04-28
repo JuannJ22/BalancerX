@@ -18,6 +18,7 @@ public class BalancerXDbContext : DbContext
     public DbSet<TransferenciaArchivo> TransferenciasArchivos => Set<TransferenciaArchivo>();
     public DbSet<EventoImpresion> EventosImpresion => Set<EventoImpresion>();
     public DbSet<EventoAuditoria> EventosAuditoria => Set<EventoAuditoria>();
+    public DbSet<PrintDestination> PrintDestinations => Set<PrintDestination>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,5 +117,14 @@ public class BalancerXDbContext : DbContext
         entidadEventoAuditoria.Property(x => x.Detalle).HasColumnName("detalle");
         entidadEventoAuditoria.Property(x => x.EventoEnUtc).HasColumnName("event_at");
         entidadEventoAuditoria.Property(x => x.EjecutadoPorUsuarioId).HasColumnName("executed_by");
+
+        var entidadPrintDestination = modelBuilder.Entity<PrintDestination>();
+        entidadPrintDestination.ToTable("print_destinations");
+        entidadPrintDestination.Property(x => x.Id).HasColumnName("id");
+        entidadPrintDestination.Property(x => x.PuntoVentaId).HasColumnName("punto_venta_id");
+        entidadPrintDestination.Property(x => x.UsuarioId).HasColumnName("usuario_id");
+        entidadPrintDestination.Property(x => x.TerminalId).HasColumnName("terminal_id");
+        entidadPrintDestination.Property(x => x.PrinterName).HasColumnName("printer_name");
+        entidadPrintDestination.Property(x => x.Activo).HasColumnName("activo");
     }
 }

@@ -61,7 +61,12 @@ public interface IArchivoSeguroServicio
 
 public interface IPrintService
 {
-    Task<PrintExecutionResult> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, CancellationToken cancellationToken);
+    Task<PrintExecutionResult> ImprimirTransferenciaAsync(long transferenciaId, string rutaArchivo, PrintRequestContext contexto, CancellationToken cancellationToken);
+}
+
+public interface IPrintDestinationResolver
+{
+    Task<string?> ResolveAsync(PrintRequestContext contexto, CancellationToken cancellationToken);
 }
 
 public interface IFirmaElectronicaServicio
@@ -83,3 +88,5 @@ public sealed record PrintExecutionResult(bool Success, PrintFailureReason Failu
     public static PrintExecutionResult Ok() => new(true);
     public static PrintExecutionResult Fail(PrintFailureReason failureReason, string? detail = null) => new(false, failureReason, detail);
 }
+
+public sealed record PrintRequestContext(int UsuarioId, int? PuntoVentaId, string? TerminalId);

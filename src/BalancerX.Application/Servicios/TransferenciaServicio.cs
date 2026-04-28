@@ -204,7 +204,7 @@ public class TransferenciaServicio
         return await archivoSeguroServicio.ObtenerPdfAsync(archivo, cancellationToken);
     }
 
-    public async Task ImprimirAsync(long transferenciaId, int usuarioId, CancellationToken cancellationToken)
+    public async Task ImprimirAsync(long transferenciaId, int usuarioId, string? terminalId, CancellationToken cancellationToken)
     {
         var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
         await ValidarAccesoAuxiliarPorPuntoVentaAsync(usuarioId, transferencia.PuntoVentaId, cancellationToken);
@@ -213,7 +213,8 @@ public class TransferenciaServicio
         if (!string.Equals(transferencia.Estado, EstadosTransferencia.SinImprimir, StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("La transferencia ya fue impresa.");
 
-        var impresion = await printService.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
+        var contextoImpresion = new PrintRequestContext(usuarioId, transferencia.PuntoVentaId, terminalId);
+        var impresion = await printService.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, contextoImpresion, cancellationToken);
         if (!impresion.Success)
             throw new InvalidOperationException($"No fue posible enviar la transferencia a impresión. {impresion.Detail ?? "Revise la configuración de impresión del servidor."}".Trim());
 
@@ -240,7 +241,7 @@ public class TransferenciaServicio
     private static bool EsAuxiliar(Usuario usuario)
         => usuario.Roles.Any(r => string.Equals(r.Rol?.Nombre, "AUXILIAR", StringComparison.OrdinalIgnoreCase));
 
-    public async Task ReimprimirAsync(long transferenciaId, ReimpresionRequest reimpresionRequest, int usuarioIdEjecutor, CancellationToken cancellationToken)
+    public async Task ReimprimirAsync(long transferenciaId, ReimpresionRequest reimpresionRequest, int usuarioIdEjecutor, string? terminalId, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(reimpresionRequest.UsuarioEncargado)) throw new InvalidOperationException("El usuario del encargado es obligatorio.");
         if (string.IsNullOrWhiteSpace(reimpresionRequest.PinEncargado)) throw new InvalidOperationException("El PIN del encargado es obligatorio.");
@@ -258,7 +259,9 @@ public class TransferenciaServicio
 
         var archivo = await transferenciaRepositorio.ObtenerArchivoPorTransferenciaAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("No existe PDF para imprimir.");
 
-        var impresion = await printService.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, cancellationToken);
+        var transferencia = await transferenciaRepositorio.ObtenerPorIdAsync(transferenciaId, cancellationToken) ?? throw new InvalidOperationException("Transferencia no encontrada.");
+        var contextoImpresion = new PrintRequestContext(usuarioEjecutor.Id, transferencia.PuntoVentaId, terminalId);
+        var impresion = await printService.ImprimirTransferenciaAsync(transferenciaId, archivo.RutaInterna, contextoImpresion, cancellationToken);
         if (!impresion.Success)
             throw new InvalidOperationException($"No fue posible enviar la reimpresión. {impresion.Detail ?? "Revise la configuración de impresión del servidor."}".Trim());
 

@@ -78,7 +78,7 @@ Configuración sugerida:
 
 ```json
 "Printing": {
-  "PrinterName": "",
+  "DefaultPrinterName": "",
   "CommandTemplate": "",
   "CloseViewerAfterPrint": true,
   "ViewerCloseDelayMs": 5000,
@@ -94,19 +94,42 @@ Si más adelante quieren una solución todavía más silenciosa, la vía más li
 
 Para operación estable, define este criterio:
 
-- `PrinterName` vacío (`""`) para que se use la impresora predeterminada.
+- `DefaultPrinterName` vacío (`""`) para que se use la impresora predeterminada.
 - `CommandTemplate` explícito con `-print-to-default`, evitando depender de asociaciones `.pdf` del sistema.
 
 Ejemplo recomendado en Windows:
 
 ```json
 "Printing": {
-  "PrinterName": "",
+  "DefaultPrinterName": "",
   "CommandTemplate": "SumatraPDF.exe -print-to-default \"{file}\" -silent"
 }
 ```
 
 > Importante: la impresión ocurre en el equipo donde se ejecuta la API (servidor o PC local), no en el navegador del usuario. Si “afuera del servidor” usan otra instancia de la API, esa instancia tendrá su propia impresora predeterminada.
+
+### Enrutamiento de impresión por contexto (punto de venta/usuario/terminal)
+
+Ahora el backend resuelve la impresora por contexto antes de imprimir, usando la tabla `bx.print_destinations`:
+
+- `punto_venta_id` (opcional)
+- `usuario_id` (opcional)
+- `terminal_id` (opcional)
+- `printer_name` (obligatorio)
+- `activo`
+
+Prioridad de resolución:
+1. Coincidencias más específicas (`usuario_id` + `terminal_id` + `punto_venta_id`).
+2. Coincidencias parciales activas.
+3. `Printing:DefaultPrinterName` como fallback.
+
+Si no hay destino válido, la API devuelve error y **no** marca la transferencia como impresa.
+
+Para enviar el identificador de terminal desde cliente:
+
+```http
+X-Terminal-Id: CAJA-PRINCIPAL
+```
 
 ## Endurecimiento de seguridad en carpetas y PDFs
 

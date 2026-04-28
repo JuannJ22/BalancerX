@@ -105,7 +105,7 @@ public class TransferenciasController : ControllerBase
     [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> Imprimir([FromRoute] long id, CancellationToken cancellationToken)
     {
-        await transferenciaServicio.ImprimirAsync(id, ObtenerUsuarioId(), cancellationToken);
+        await transferenciaServicio.ImprimirAsync(id, ObtenerUsuarioId(), ObtenerTerminalId(), cancellationToken);
         return Ok(new { mensaje = "Impresión completada" });
     }
 
@@ -113,7 +113,7 @@ public class TransferenciasController : ControllerBase
     [Authorize(Roles = "ADMIN,TESORERIA,AUXILIAR")]
     public async Task<IActionResult> Reimprimir([FromRoute] long id, [FromBody] ReimpresionRequest reimpresionRequest, CancellationToken cancellationToken)
     {
-        await transferenciaServicio.ReimprimirAsync(id, reimpresionRequest, ObtenerUsuarioId(), cancellationToken);
+        await transferenciaServicio.ReimprimirAsync(id, reimpresionRequest, ObtenerUsuarioId(), ObtenerTerminalId(), cancellationToken);
         return Ok(new { mensaje = "Reimpresión completada" });
     }
 
@@ -121,6 +121,15 @@ public class TransferenciasController : ControllerBase
     {
         var claim = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue(ClaimTypes.Sid) ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub);
         return int.Parse(claim!);
+    }
+
+    private string? ObtenerTerminalId()
+    {
+        if (!Request.Headers.TryGetValue("X-Terminal-Id", out var terminalId))
+            return null;
+
+        var valor = terminalId.ToString().Trim();
+        return string.IsNullOrWhiteSpace(valor) ? null : valor;
     }
 
     private void AgregarCabecerasSeguridadPdf()

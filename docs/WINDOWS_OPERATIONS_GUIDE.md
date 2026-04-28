@@ -273,17 +273,17 @@ Checklist recomendado:
 1. Verificar visor PDF instalado en el servidor (Adobe Reader / SumatraPDF / Edge).
 2. Confirmar asociación predeterminada para `.pdf` en la sesión de Windows del servidor.
 3. Recordar alcance: la impresión siempre sucede en el host donde corre la API (servidor o PC local), no en el navegador cliente.
-4. Preferir siempre impresión por comando explícito (sin depender de UI), dejando `PrinterName` vacío para usar la predeterminada del host:
+4. Preferir siempre impresión por comando explícito (sin depender de UI), dejando `DefaultPrinterName` vacío para usar la predeterminada del host:
    ```json
    "Printing": {
-     "PrinterName": "",
+     "DefaultPrinterName": "",
      "CommandTemplate": "SumatraPDF.exe -print-to-default \"{file}\" -silent"
    }
    ```
 5. Si se requiere impresora específica:
    ```json
    "Printing": {
-     "PrinterName": "NOMBRE_IMPRESORA",
+     "DefaultPrinterName": "NOMBRE_IMPRESORA",
      "CommandTemplate": "AcroRd32.exe /t \"{file}\" \"{printer}\""
    }
    ```
